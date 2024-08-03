@@ -1,6 +1,6 @@
-from backend.tools.epub_parser.utils.file import read_file_with_error_handling, resolve_relative_path, match_toc_reference
-from backend.tools.epub_parser.utils.toc import parse_toc_ncx
-from backend.tools.epub_parser.utils.inspector import find_toc_file
+from tools.epub_parser.utils.file import read_file_with_error_handling, resolve_relative_path, match_toc_reference
+from tools.epub_parser.utils.toc import parse_toc_ncx
+from tools.epub_parser.utils.inspector import find_toc_file
 
 from bs4 import BeautifulSoup
 
@@ -42,7 +42,12 @@ def extract_chapters(file_path):
                     content = entry['content']
                     chapter_file = resolve_relative_path(toc_file_used, content.split('#')[0])
                     fragment_id = content.split('#')[1] if '#' in content else None
-                    next_fragment_id = next_entry['content'].split('#')[1] if next_entry and '#' in next_entry['content'] else None
+                    next_fragment_id = None
+                    if next_entry:
+                        next_content = next_entry['content']
+                        next_chapter_file = resolve_relative_path(toc_file_used, next_content.split('#')[0])
+                        if chapter_file == next_chapter_file and '#' in next_content:
+                            next_fragment_id = next_content.split('#')[1]
                     matched_file = match_toc_reference(chapter_file, file_list)
                     if matched_file:
                         file_content = read_file_with_error_handling(zip_ref, matched_file)
@@ -55,6 +60,7 @@ def extract_chapters(file_path):
                                 'parent_label': entry['parent_label'],
                                 'playOrder': entry['playOrder']
                             })
+
         else:
             print("No TOC file found. Processing all document items.")
 
@@ -74,7 +80,7 @@ def extract_chapters(file_path):
     return chapters
 
 def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
-    """Extract text from a specific fragment ID to the next fragment ID."""
+    """Extract text from a specific fragment ID to the next fragment ID or to the end of the file."""
     start_tag = soup.find(id=fragment_id)
     if not start_tag:
         return ""
@@ -85,7 +91,7 @@ def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
     for element in start_tag.next_elements:
         if is_descendant_of_processed(element, processed_elements):
             continue
-        if element.name and element.get('id') == next_fragment_id:
+        if next_fragment_id and element.name and element.get('id') == next_fragment_id:
             break
 
         if isinstance(element, str):
@@ -94,6 +100,7 @@ def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
             chapter_text.append(process_element(element, processed_elements))
 
     return ''.join(chapter_text)
+
 
 def process_element(element, processed_elements):
     """Recursively process an element to handle nested tags without duplication."""
