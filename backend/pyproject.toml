@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "multiagent-rag-system"
+version = "0.1.0"
+description = "A multiagent system to aid in learning programming languages and other tech"
+authors = ["Jaka Krajnc <444.ous@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "server" },
+    { include = "langgraph" },
+    { include = "tools" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.server.dependencies]
+pytest = "^8.3.2"
+fastapi = "^0.111.1"
+
+[tool.poetry.group.langgraph.dependencies]
+langgraph = "^0.1.19"
+
+[tool.poetry.group.tools.dependencies]
+beautifulsoup4 = "^4.12.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
