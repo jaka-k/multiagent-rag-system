@@ -32,7 +32,7 @@ def extract_chapters(file_path):
                     break
 
         if toc_content:
-            toc_entries = parse_toc_ncx(toc_content)
+            title, toc_entries = parse_toc_ncx(toc_content)
             max_play_order = max(entry['playOrder'] for entry in toc_entries)
 
             for play_order in range(1, max_play_order + 1):
@@ -77,7 +77,7 @@ def extract_chapters(file_path):
                             'playOrder': -1
                         })
 
-    return chapters
+    return title, chapters
 
 def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
     """Extract text from a specific fragment ID to the next fragment ID or to the end of the file."""

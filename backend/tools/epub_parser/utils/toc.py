@@ -31,10 +31,16 @@ def parse_toc_ncx(toc_content):
             })
         return result
 
+    # Extract the title
+    doc_title_element = root.find('.//ncx:docTitle/ncx:text', ns)
+    title = doc_title_element.text if doc_title_element is not None else "Unknown Title"
+    if title is None:
+        title = "Unknown Title"
+
     # Find the navMap and parse all first-level navPoints
     nav_map = root.find('ncx:navMap', ns)
     second_level_entries = []
     for nav_point in nav_map.findall('ncx:navPoint', ns):
         second_level_entries.extend(parse_nav_point(nav_point))
 
-    return second_level_entries
+    return title, second_level_entries
