@@ -6,10 +6,12 @@ from tools.epub_parser.utils.chapter_extractor import extract_chapters
 from tools.epub_parser.utils.inspector import inspect_epub
 from tools.epub_parser.utils.logging import log_empty_chapters
 
+
 class EpubParserInterface(ABC):
     @abstractmethod
     def parse(self, file_path: str) -> EpubDTO:
         pass
+
 
 class EpubParser(EpubParserInterface):
     def parse(self, file_path: str) -> EpubDTO:
@@ -18,9 +20,9 @@ class EpubParser(EpubParserInterface):
 
         chapters = [
             ChapterDTO(
-                label=chapter_info['label'],
-                parent_label=chapter_info['parent_label'],
-                content=chapter_info['content']
+                label=chapter_info["label"],
+                parent_label=chapter_info["parent_label"],
+                content=chapter_info["content"],
             )
             for chapter_info in parsed_chapters
         ]
