@@ -7,6 +7,7 @@ from langchain.schema.document import Document
 # {page_content: str, metadata: dict}
 from langchain_chroma import Chroma
 
+from statemachine.db.client import get_db_client
 from statemachine.dtos.epub_dto import EpubDTO
 from statemachine.embeddings.utils import get_embedding_function
 from statemachine.services.document_chunks_service import DocumentChunkService
@@ -17,9 +18,11 @@ from tools.epub_parser.parser import EpubParser
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
 
+
 def main():
     placeholderPath = "/Users/jakakrajnc/Code/python/multiagent-rag-system/backend/tools/epub_parser/data/mastering-go.epub"
     populate(placeholderPath)
+
 
 def populate(placeholderPath):
 
@@ -35,12 +38,14 @@ def populate(placeholderPath):
 
 
 def add_to_chroma(epub_dto_: str):
+    client = get_db_client()
+
     # Load the existing database.
     db = Chroma(
-        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
+        client=client,
+        persist_directory=CHROMA_PATH,
+        embedding_function=get_embedding_function(),
     )
-
-
 
     # SHOULD HAPPEN WAY BEFOR
     # Initialize the parser
@@ -77,6 +82,7 @@ def add_to_chroma(epub_dto_: str):
 def clear_database():
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
+
 
 if __name__ == "__main__":
     main()
