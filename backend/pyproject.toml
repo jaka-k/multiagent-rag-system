@@ -6,19 +6,26 @@ authors = ["Jaka Krajnc <444.ous@gmail.com>"]
 readme = "README.md"
 packages = [
     { include = "server" },
-    { include = "langgraph" },
+    { include = "statemachine" },
     { include = "tools" },
 ]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+black = "^24.8.0"
 
 [tool.poetry.group.server.dependencies]
 pytest = "^8.3.2"
 fastapi = "^0.111.1"
+websockets = "^13.0"
 
-[tool.poetry.group.langgraph.dependencies]
+[tool.poetry.group.statemachine.dependencies]
 langgraph = "^0.1.19"
+langchain = "^0.2.12"
+langchain-openai = "^0.1.20"
+chromadb = "^0.5.5"
+langchain-community = "^0.2.11"
+langchain-chroma = "^0.1.2"
 
 [tool.poetry.group.tools.dependencies]
 beautifulsoup4 = "^4.12.3"
