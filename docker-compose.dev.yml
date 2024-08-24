@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: dev.Dockerfile
+    ports:
+      - "8000:8000"
+      - "8088:8088"
+    volumes:
+      - ./backend:/app/backend
+    environment:
+      - POETRY_NO_INTERACTION=1
+      - POETRY_VIRTUALENVS_IN_PROJECT=1
+      - POETRY_VIRTUALENVS_CREATE=1
+      - POETRY_CACHE_DIR=/tmp/poetry_cache
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dev.Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app   # Bind mount
+    environment:
+      - NODE_ENV=development
