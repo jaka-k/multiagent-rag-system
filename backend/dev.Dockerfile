@@ -7,6 +7,10 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
+RUN apt-get update && \
+    apt-get install -y libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
@@ -14,7 +18,6 @@ COPY ./ ./
 
 RUN touch README.md
 
-# Install dependencies without installing the project itself
-RUN poetry install --no-root
+RUN poetry install
 
-ENTRYPOINT ["poetry", "run", "fastapi", "dev", "server/main.py", "--host", "0.0.0.0", "--port", "8088"]
+ENTRYPOINT ["poetry", "run", "fastapi", "dev", "server/main.py", "--host", "0.0.0.0", "--port", "8080" ]
