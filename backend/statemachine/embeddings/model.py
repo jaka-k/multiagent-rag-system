@@ -7,7 +7,7 @@ from langchain.schema.document import Document
 # {page_content: str, metadata: dict}
 from langchain_chroma import Chroma
 
-from statemachine.db.client import get_db_client
+from statemachine.db.client import get_chroma_db_client
 from statemachine.dtos.epub_dto import EpubDTO
 from statemachine.embeddings.utils import get_embedding_function
 from statemachine.services.document_chunks_service import DocumentChunkService
@@ -38,7 +38,7 @@ def populate(placeholderPath):
 
 
 def add_to_chroma(epub_dto_: str):
-    client = get_db_client()
+    client = get_chroma_db_client()
 
     # Load the existing database.
     db = Chroma(
