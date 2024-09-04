@@ -1,3 +1,115 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": [
+    "airbnb-base",
+    "next/core-web-vitals",
+    "plugin:import/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": [
+    "simple-import-sort",
+    "unused-imports",
+    "react-hooks",
+    "react",
+    "import",
+    "@typescript-eslint"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "rules": {
+    "no-undef": "off", // TypeScript handles this
+    "no-use-before-define": "off", // TypeScript handles this with @typescript-eslint/no-use-before-define
+    "@typescript-eslint/no-use-before-define": "error",
+    "no-underscore-dangle": ["error", { "allow": ["_uid"] }],
+    "no-shadow": "off", // TypeScript handles this with @typescript-eslint/no-shadow
+    "@typescript-eslint/no-shadow": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "object-curly-newline": [
+      "error",
+      {
+        "ObjectExpression": "always",
+        "ObjectPattern": { "multiline": true },
+        "ImportDeclaration": "never",
+        "ExportDeclaration": { "multiline": true, "minProperties": 2 }
+      }
+    ],
+    "array-bracket-spacing": ["error", "always"],
+    "block-spacing": ["error", "always"],
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
+    "import/no-unresolved": "error",
+    "import/prefer-default-export": "off",
+    "import/order": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_" }
+    ],
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "jsx-a11y/role-supports-aria-props": "off", // TODO: Turn on once refactoring is finished
+    "padding-line-between-statements": [
+      "error",
+      { "blankLine": "always", "prev": "*", "next": "block" },
+      { "blankLine": "always", "prev": "block", "next": "*" },
+      { "blankLine": "always", "prev": "*", "next": "block-like" },
+      { "blankLine": "always", "prev": "block-like", "next": "*" }
+    ],
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": true,
+        "trailingComma": "none",
+        "arrowParens": "always",
+        "semi": false
+      }
+    ]
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": "./"
+      },
+      "alias": {
+        "map": [
+          ["@", "./src"],
+          ["@components", "./src/components"],
+          ["@containers", "./src/components/containers"],
+          ["@hooks", "./src/hooks"],
+          ["@images", "./images"],
+          ["@utils", "./utils"]
+        ],
+        "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
+      }
+    }
+  },
+  "overrides": [
+    {
+      "files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
+      "extends": ["plugin:prettier/recommended"],
+      "rules": {
+        "object-curly-newline": [
+          "error",
+          {
+            "ObjectExpression": "always",
+            "ObjectPattern": { "multiline": true },
+            "ImportDeclaration": "never",
+            "ExportDeclaration": { "multiline": true, "minProperties": 2 }
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.stories.jsx"],
+      "rules": {
+        "import/no-anonymous-default-export": "off"
+      }
+    }
+  ]
 }
