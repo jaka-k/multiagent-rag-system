@@ -1,8 +1,9 @@
 'use client'
 
-import { Check, Plus, Send } from 'lucide-react'
+import { Check, Loader, Plus, Send } from 'lucide-react'
 import * as React from 'react'
 import Markdown from 'react-markdown'
+import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -31,10 +32,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip'
-
 import { cn, connectionStatusMapping } from '@/lib/utils'
 
-import useWebSocket from 'react-use-websocket'
 import { ScrollArea } from '../ui/scroll-area'
 
 const users = [
@@ -66,49 +65,79 @@ const users = [
 ] as const
 
 type User = (typeof users)[number]
+type Message = {
+  role: string
+  content: string
+  metadata?: string
+}
 
 export function CardsChat({ chatId }: { chatId: string }) {
   const socketUrl = `ws://localhost:8080/api/v1/ws/${chatId}`
   const [open, setOpen] = React.useState(false)
   const [selectedUsers, setSelectedUsers] = React.useState<User[]>([])
-
-  const onNewMessage = (message: string) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        role: 'agent',
-        content: message
-      }
-    ])
-  }
-  const { sendMessage, readyState } = useWebSocket(socketUrl, {
-    onMessage(event) {
-      onNewMessage(event.data)
-    }
-  })
-
-  const connectionStatus = connectionStatusMapping(readyState)
-
-  const [messages, setMessages] = React.useState([
+  const [messages, setMessages] = React.useState<Message[]>([
     {
       role: 'agent',
-      content: 'Hi, how can I help you today?'
-    },
-    {
-      role: 'user',
-      content: "Hey, I'm having trouble with my account."
-    },
-    {
-      role: 'agent',
-      content: 'What seems to be the problem?'
-    },
-    {
-      role: 'user',
-      content: "I can't log in."
+      content: 'Hi, how can I help you today?',
+      metadata: 'AAA'
     }
   ])
   const [input, setInput] = React.useState('')
   const inputLength = input.trim().length
+
+  const appendToLastAgentMessage = (newContent: string) => {
+    setMessages((prevMessages) => {
+      const lastMessage = prevMessages[prevMessages.length - 1]
+
+      if (lastMessage.role === 'agent') {
+        return [
+          ...prevMessages.slice(0, prevMessages.length - 1),
+          {
+            ...lastMessage,
+            content: lastMessage.content + newContent
+          }
+        ]
+      }
+
+      // if last message not from agent, return as is (unlikely, but safe)
+      return prevMessages
+    })
+  }
+  // TODO: Combine both the appendFuncs
+  const appendMetadataMessage = (metadata: string) => {
+    setMessages((prevMessages) => {
+      const lastMessage = prevMessages[prevMessages.length - 1]
+
+      if (lastMessage.role === 'agent') {
+        return [
+          ...prevMessages.slice(0, prevMessages.length - 1),
+          {
+            ...lastMessage,
+            metadata: JSON.stringify(metadata)
+          }
+        ]
+      }
+
+      return prevMessages
+    })
+  }
+
+  const { sendMessage, readyState } = useWebSocket(socketUrl, {
+    onMessage(event) {
+      try {
+        const messageData = JSON.parse(event.data)
+        if (messageData.content) {
+          appendToLastAgentMessage(messageData.content)
+        } else if (messageData.metadata) {
+          // Handle metadata
+          appendMetadataMessage(messageData.metadata)
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error)
+      }
+    }
+  })
+  const connectionStatus = connectionStatusMapping(readyState)
 
   const sendMessageHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -118,22 +147,24 @@ export function CardsChat({ chatId }: { chatId: string }) {
       {
         role: 'user',
         content: input
+      },
+      {
+        role: 'agent',
+        content: ''
       }
     ])
     sendMessage(input)
     setInput('')
   }
 
-  console.log(messages)
-
   return (
     <>
-      <Card className=" ">
+      <Card className="flex-auto">
         <CardHeader className="flex flex-row items-center">
           <div className="flex items-center space-x-4">
             <Avatar>
               <AvatarImage src="/avatars/01.png" alt="Image" />
-              <AvatarFallback>OM</AvatarFallback>
+              <AvatarFallback>{chatId}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-sm font-medium leading-none">Sofia Davis</p>
@@ -168,20 +199,27 @@ export function CardsChat({ chatId }: { chatId: string }) {
         <CardContent>
           <ScrollArea className="h-screen">
             <div className="space-y-4 h-max w-full flex flex-col">
-              {messages.map((message, index) => (
-                <Markdown
-                  key={index}
-                  className={cn(
-                    'flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
-                    message.role === 'user'
-                      ? 'ml-auto bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  )}
-                  rehypePlugins={[rehypeHighlight]}
-                >
-                  {message.content}
-                </Markdown>
-              ))}
+              {messages.map((message, index) =>
+                message.content.length == 0 ? (
+                  <Loader className="animate-spin" />
+                ) : (
+                  <>
+                    <Markdown
+                      key={index}
+                      className={cn(
+                        'flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
+                        message.role === 'user'
+                          ? 'ml-auto bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      )}
+                      rehypePlugins={[rehypeHighlight]}
+                    >
+                      {message.content}
+                    </Markdown>
+                    <p className="bg-red-200">{message.metadata ?? ''}</p>
+                  </>
+                )
+              )}
             </div>
           </ScrollArea>
         </CardContent>

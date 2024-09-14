@@ -1,9 +1,11 @@
 import { CardsChat } from '@/components/containers/chat'
+import Console from '@/components/containers/console'
 
-const ChatPage = ({ chatId }: { chatId: string }) => {
+const ChatPage = ({ params }: { params: { chatId: string } }) => {
   return (
-    <div>
-      <CardsChat chatId={chatId} />
+    <div className="flex">
+      <CardsChat chatId={params.chatId} />
+      <Console chatId={params.chatId} />
     </div>
   )
 }

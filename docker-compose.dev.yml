@@ -3,25 +3,84 @@ services:
     build:
       context: ./backend
       dockerfile: dev.Dockerfile
+    networks:
+      - multirag_network
     ports:
-      - "8000:8000"
-      - "8088:8088"
+      - '8080:8080'
     volumes:
-      - ./backend:/app/backend
+      - type: bind
+        source: ./backend
+        target: /app/backend
     environment:
       - POETRY_NO_INTERACTION=1
       - POETRY_VIRTUALENVS_IN_PROJECT=1
       - POETRY_VIRTUALENVS_CREATE=1
       - POETRY_CACHE_DIR=/tmp/poetry_cache
+      - ENVIRONMENT=${ENVIRONMENT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=postgres-server
+    depends_on:
+      - chroma-server
+      - postgres-server
   frontend:
     build:
       context: ./frontend
       dockerfile: dev.Dockerfile
+    networks:
+      - multirag_network
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
-      - ./frontend:/app   # Bind mount
+      - type: bind
+        source: ./frontend
+        target: /app
     environment:
       - NODE_ENV=development
+    depends_on:
+      - chroma-server
+      - postgres-server
+      - backend
+  postgres-server:
+    image: postgres:16.4-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'multirag_dev', '-d', 'multirag_db']
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - multirag_network
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  chroma-server:
+    image: ghcr.io/chroma-core/chroma:latest
+    environment:
+      - IS_PERSISTENT=1
+    networks:
+      - multirag_network
+    ports:
+      - 8000:8000
+    volumes:
+      - chroma:/chroma/chroma
+
+volumes:
+  postgres_data:
+  chroma:
+
+networks:
+  multirag_network:
+    external: true

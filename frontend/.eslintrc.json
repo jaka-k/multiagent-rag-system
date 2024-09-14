@@ -83,7 +83,7 @@
           ["@containers", "./src/components/containers"],
           ["@hooks", "./src/hooks"],
           ["@images", "./images"],
-          ["@utils", "./utils"]
+          ["@lib", "./src/lib"]
         ],
         "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
       }

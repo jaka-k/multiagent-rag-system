@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputDTO
 from statemachine.services.chat_service import ChatService
@@ -13,23 +14,19 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-
-            # Step 2: Create a ChatInputDTO object
             chat_input = ChatInputDTO(user_input=data, thread_id=chat_id)
 
-            # Step 3: Process the input through the ChatService
-            responses = chat_service.handle_chat(chat_input)
+            response_generator = chat_service.handle_chat(chat_input)
 
-            # Step 4: Stream the responses back to the WebSocket client
-            for response in responses:
-                # Directly send each response in the stream
-                await websocket.send_text(
-                    str(response.response)
-                )  # Assuming response is a simple data structure
-                # Use ChatoutputDTO
-                await websocket.send_text(
-                    "----"
-                )  # Optional separator, as used in the console
+            for chat_output_dto in response_generator:
+
+                for content in chat_output_dto.stream_messages():
+                    if isinstance(content, dict):
+                        # This is the metadata
+                        await websocket.send_text(json.dumps({"metadata": content}))
+                    else:
+                        # This is a message content
+                        await websocket.send_text(json.dumps({"content": content}))
 
     except WebSocketDisconnect:
         print("Client disconnected")

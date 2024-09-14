@@ -1,5 +1,6 @@
+from langchain.callbacks import get_openai_callback
 from statemachine.agents.rag.rag_agent import LangChainChat
-from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputDTO
+from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputStreamDTO
 
 
 class ChatService:
@@ -7,10 +8,13 @@ class ChatService:
         self.langchain_chat = LangChainChat()
 
     def handle_chat(self, chat_input: ChatInputDTO):
-        response_stream = self.langchain_chat.process_input(
-            chat_input.user_input, chat_input.thread_id
-        )
-        responses = []
-        for response in response_stream:
-            responses.append(ChatOutputDTO(response=response))
-        return responses
+        with get_openai_callback() as cb:
+            response_stream = self.langchain_chat.process_chain_input(
+                chat_input.user_input, chat_input.thread_id
+            )
+
+            chat_output_dto = ChatOutputStreamDTO(
+                raw_stream=response_stream, metadata=cb
+            )
+
+            yield chat_output_dto

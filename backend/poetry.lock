@@ -1479,6 +1479,25 @@ openai = ">=1.40.0,<2.0.0"
 tiktoken = ">=0.7,<1"
 
 [[package]]
+name = "langchain-postgres"
+version = "0.0.9"
+description = "An integration package connecting Postgres and LangChain"
+optional = false
+python-versions = "<4.0.0,>=3.8.1"
+files = [
+    {file = "langchain_postgres-0.0.9-py3-none-any.whl", hash = "sha256:efbd8afbb7cc810fa6dfa87dd269e466c70d9af9f74aececcf47893e4b51535e"},
+    {file = "langchain_postgres-0.0.9.tar.gz", hash = "sha256:f68e1981e79f2130ae34053683b90eea63335d7ef451db3f870a36b48d5675ab"},
+]
+
+[package.dependencies]
+langchain-core = ">=0.1.50,<0.3"
+numpy = ">=1,<2"
+pgvector = ">=0.2.5,<0.3.0"
+psycopg = ">=3,<4"
+psycopg-pool = ">=3.2.1,<4.0.0"
+sqlalchemy = ">=2,<3"
+
+[[package]]
 name = "langchain-text-splitters"
 version = "0.2.2"
 description = "LangChain text splitting utilities"
@@ -1540,13 +1559,13 @@ psycopg-pool = ">=3.0.0,<4.0.0"
 
 [[package]]
 name = "langsmith"
-version = "0.1.108"
+version = "0.1.116"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.108-py3-none-any.whl", hash = "sha256:407f318b0989e33f2cd30bc2fbd443e4ddfa7c2a93de7f795fb6b119b015583c"},
-    {file = "langsmith-0.1.108.tar.gz", hash = "sha256:42f603e2d5770ba36093951bdb29eaab22451cb12ab8c062340c722cf60d4cec"},
+    {file = "langsmith-0.1.116-py3-none-any.whl", hash = "sha256:4b5ea64c81ba5ca309695c85dc3fb4617429a985129ed5d9eca00d1c9d6483f4"},
+    {file = "langsmith-0.1.116.tar.gz", hash = "sha256:5ccd7f5c1840f7c507ab3ee56334a1391de28c8bf72669782e2d82cafeefffa7"},
 ]
 
 [package.dependencies]
@@ -2299,6 +2318,19 @@ files = [
     {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
     {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
 ]
+
+[[package]]
+name = "pgvector"
+version = "0.2.5"
+description = "pgvector support for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pgvector-0.2.5-py2.py3-none-any.whl", hash = "sha256:5e5e93ec4d3c45ab1fa388729d56c602f6966296e19deee8878928c6d567e41b"},
+]
+
+[package.dependencies]
+numpy = "*"
 
 [[package]]
 name = "platformdirs"
@@ -3844,4 +3876,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "9e9680b9f6be7d3a3c3738ed77f82bddf55d2291e48bd584f8e9ef1e0a203bb2"
+content-hash = "1c00cd80e514a1e39ac83fc5c3f9ae3e42e6d9396959ea9da8e5b66049a91c8c"
