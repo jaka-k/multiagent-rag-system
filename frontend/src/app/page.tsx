@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+// Something like this: https://ui.shadcn.com/examples/tasks
+
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
