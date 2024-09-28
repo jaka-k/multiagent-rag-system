@@ -1,0 +1,143 @@
+import { ColumnDef, FilterFn } from '@tanstack/react-table'
+import { CheckCircleIcon, LucideIcon, XCircleIcon } from 'lucide-react'
+import { z } from 'zod'
+
+export type Chat = {
+  id: string
+  label: string
+  title: string
+  status: string
+  tokensUsed: number
+  lastUpdated: string
+}
+
+type StatusType = 'active' | 'non-active'
+
+export const tableSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  title: z.string(),
+  status: z.enum(['active', 'non-active']),
+  tokensUsed: z.number(),
+  lastUpdated: z.string()
+})
+
+const statusMappings: Record<StatusType, { label: string; icon: LucideIcon }> =
+  {
+    active: {
+      label: 'Active',
+      icon: CheckCircleIcon
+    },
+    'non-active': {
+      label: 'Non-Active',
+      icon: XCircleIcon
+    }
+  }
+
+type NumberFilterValue = {
+  operator: 'greaterThan' | 'lessThan'
+  value: number | undefined
+}
+
+export const numberComparison: FilterFn<Chat> = (
+  row,
+  columnId,
+  filterValue
+) => {
+  const cellValue = row.getValue<number>(columnId)
+  const { operator, value } = filterValue as NumberFilterValue
+
+  if (value === undefined) return true
+
+  if (operator === 'greaterThan') {
+    return cellValue > value
+  }
+
+  if (operator === 'lessThan') {
+    return cellValue < value
+  }
+
+  return true
+}
+
+export const dateBetween: FilterFn<Chat> = (row, columnId, filterValue) => {
+  const cellValue = new Date(row.getValue<string>(columnId))
+  const [start, end] = filterValue as [string | undefined, string | undefined]
+
+  if (start && end) {
+    return cellValue >= new Date(start) && cellValue <= new Date(end)
+  }
+
+  if (start) {
+    return cellValue >= new Date(start)
+  }
+
+  if (end) {
+    return cellValue <= new Date(end)
+  }
+
+  return true
+}
+
+// Define columns for the table
+export const getColumns = (
+  getLabelColorClass: (label: string) => string
+): ColumnDef<Chat>[] => [
+  {
+    accessorKey: 'id',
+    header: 'ID',
+    filterFn: 'includesString'
+  },
+  {
+    accessorKey: 'label',
+    header: 'Label',
+    cell: ({ getValue }) => {
+      const labelValue = getValue() as string
+      const colorClass =
+        getLabelColorClass(labelValue) || 'bg-gray-100 text-gray-800'
+      return (
+        <span
+          className={`px-2 py-1 rounded-full text-sm font-medium ${colorClass}`}
+        >
+          {labelValue}
+        </span>
+      )
+    },
+    filterFn: 'arrIncludes'
+  },
+  {
+    accessorKey: 'title',
+    header: 'Title',
+    cell: ({ row }) => <span>{row.getValue('title')}</span>,
+    filterFn: 'includesString'
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ getValue }) => {
+      const statusValue = getValue() as StatusType
+      const statusInfo = statusMappings[statusValue]
+      return (
+        <div className="flex items-center">
+          <span>{statusInfo.label}</span>
+          {statusInfo && (
+            <statusInfo.icon className="ml-2 h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+      )
+    },
+    filterFn: 'arrIncludes'
+  },
+  {
+    accessorKey: 'tokensUsed',
+    header: 'Tokens Used',
+    cell: ({ getValue }) => getValue<number>().toLocaleString(),
+    filterFn: numberComparison
+  },
+  {
+    accessorKey: 'lastUpdated',
+    header: 'Last Updated',
+    cell: ({ getValue }) => <span>{getValue<string>()}</span>,
+    filterFn: dateBetween
+  }
+]
