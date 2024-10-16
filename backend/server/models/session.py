@@ -1,80 +1,70 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import (
-    Column,
-    String,
-    ForeignKey,
-    DateTime,
-    Integer,
-)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, declarative_base
+from datetime import datetime, timezone
 
-Base = declarative_base()
+from server.models.area import Area
+from server.models.document import DocumentChunk
+from server.models.flashcard import Flashcard
+from server.models.user import User
+from sqlmodel import SQLModel, Field, Relationship
 
 
-class Session(Base):
-    __tablename__ = "sessions"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String, nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
-    area_id = Column(UUID(as_uuid=True), ForeignKey("area.id"))
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-    tokens_used = Column(Integer)
-    session_status = Column(String, nullable=True)
+class Session(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str
+    user_id: uuid.UUID = Field(foreign_key="user.id")
+    area_id: uuid.UUID = Field(foreign_key="area.id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    tokens_used: int = Field(default=None, nullable=True)
+    session_status: str = Field(default=None, nullable=True)
 
-    user = relationship("User", back_populates="sessions")
-    area = relationship("Area", back_populates="sessions")
-    messages = relationship("Message", back_populates="sessions")
-    flashcard_queue = relationship(
-        "FlashcardQueue", back_populates="sessions", uselist=False
+    user: "User" = Relationship(back_populates="sessions")
+    area: "Area" = Relationship(back_populates="sessions")
+    messages: list["Message"] = Relationship(back_populates="session")
+    flashcard_queue: "FlashcardQueue" = Relationship(
+        back_populates="session", sa_relationship_kwargs={"uselist": False}
     )
-    doc_chunk_queue = relationship(
-        "DocChunkQueue", back_populates="sessions", uselist=False
+    doc_chunk_queue: "DocChunkQueue" = Relationship(
+        back_populates="session", sa_relationship_kwargs={"uselist": False}
     )
-    custom_instruction_queue = relationship(
-        "CustomInstructionQueue", back_populates="sessions", uselist=False
+    custom_instruction_queue: "CustomInstructionQueue" = Relationship(
+        back_populates="session", sa_relationship_kwargs={"uselist": False}
     )
 
 
-class Message(Base):
-    __tablename__ = "messages"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("session.id"))
-    role = Column(String, nullable=False)
-    content = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+class Message(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    session_id: uuid.UUID = Field(foreign_key="session.id")
+    role: str
+    content: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    session = relationship("Session", back_populates="messages")
-
-
-class FlashcardQueue(Base):
-    __tablename__ = "flashcard_queues"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("session.id"), unique=True)
-    flashcard_data = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-
-    session = relationship("Session", back_populates="flashcard_queues")
-    flashcards = relationship("Flashcards", back_populates="flashcard_queues")
+    session: "Session" = Relationship(back_populates="messages")
 
 
-class DocChunkQueue(Base):
-    __tablename__ = "doc_chunk_queues"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("session.id"), unique=True)
-    created_at = Column(DateTime, default=datetime.now)
+class FlashcardQueue(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    session_id: uuid.UUID = Field(foreign_key="session.id", nullable=False)
+    flashcard_data: str = Field(default=None, nullable=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    session = relationship("Session", back_populates="doc_chunk_queues")
-    doc_chunks = relationship("DocumentChunks", back_populates="doc_chunk_queues")
+    session: "Session" = Relationship(back_populates="flashcard_queue")
+    flashcards: list["Flashcard"] = Relationship(back_populates="flashcard_queue")
 
 
-class CustomInstructionQueue(Base):
-    __tablename__ = "custom_instruction_queues"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("session.id"), unique=True)
-    instruction = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
+class DocChunkQueue(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    session_id: uuid.UUID = Field(foreign_key="session.id", nullable=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    session = relationship("Session", back_populates="custom_instruction_queues")
+    session: "Session" = Relationship(back_populates="doc_chunk_queue")
+    doc_chunks: list["DocumentChunk"] = Relationship(back_populates="doc_chunk_queue")
+
+
+class CustomInstructionQueue(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    session_id: uuid.UUID = Field(foreign_key="session.id", nullable=False)
+    instruction: str = Field(default=None, nullable=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    session: "Session" = Relationship(back_populates="custom_instruction_queue")

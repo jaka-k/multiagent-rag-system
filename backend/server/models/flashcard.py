@@ -1,40 +1,28 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    ForeignKey,
-    DateTime,
-)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from pytz import timezone
+from server.models.area import Area
+from server.models.session import FlashcardQueue
+from sqlmodel import SQLModel, Field, Relationship
 
 
-class Deck(Base):
-    __tablename__ = "decks"
-    id = Column(Integer, primary_key=True)
-    # anki_id = Column(Integer, primary_key=True)  # Uncomment if needed
-    name = Column(String, nullable=False)
-    area_id = Column(UUID(as_uuid=True), ForeignKey("area.id"))
+class Deck(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    # anki_id: int = Field(primary_key=True)
+    name: str
+    area_id: uuid.UUID = Field(foreign_key="area.id")
 
-    area = relationship("Area", back_populates="decks")
-    flashcards = relationship("Flashcards", back_populates="decks")
+    area: "Area" = Relationship(back_populates="decks")
+    flashcards: list["Flashcard"] = Relationship(back_populates="deck")
 
 
-class Flashcard(Base):
-    __tablename__ = "flashcards"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    front = Column(String, nullable=False)
-    back = Column(String, nullable=False)
-    deck_id = Column(Integer, ForeignKey("deck.id"), nullable=True)
-    queue_id = Column(
-        UUID(as_uuid=True), ForeignKey("flashcardqueue.id"), nullable=True
-    )
-    created_at = Column(DateTime, default=datetime.now)
+class Flashcard(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    front: str
+    back: str
+    deck_id: int = Field(foreign_key="deck.id", nullable=True)
+    queue_id: uuid.UUID = Field(foreign_key="flashcardqueue.id", nullable=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    deck = relationship("Deck", back_populates="flashcards")
-    queue = relationship("FlashcardQueue", back_populates="flashcards")
+    deck: "Deck" = Relationship(back_populates="flashcards")
+    queue: "FlashcardQueue" = Relationship(back_populates="flashcards")

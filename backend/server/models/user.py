@@ -1,35 +1,27 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
-from sqlalchemy import Column, DateTime, String, Boolean, ForeignKey, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, declarative_base
-
-Base = declarative_base()
-
-
-class User(Base):
-    __tablename__ = "users"
-    __table_args__ = (
-        UniqueConstraint("email"),
-        UniqueConstraint("username"),
-    )
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String, nullable=False)
-    username = Column(String, nullable=False, index=True)
-    hashed_password = Column(String, nullable=False)
-    disabled = Column(Boolean, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-    sessions = relationship("Session", back_populates="users")
-    areas = relationship("Area", back_populates="users")
-    tokens = relationship("Token", back_populates="users")
+from server.models.area import Area
+from server.models.session import Session
+from sqlalchemy import UniqueConstraint
+from sqlmodel import Field, Relationship, SQLModel
 
 
-class Token(Base):
-    __tablename__ = "tokens"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    token = Column(String, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
+class User(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("email"), UniqueConstraint("username"))
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    email: str
+    username: str = Field(index=True)
+    hashed_password: str
+    disabled: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    user = relationship("User", back_populates="tokens")
+    sessions: list["Session"] = Relationship(back_populates="user")
+    areas: list["Area"] = Relationship(back_populates="user")
+    tokens: list["Token"] = Relationship(back_populates="user")
+
+
+class Token(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
+    token: str = Field(index=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id")

@@ -1,47 +1,40 @@
+from typing import List, Optional
 import uuid
-from datetime import datetime
-from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    ForeignKey,
-    DateTime,
-)
-from sqlalchemy.dialects.postgresql import UUID  # Adjust if not using PostgreSQL
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from datetime import datetime, timezone
+from server.models.document import Document
+from server.models.flashcard import Deck
+from server.models.user import User
+from sqlmodel import Field, Relationship, SQLModel
+from server.models.session import Session
 
 
-class Area(Base):
-    __tablename__ = "areas"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+class Area(SQLModel, table=True):
 
-    label = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-    tokens_used = Column(Integer, nullable=False)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
+    name: str
+    user_id: uuid.UUID = Field(foreign_key="user.id")
 
-    user = relationship("User", back_populates="areas")
-    sessions = relationship("Sessions", back_populates="areas")
-    decks = relationship("Deck", back_populates="areas")
-    instructions = relationship("Instructions", back_populates="areas")
+    label: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    tokens_used: int
+
+    user: User = Relationship(back_populates="areas")
+    instructions: List["Instruction"] = Relationship(back_populates="area")
+    decks: Deck = Relationship(back_populates="area")
+    sessions: List["Session"] = Relationship(back_populates="area")
+    documents: List["Document"] = Relationship(back_populates="area")
 
     # Connect to embeddings somehow
-    # epubs ??
 
 
-class Instruction(Base):
-    __tablename__ = "instructions"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    area_id = Column(UUID(as_uuid=True), ForeignKey("area.id"), nullable=False)
-    context_text = Column(String, nullable=False)
-    model = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+class Instruction(SQLModel, table=True):
 
-    # Relationship to Area
-    area = relationship("Area", back_populates="instructions")
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
+    area_id: uuid.UUID = Field(foreign_key="areas.id")
+    context_text: str
+    model: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    area: Area = Relationship(back_populates="instructions")
