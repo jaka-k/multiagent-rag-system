@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
 import {
   Table,
@@ -23,6 +24,7 @@ import {
   getFilteredRowModel,
   useReactTable
 } from '@tanstack/react-table'
+import { PlusIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 
@@ -112,6 +114,10 @@ const ChatTable = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center py-4">
+        <Button className="bg-stone-400 pr-4" variant="default" size="sm">
+          <PlusIcon className="mr-2 h-4 w-4" />
+          New Chat
+        </Button>
         <Input
           placeholder="Search chats..."
           value={globalFilter ?? ''}

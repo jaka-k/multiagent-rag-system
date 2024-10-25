@@ -1,9 +1,17 @@
 import chromadb
 from chromadb.config import Settings
+from jinja2 import Environment
+from tools.env import get_environment_variable
+
+Environment = get_environment_variable("ENVIRONMENT")
+ssl_enabled = not Environment == "dev"
 
 
-def get_db_client():
+def get_chroma_db_client():
     client = chromadb.HttpClient(
-        host="localhost", port=8000, ssl=False, settings=Settings(allow_reset=True)
+        host="chroma-server",
+        port=8000,
+        ssl=False,
+        settings=Settings(allow_reset=True),
     )
     return client

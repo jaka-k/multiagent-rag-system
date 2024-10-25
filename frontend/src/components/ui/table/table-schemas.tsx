@@ -86,7 +86,10 @@ export const getColumns = (
   {
     accessorKey: 'id',
     header: 'ID',
-    filterFn: 'includesString'
+    filterFn: 'includesString',
+    cell: ({ row }) => (
+      <span className="text-slate-600 text-xs">{row.getValue('id')}</span>
+    )
   },
   {
     accessorKey: 'label',

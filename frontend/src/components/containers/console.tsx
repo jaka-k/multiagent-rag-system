@@ -1,10 +1,13 @@
+/* eslint-disable no-console */
+
 'use client'
 
 import { Card } from '@components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import { cn } from '@lib/utils'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { BadgeMinus, BadgePlus, Bot, Club, FileText } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type Flashcard = {
   id: string
@@ -21,37 +24,78 @@ const Console = ({ chatId }: { chatId: string }) => {
       back: 'This class restricts the shrinking feature, it has the ability of an item to shrink compared to content present inside the same container.'
     },
     {
-      id: 'string',
+      id: '1213213',
       front: 'flex-shrink-0',
       back: 'This class restricts the shrinking feature, it has the ability of an item to shrink compared to content present inside the same container.'
     }
   ])
-  const eventSource = new EventSource(
-    `http://localhost:8080/flashcards-sse/${chatId}`
-  )
 
-  eventSource.onopen = () => {
-    console.log('EventSource connected')
-    setIsConnected(true)
-  }
+  useEffect(() => {
+    const fetchData = async () => {
+      fetchEventSource(
+        `http://localhost:8080/api/v1/flashcards-sse/${chatId}`,
+        {
+          async onopen(response) {
+            if (
+              response.ok &&
+              response.headers.get('content-type') === 'text/event-stream'
+            ) {
+              console.log('EventSource connected')
+              setIsConnected(true)
+            } else if (
+              response.status >= 400 &&
+              response.status < 500 &&
+              response.status !== 429
+            ) {
+              console.error('Client-side error occurred:', response)
+              throw new Error('Fatal error')
+            } else {
+              console.warn('Retryable error occurred, retrying...')
+              throw new Error('Retriable error')
+            }
+          },
 
-  // eventSource can have event listeners based on the type of event.
-  // Bydefault for message type of event it have the onmessage method which can be used directly or this same can be achieved through explicit eventlisteners
-  eventSource.addEventListener('flashcardsUpdate', (event) => {
-    const data: Flashcard = JSON.parse(event.data)
-    setFlashcards((prev) => [...prev, data])
-    console.log('FlashcardUpdated', flashcards)
-  })
+          onmessage(event) {
+            console.log(event)
 
-  // In case of any error, if eventSource is not closed explicitely then client will retry the connection a new call to backend will happen and the cycle will go on.
-  eventSource.onerror = (error) => {
-    console.error('EventSource failed', error)
-    eventSource.close()
-  }
+            if (event.event === 'flashcards_update') {
+              const data = JSON.parse(event.data)
+              console.log('FlashcardsUpdated', data)
+              setFlashcards((prev) => [...prev, data])
+            }
+          },
+
+          onclose() {
+            console.log('Connection closed by server, retrying...')
+            setIsConnected(false)
+            throw new Error('Connection closed')
+          },
+
+          onerror(err) {
+            console.error('Error occurred during SSE connection:', err)
+
+            if (err.message === 'Fatal error') {
+              console.error('Fatal error, stopping SSE connection.')
+              throw err
+            } else {
+              console.warn('Recoverable error, retrying connection...')
+            }
+          }
+        }
+      )
+    }
+
+    fetchData()
+
+    // Clean up when the component unmounts
+    return () => {
+      console.log('EventSource closed')
+    }
+  }, [chatId])
 
   return (
     <div className="flex-shrink-0 space-y-3 bg-gray-300 p-4">
-      <Tabs defaultValue="documents" className="h-full space-y-6">
+      <Tabs defaultValue="flashcards" className="h-full space-y-6">
         <div className="space-between flex items-center">
           <TabsList>
             <TabsTrigger value="documents" className="space-x-2">
@@ -82,7 +126,10 @@ const Console = ({ chatId }: { chatId: string }) => {
         </TabsContent>
         <TabsContent value="flashcards">
           {flashcards.map((element) => (
-            <Card className="p-4 bg-slate-50 max-w-[25vw] relative">
+            <Card
+              key={element.id}
+              className="p-4 bg-slate-50 max-w-[25vw] relative"
+            >
               <div className="flex space-x-1 absolute top-2 right-2">
                 <button className="active:animate-ping">
                   <BadgeMinus

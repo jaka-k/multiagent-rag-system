@@ -4,8 +4,8 @@ from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputStreamDTO
 
 
 class ChatService:
-    def __init__(self):
-        self.langchain_chat = LangChainChat()
+    def __init__(self, chat_id: str):
+        self.langchain_chat = LangChainChat(chat_id)
 
     def handle_chat(self, chat_input: ChatInputDTO):
         with get_openai_callback() as cb:
@@ -18,3 +18,6 @@ class ChatService:
             )
 
             yield chat_output_dto
+
+    def get_chat_history(self):
+        return self.langchain_chat.chat_history.get_messages()

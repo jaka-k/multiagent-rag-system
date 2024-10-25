@@ -11,7 +11,7 @@ class User(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     email: str
     username: str = Field(index=True)
-    hashed_password: str
+    hashed_password: bytes = Field(default=False)
     disabled: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -25,3 +25,7 @@ class Token(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
     token: str = Field(index=True)
     user_id: uuid.UUID = Field(foreign_key="user.id")
+    expires_at: datetime
+    revoked: bool = False
+
+    user: User = Relationship(back_populates="tokens")

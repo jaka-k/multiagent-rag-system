@@ -20,7 +20,7 @@ DATA_PATH = "data"
 
 
 def main():
-    placeholderPath = "/Users/jakakrajnc/Code/python/multiagent-rag-system/backend/tools/epub_parser/data/mastering-go.epub"
+    placeholderPath = "/Users/jakakrajnc/Code/python/multiagent-rag-system/backend/tools/epub_parser/data/100-go-mistakes.epub"
     populate(placeholderPath)
 
 

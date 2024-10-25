@@ -1,8 +1,7 @@
 from typing import List
-from statemachine.embeddings.embedding import Embedding
 from statemachine.embeddings.utils import format_chapter_id
-from statemachine.model.document_chunk import DocumentChunk
-from statemachine.model.epub import Chapter, Epub
+from statemachine.models.document_chunk import DocumentChunk
+from statemachine.models.epub import Chapter, Epub
 
 
 class DocumentChunkService:

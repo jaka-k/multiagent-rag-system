@@ -1,15 +1,15 @@
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputDTO
+from statemachine.dtos.chat_dto import ChatInputDTO
 from statemachine.services.chat_service import ChatService
 
 
 router = APIRouter()
-chat_service = ChatService()
 
 
 @router.websocket("/ws/{chat_id}")
 async def websocket_endpoint(websocket: WebSocket, chat_id: str):
+    chat_service = ChatService(chat_id)
     await websocket.accept()
     try:
         while True:

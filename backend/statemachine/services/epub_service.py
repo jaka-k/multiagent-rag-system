@@ -1,5 +1,5 @@
-from statemachine.dtos.epub_dto import EpubDTO, ChapterDTO
-from statemachine.model.epub import Epub, Chapter
+from statemachine.dtos.epub_dto import EpubDTO
+from statemachine.models.epub import Epub, Chapter
 
 
 class EpubService:
