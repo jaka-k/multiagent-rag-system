@@ -1,35 +1,66 @@
 # https://python.langchain.com/v0.2/docs/tutorials/qa_chat_history/#agent-constructor
+import uuid
+
+
 from langchain_openai import ChatOpenAI
-from statemachine.agents.rag.templates import SYSTEM_PROMPT
-from statemachine.db.pg_config import get_chat_history, get_db_checkpoint
+from statemachine.agents.rag.rag_agent_history import get_chat_history
+from statemachine.agents.rag.templates import (
+    SYSTEM_PROMPT,
+    CONTEXTUALIZE_Q_SYSTEM_PROMPT,
+)
+from langchain_core.prompts import MessagesPlaceholder
+from langchain.chains import create_retrieval_chain, create_history_aware_retriever
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from statemachine.embeddings.retriever import get_retriever_tool
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage
-from langchain.prompts import PromptTemplate
+from langchain.prompts import ChatPromptTemplate
 
 
 class LangChainChat:
-    def __init__(self, chat_id: str):
-        self.chat_history = get_chat_history(chat_id)
+    def __init__(self, chat_id: uuid.UUID):
+        self.chat_id = chat_id
         self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             temperature=0,
             stream_usage=True,
         )
-        self.rag_prompt = PromptTemplate(
-            template=SYSTEM_PROMPT, input_variables=["question", "context"]
-        )
-        # TODO ADD PERSISTENCE -> FROM LANGGRAPH SETUP
-        self.memory = get_db_checkpoint()
+        self.llm_mini = ChatOpenAI(model="gpt-4o-mini", temperature=0)
         self.retriever_tool = get_retriever_tool()
-        self.agent_chain = self.rag_prompt | self.llm | StrOutputParser()
 
-    def process_chain_input(self, user_input: str, thread_id: str):
-        CONTEXT = self.retriever_tool.invoke(user_input)
+        self.history_aware_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", CONTEXTUALIZE_Q_SYSTEM_PROMPT),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
+        self.rag_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", SYSTEM_PROMPT),
+                ("human", "{input}"),
+            ]
+        )
 
-        self.chat_history.add_message([HumanMessage(content="bark")])
+        self.history_aware_retriever = create_history_aware_retriever(
+            self.llm_mini, self.retriever_tool, self.history_aware_prompt
+        )
 
-        return self.agent_chain.stream(
-            {"question": user_input, "context": CONTEXT},
-            config={"configurable": {"thread_id": thread_id}},
+        self.qa_chain = create_stuff_documents_chain(self.llm, self.rag_prompt)
+
+        self.agent_chain = create_retrieval_chain(
+            self.history_aware_retriever, self.qa_chain
+        )
+
+    async def process_chain_input(self, user_input: str, thread_id: uuid.UUID):
+        chat_history = await get_chat_history(self.chat_id)
+
+        return RunnableWithMessageHistory(
+            self.agent_chain,
+            get_session_history=lambda: chat_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="answer",
+        ).stream(
+            {"input": user_input},
+            config={"configurable": {"session_id": thread_id}},
         )
