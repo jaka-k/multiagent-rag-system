@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn, connectionStatusMapping } from '@/lib/utils'
 
+import { ChatData, Message } from '@types'
 import { ScrollArea } from '../ui/scroll-area'
 
 const users = [
@@ -60,23 +61,14 @@ const users = [
 ] as const
 
 type User = (typeof users)[number]
-type Message = {
-  role: string
-  content: string
-  metadata?: string
-}
 
-export function CardsChat({ chatId }: { chatId: string }) {
-  const socketUrl = `ws://localhost:8080/api/v1/ws/${chatId}`
+export function CardsChat({ chatData }: { chatData: ChatData }) {
+  const socketUrl = `ws://localhost:8080/api/v1/ws/${chatData.id}`
   const [open, setOpen] = React.useState(false)
   const [selectedUsers, setSelectedUsers] = React.useState<User[]>([])
-  const [messages, setMessages] = React.useState<Message[]>([
-    {
-      role: 'agent',
-      content: 'Hi, how can I help you today?',
-      metadata: 'AAA'
-    }
-  ])
+  const [messages, setMessages] = React.useState<Message[]>(
+    chatData.messages ?? []
+  )
   const [input, setInput] = React.useState('')
   const inputLength = input.trim().length
 
@@ -158,7 +150,7 @@ export function CardsChat({ chatId }: { chatId: string }) {
         <CardHeader className="flex flex-row items-center">
           <div className="flex items-center space-x-4">
             <Avatar>
-              <AvatarFallback>{chatId}</AvatarFallback>
+              <AvatarFallback>{chatData.id}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-sm font-medium leading-none">Sofia Davis</p>
@@ -199,7 +191,7 @@ export function CardsChat({ chatId }: { chatId: string }) {
                 ) : (
                   <>
                     <Markdown
-                      key={index}
+                      key={message.id}
                       className={cn(
                         'flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
                         message.role === 'user'
@@ -210,7 +202,6 @@ export function CardsChat({ chatId }: { chatId: string }) {
                     >
                       {message.content}
                     </Markdown>
-                    <p className="bg-red-200">{message.metadata ?? ''}</p>
                   </>
                 )
               )}

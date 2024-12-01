@@ -1,35 +1,41 @@
-from typing import Dict, Any, Optional
-from pydantic import BaseModel
+import uuid
 
-from langchain_core.messages.ai import AIMessage
+from pydantic import BaseModel
 
 
 class ChatInputDTO(BaseModel):
     user_input: str
-    thread_id: str
+    thread_id: uuid.UUID
+
+
+class MetaDataDTO(BaseModel):
+    total_tokens: int
+    prompt_tokens: int
+    completion_tokens: int
+    total_cost: float
 
 
 class ChatOutputStreamDTO:
     def __init__(self, raw_stream, metadata):
         self.raw_stream = raw_stream
-        self.metadata = metadata
 
-    def stream_messages(self):
+        self.metadata = MetaDataDTO(
+            total_tokens=metadata.total_tokens,
+            prompt_tokens=metadata.prompt_tokens,
+            completion_tokens=metadata.completion_tokens,
+            total_cost=metadata.total_cost,
+        )
+
+    async def stream_messages(self):
         try:
-            for message in self.raw_stream:
+            async for message in self.raw_stream:
                 yield message
             yield self.get_metadata()
         except Exception as e:
-            # Handle exceptions (e.g., logging)
+            # TODO: Handle exceptions (e.g., logging)
             print(f"Error processing stream: {e}")
-            # Optionally, you can re-raise the exception or yield an error message
+            # raise the exception or yield an error message
             raise e
 
-    def get_metadata(self):
-
-        return {
-            "total_tokens": self.metadata.total_tokens,
-            "prompt_tokens": self.metadata.prompt_tokens,
-            "completion_tokens": self.metadata.completion_tokens,
-            "total_cost": self.metadata.total_cost,
-        }
+    def get_metadata(self) -> MetaDataDTO:
+        return self.metadata
