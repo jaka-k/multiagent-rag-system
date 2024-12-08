@@ -6,7 +6,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 class Deck(SQLModel, table=True):
     id: int = Field(primary_key=True)
-    # anki_id: int = Field(primary_key=True)
+    anki_id: int = Field(index=True)
     name: str
     area_id: uuid.UUID = Field(foreign_key="area.id")
     area: "Area" = Relationship(back_populates="deck")  # type: ignore
@@ -16,6 +16,7 @@ class Deck(SQLModel, table=True):
 
 class Flashcard(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    anki_id: int = Field(index=True)
     front: str
     back: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -23,5 +24,7 @@ class Flashcard(SQLModel, table=True):
     deck_id: Optional[int] = Field(foreign_key="deck.id", nullable=True)
     deck: Optional["Deck"] = Relationship(back_populates="flashcards")
 
-    queue_id: uuid.UUID = Field(foreign_key="flashcardqueue.id", nullable=True)
+    queue_id: Optional[uuid.UUID] = Field(
+        foreign_key="flashcardqueue.id", nullable=True
+    )
     queue: Optional["FlashcardQueue"] = Relationship(back_populates="flashcards")  # type: ignore
