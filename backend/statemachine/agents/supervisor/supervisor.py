@@ -1,21 +1,40 @@
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 
-from statemachine.agents.flashcards.flashcard_agents import FlashcardAgent
-from statemachine.agents.summarizer.summarizer_agent import SummarizerAgent
+from statemachine.agents.analysis.knowledge_identification_agent import KnowledgeIdentificationAgent
+from statemachine.agents.analysis.summarizer_agent import SummarizerAgent
+from statemachine.agents.flashcards.flashcard_agent import FlashcardAgent
 from statemachine.agents.supervisor.supervisor_state import SupervisorAgentState
 from statemachine.agents.web_search.web_search_agent import WebSearchAgent
 
 
 class SupervisorAgent:
     def __init__(self):
-        """
-        Initialize the SupervisorAgent and set up the state graph with conditional branching.
-        """
         self.state = SupervisorAgentState
+        self.knowledge_agent = KnowledgeIdentificationAgent()
         self.flashcard_agent = FlashcardAgent()
         self.web_search_agent = WebSearchAgent()
         self.summarizer_agent = SummarizerAgent()
+
+        self.supervisor_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        self.knowledge_gaps_prompt = PromptTemplate.from_template(template="""
+        Examine the transcript of the user’s exchange with the system, along with any additional context from retrieved documents. 
+        Identify the key concepts, ideas, or topics that the user has not fully mastered or finds confusing. For each concept, 
+        provide details about it's relevance, how it connects to the user’s question, and what sub-topics the user should review.
+        
+        ###
+        
+        {question}
+        
+        ###
+        
+        {llm_response}
+        
+        """)
+        self.knowledge_gaps_chain = self.knowledge_gaps_prompt | self.supervisor_llm | StrOutputParser()
 
         # TODO: add logging
         # logging.getLogger(self.name)
@@ -24,73 +43,53 @@ class SupervisorAgent:
 
         builder.add_edge(START, "supervisor")
         builder.add_node("supervisor", self.supervisor_node)
+        builder.add_node("knowledge_analysis", self.knowledge_agent.analyze)
         builder.add_node("flashcard", self.flashcard_agent.invoke)
         builder.add_node("web_search", self.web_search_agent.invoke)
         builder.add_node("summarizer", self.summarizer_agent.invoke)
 
-        ## https://langchain-ai.github.io/langgraph/how-tos/branching/
+        builder.add_edge("supervisor", "knowledge_analysis")
 
         builder.add_conditional_edges(
-            "supervisor",
-            lambda state: self.determine_next_nodes(),
-            then="summarizer"  # after these branches, go to summarizer
+            "knowledge_analysis",
+            lambda state: determine_next_nodes(state),
+            then="summarizer"
         )
 
         builder.add_edge("summarizer", END)
 
         self.graph = builder.compile()
 
-    def supervisor_node(self) -> dict:
-        """
-        The supervisor node. This is where you run your supervisor prompt logic.
-        You might run a prompt here that determines what to do:
+    async def invoke(self, load: dict) -> SupervisorAgentState:
+        self.state = SupervisorAgentState(
+            question=load.get("question", ""),
+            llm_response=load.get("llm_response", ""),
+            knowledge_gaps="",
+            flashcard_agent=False,
+            web_search_agent=False,
+            documents=load.get("documents", [])
+        )
 
-        For example, after running a prompt with a language model:
-        state["web_search"] = True/False
-        state["flashcard"] = True/False
+        return await self.graph.ainvoke(self.state)
 
-        Additionally, you might store the chosen next step in state["next"] if desired,
-        but here we rely on `determine_next_nodes`.
-        """
-        # Pseudocode for running your supervisor prompt:
-        # response = run_supervisor_prompt(state)
-        # state["web_search"] = response.get("use_web_search", False)
-        # state["flashcard"] = response.get("create_flashcards", False)
+    def supervisor_node(self, state: SupervisorAgentState) -> dict:
+        question = state.get("question", "")
+        llm_response = state.get("llm_response", "")
+        documents = "\n".join(state.get("documents", []))
 
-        # Ensure defaults if not set:
+        state["knowledge_gaps"] = self.knowledge_gaps_chain.invoke({
+            "question": question,
+            "llm_response": llm_response,
+            "documents": documents
+        })
 
-        self.state.setdefault("web_search_agent", False)
-        self.state.setdefault("flashcard_agent", False)
-
-        return self.state
-
-
-    def determine_next_nodes(self):
-        """
-        Determine which nodes to run next based on state booleans.
-        If both are True, return ["flashcard", "web_search"] or ["web_search", "flashcard"]
-        depending on desired order. If one is True, return that single node.
-        If none is True, return an empty list which will send us directly to summarizer.
-
-        According to the docs for branching, we can return:
-        - A single node name (string)
-        - A list of node names in the order we want them to run
-        - An empty list or None if we want to skip directly to the `then` node (summarizer)
-        """
-        next_nodes = []
-        if self.state.get("flashcard", False):
-            next_nodes.append("flashcard")
-        if self.state.get("web_search", False):
-            next_nodes.append("web_search")
-
-        # If no nodes selected, return empty to skip to summarizer
-        return next_nodes if next_nodes else []
+        return state
 
 
-    async def invoke(self, load: dict):
-        """
-        Invoke the state graph with the given load.
-
-        :param load: A dictionary representing the state to be processed.
-        """
-        return await self.graph.invoke(load)
+def determine_next_nodes(state: SupervisorAgentState):
+    next_nodes = []
+    if state.get("flashcard_agent", False):
+        next_nodes.append("flashcard")
+    if state.get("web_search_agent", False):
+        next_nodes.append("web_search")
+    return next_nodes if next_nodes else []

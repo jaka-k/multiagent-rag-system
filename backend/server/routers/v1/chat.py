@@ -7,6 +7,8 @@ from server.db.dtos.session_dto import SessionDTO
 from server.models.session import Session
 
 from sqlmodel import select
+
+from server.service.supervisor_server_service import SupervisorServerService
 from statemachine.dtos.chat_dto import ChatInputDTO, MetaDataDTO
 from statemachine.services.chat_service import ChatService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +46,8 @@ async def websocket_endpoint(
     chat_service = ChatService(chat_id, session)
     chat_controller = ChatController(chat_id, session)
 
+    supervisor_service = SupervisorServerService(session)
+
     await websocket.accept()
     try:
         while True:
@@ -55,7 +59,7 @@ async def websocket_endpoint(
             response_generator = chat_service.handle_chat(chat_input)
             response_content_collector = ""
 
-            print("štart")
+            documents = []
 
             async for chat_output_dto in response_generator:
                 print(f"Received ChatOutputStreamDTO: {chat_output_dto}")
@@ -71,11 +75,13 @@ async def websocket_endpoint(
                         response_content_collector += message_text
                         await websocket.send_text(json.dumps({"content": message_text}))
                     elif isinstance(content, dict) and "retriever_context" in content:
+                        documents = content["retriever_context"]
                         ## TODO: SEND Context to document console
                         print(content["retriever_context"])
 
             await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.update_session_metadata(metadata_collector)
+            await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, documents)
 
     except WebSocketDisconnect:
         print("Client disconnected")
