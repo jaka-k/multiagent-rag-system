@@ -1,11 +1,15 @@
 from datetime import timedelta, datetime, timezone
 from typing import List
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from server.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from server.core.config import settings
+from server.models.session import Session
+
 from sqlmodel import select, and_
 
 from server.core.security import (
@@ -166,6 +170,35 @@ async def create_test_user(session: AsyncSession = Depends(get_session)):
     print(
         f"Test user created with username: {test_user.username} and password: 'admin'"
     )
+
+
+@router.get("/test-session/", tags=["dev-test"])
+async def create_session(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
+):
+
+    chat_session = Session(
+        title="test session",
+        user_id=current_user.id,
+        area_id=uuid.UUID("24057f5e-f5a9-4c89-abce-d7468fba66aa"),
+    )
+    session.add(chat_session)
+    await session.commit()
+    print(f"Test session created.")
+    return {"status": "ok"}
+
+
+@router.get("/test-area/", tags=["dev-test"])
+async def create_area(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    area = Area(name="Go", label="golang", user_id=current_user.id, tokens_used=1)
+    session.add(area)
+    await session.commit()
+    print(f"Test area created.")
+    return {"status": "ok"}
 
 
 @router.get("/test-delete/", tags=["dev-test"])

@@ -1,27 +1,26 @@
 import json
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from server.controller.chat_controller import ChatController
 from server.db.database import get_session
 from server.db.dtos.session_dto import SessionDTO
 from server.models.session import Session
-
-from sqlmodel import select
-
 from server.service.supervisor_server_service import SupervisorServerService
 from statemachine.dtos.chat_dto import ChatInputDTO, MetaDataDTO
 from statemachine.services.chat_service import ChatService
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-
 
 router = APIRouter()
 
 
 @router.get("/chat/{chat_id}", response_model=SessionDTO)
 async def chat_endpoint(
-    chat_id: uuid.UUID,
-    session: AsyncSession = Depends(get_session),
+        chat_id: uuid.UUID,
+        session: AsyncSession = Depends(get_session),
 ):
     result = await session.execute(
         select(Session)
@@ -38,15 +37,16 @@ async def chat_endpoint(
 
 @router.websocket("/ws/{chat_id}")
 async def websocket_endpoint(
-    websocket: WebSocket,
-    chat_id: uuid.UUID,
-    session: AsyncSession = Depends(get_session),
+        websocket: WebSocket,
+        chat_id: uuid.UUID,
+        session: AsyncSession = Depends(get_session),
 ):
     # TODO: Error handling is non-existent, The service should be integrated inside the controller
     chat_service = ChatService(chat_id, session)
     chat_controller = ChatController(chat_id, session)
 
-    supervisor_service = SupervisorServerService(session)
+    flashcard_queue = await chat_service.get_flashcard_queue()
+    supervisor_service = SupervisorServerService(session, flashcard_queue.id)
 
     await websocket.accept()
     try:

@@ -1,6 +1,9 @@
 import uuid
+
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from server.models.session import Message, Session
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from statemachine.dtos.chat_dto import ChatInputDTO, MetaDataDTO
 
 
