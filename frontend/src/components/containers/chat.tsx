@@ -1,76 +1,42 @@
 'use client'
 
-import { Check, Loader, Plus, Send } from 'lucide-react'
-import * as React from 'react'
-import Markdown from 'react-markdown'
-import useWebSocket from 'react-use-websocket'
-import rehypeHighlight from 'rehype-highlight'
-
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command'
+import { Avatar, AvatarFallback } from '@components/ui/avatar'
+import { Button } from '@components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import { cn, connectionStatusMapping } from '@/lib/utils'
-
+} from '@components/ui/dialog'
+import { cn, connectionStatusMapping } from '@lib/utils'
 import { ChatData, Message } from '@types'
-import { ScrollArea } from '../ui/scroll-area'
+import { Plus, Send } from 'lucide-react'
+import * as React from 'react'
+import { useEffect, useRef } from 'react'
+import Markdown from 'react-markdown'
+import useWebSocket from 'react-use-websocket'
+import rehypeHighlight from 'rehype-highlight'
+import { Textarea } from '@ui/textarea'
 
-const users = [
-  {
-    name: 'Olivia Martin',
-    email: 'm@example.com'
-  },
-  {
-    name: 'Isabella Nguyen',
-    email: 'isabella.nguyen@email.com'
-  },
-  {
-    name: 'Emma Wilson',
-    email: 'emma@example.com'
-  },
-  {
-    name: 'Jackson Lee',
-    email: 'lee@example.com'
-  },
-  {
-    name: 'William Kim',
-    email: 'will@email.com'
-  }
-] as const
-
-type User = (typeof users)[number]
-
-export function CardsChat({ chatData }: { chatData: ChatData }) {
-  const socketUrl = `ws://localhost:8080/api/v1/ws/${chatData.id}`
+export function Chat({ chatData }: { chatData: ChatData }) {
+  const socketUrl = `ws://localhost:8080/api/ws/${chatData.id}`
   const [open, setOpen] = React.useState(false)
-  const [selectedUsers, setSelectedUsers] = React.useState<User[]>([])
+
   const [messages, setMessages] = React.useState<Message[]>(
     chatData.messages ?? []
   )
   const [input, setInput] = React.useState('')
   const inputLength = input.trim().length
+
+  // 2) Auto-scroll ref
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop =
+        scrollContainerRef.current.scrollHeight
+    }
+  }, [messages])
 
   const appendToLastAgentMessage = (newContent: string) => {
     setMessages((prevMessages) => {
@@ -90,6 +56,7 @@ export function CardsChat({ chatData }: { chatData: ChatData }) {
       return prevMessages
     })
   }
+
   // TODO: Combine both the appendFuncs
   const appendMetadataMessage = (metadata: string) => {
     setMessages((prevMessages) => {
@@ -113,6 +80,7 @@ export function CardsChat({ chatData }: { chatData: ChatData }) {
     onMessage(event) {
       try {
         const messageData = JSON.parse(event.data)
+
         if (messageData.content) {
           appendToLastAgentMessage(messageData.content)
         } else if (messageData.metadata) {
@@ -126,7 +94,7 @@ export function CardsChat({ chatData }: { chatData: ChatData }) {
   })
   const connectionStatus = connectionStatusMapping(readyState)
 
-  const sendMessageHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSendMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (inputLength === 0) return
     setMessages([
@@ -145,170 +113,94 @@ export function CardsChat({ chatData }: { chatData: ChatData }) {
   }
 
   return (
-    <>
-      <Card className="flex-auto">
-        <CardHeader className="flex flex-row items-center">
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarFallback>{chatData.id}</AvatarFallback>
+    <div className="w-full h-full p-4 overflow-hidden">
+      {/* Outer Card */}
+      <div className="relative flex flex-col w-full h-full bg-white rounded-lg shadow-lg">
+        {/* Header */}
+        <header className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>
+                {chatData.id.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-sm font-medium leading-none">Sofia Davis</p>
-              <p className="text-sm text-muted-foreground">m@example.com</p>
-            </div>
-            <p
+            <div className="text-sm font-semibold">Live Chat</div>
+            <span
               className={cn(
-                connectionStatus == 'Open' ? 'bg-green-400' : 'bg-red-500',
-                'p-2 rounded-md text-white font-semibold'
+                'text-xs font-medium px-2 py-0.5 rounded-md',
+                connectionStatus === 'Open'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
               )}
             >
-              Connected
-            </p>
+              {connectionStatus === 'Open' ? 'Connected' : 'Disconnected'}
+            </span>
           </div>
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="ml-auto rounded-full"
-                  onClick={() => setOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">New message</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={10}>New message</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-screen">
-            <div className="space-y-4 h-max w-full flex flex-col">
-              {messages.map((message, index) =>
-                message.content.length == 0 ? (
-                  <Loader className="animate-spin" />
-                ) : (
-                  <>
-                    <Markdown
-                      key={message.id}
-                      className={cn(
-                        'flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
-                        message.role === 'user'
-                          ? 'ml-auto bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      )}
-                      rehypePlugins={[rehypeHighlight]}
-                    >
-                      {message.content}
-                    </Markdown>
-                  </>
-                )
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-        <CardFooter className="sticky bottom-0">
-          <form
-            onSubmit={sendMessageHandler}
-            className="flex w-full items-center space-x-2"
-          >
-            <Input
-              id="message"
-              placeholder="Type your message..."
-              className="flex-1"
-              autoComplete="off"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-            />
-            <Button type="submit" size="icon" disabled={inputLength === 0}>
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
-        </CardFooter>
-      </Card>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="gap-0 p-0 outline-none">
-          <DialogHeader className="px-4 pb-4 pt-5">
-            <DialogTitle>New Chat</DialogTitle>
-            <DialogDescription>
-              Invite a user to this thread. This will create a new group
-              message.
-            </DialogDescription>
-          </DialogHeader>
-          <Command className="overflow-hidden rounded-t-none border-t">
-            <CommandInput placeholder="Search user..." />
-            <CommandList>
-              <CommandEmpty>No users found.</CommandEmpty>
-              <CommandGroup className="p-2">
-                {users.map((user) => (
-                  <CommandItem
-                    key={user.email}
-                    className="flex items-center px-2"
-                    onSelect={() => {
-                      if (selectedUsers.includes(user)) {
-                        return setSelectedUsers(
-                          selectedUsers.filter(
-                            (selectedUser) => selectedUser !== user
-                          )
-                        )
-                      }
+          <Button variant="outline" size="icon" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </header>
 
-                      return setSelectedUsers(
-                        [...users].filter((u) =>
-                          [...selectedUsers, user].includes(u)
-                        )
-                      )
-                    }}
-                  >
-                    <Avatar>
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="ml-2">
-                      <p className="text-sm font-medium leading-none">
-                        {user.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                    {selectedUsers.includes(user) ? (
-                      <Check className="ml-auto flex h-5 w-5 text-primary" />
-                    ) : null}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-          <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
-            {selectedUsers.length > 0 ? (
-              <div className="flex -space-x-2 overflow-hidden">
-                {selectedUsers.map((user) => (
-                  <Avatar
-                    key={user.email}
-                    className="inline-block border-2 border-background"
-                  >
-                    <AvatarFallback>{user.name[0]}</AvatarFallback>
-                  </Avatar>
-                ))}
+        {/* Messages (scrollable) */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
+        >
+          {messages.map((msg, idx) =>
+            msg.content.length === 0 ? (
+              <div key={idx} className="flex justify-center">
+                <span className="text-sm text-gray-400 animate-pulse">
+                  Agent is typing...
+                </span>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Select users to add to this thread.
-              </p>
-            )}
-            <Button
-              disabled={selectedUsers.length < 2}
-              onClick={() => {
-                setOpen(false)
-              }}
-            >
-              Continue
+              <Markdown
+                key={idx}
+                rehypePlugins={[rehypeHighlight]}
+                className={cn(
+                  'w-fit max-w-[70%] px-3 py-2 rounded-lg text-sm whitespace-pre-wrap shadow-sm',
+                  msg.role === 'user'
+                    ? 'ml-auto bg-cyan-800 text-white'
+                    : 'bg-gray-100 text-gray-800'
+                )}
+              >
+                {msg.content}
+              </Markdown>
+            )
+          )}
+        </div>
+
+        {/* Input pinned to bottom */}
+        <div className="p-4 border-t border-gray-200">
+          <form
+            onSubmit={handleSendMessage}
+            className="flex items-center space-x-2"
+          >
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
+            />
+            <Button type="submit" size="icon" disabled={!input.trim()}>
+              <Send className="h-4 w-4" />
             </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* Dialog for new group chat */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Chat</DialogTitle>
+          </DialogHeader>
+          {/* your user list or selection UI */}
+          <DialogFooter>
+            <Button onClick={() => setOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }
