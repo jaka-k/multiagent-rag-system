@@ -1,13 +1,16 @@
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 
-from sqlalchemy.ext.asyncio.session import AsyncSession
+
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.db.config import DATABASE_URL
 
-engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+engine = create_async_engine(f"postgresql+psycopg://{DATABASE_URL}", echo=True, future=True)
 
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
 
@@ -26,9 +29,16 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+@asynccontextmanager
+async def get_single_session():
+    async for session in get_session():
+        yield session
+        break
+
+
 async def drop_all_tables():
     """Drop all the tables defined in SQLModel models."""
-    print("Starting DB deletation...")
+    print("Starting DB deletion...")
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
     print("DB deleted.")

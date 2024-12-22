@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Optional
+
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -28,12 +29,12 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> Optional[str]:
         if all(
-            [
-                self.postgres_user,
-                self.postgres_password,
-                self.postgres_host,
-                self.postgres_db,
-            ]
+                [
+                    self.postgres_user,
+                    self.postgres_password,
+                    self.postgres_host,
+                    self.postgres_db,
+                ]
         ):
             # TODO: NOT USED, CONSDIER asyncpg
             return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}/{self.postgres_db}"
@@ -41,16 +42,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
-        fields = {
-            "environment": {"env": "ENVIRONMENT"},
-            "learning_area": {"env": "LEARNING_AREA"},
-            "postgres_host": {"env": "POSTGRES_HOST"},
-            "postgres_user": {"env": "POSTGRES_USER"},
-            "postgres_password": {"env": "POSTGRES_PASSWORD"},
-            "postgres_db": {"env": "POSTGRES_DB"},
-            "hashing_secret_key": {"env": "HASHING_SECRET_KEY"},
-            "hashing_algorithm": {"env": "HASHING_ALGORITHM"},
-        }
-
+        model_config = SettingsConfigDict(env_file=str(Path(__file__).resolve().parent.parent.parent.parent / ".env"))
 
 settings = Settings()

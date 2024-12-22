@@ -46,7 +46,7 @@ async def websocket_endpoint(
     chat_controller = ChatController(chat_id, session)
 
     flashcard_queue = await chat_service.get_flashcard_queue()
-    supervisor_service = SupervisorServerService(session, flashcard_queue.id)
+    supervisor_service = SupervisorServerService(session, chat_id, flashcard_queue.id)
 
     await websocket.accept()
     try:
