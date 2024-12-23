@@ -6,7 +6,7 @@ import {
   getFlashcards
 } from '@lib/fetchers/fetchFlashcards'
 import { Flashcard } from '@types'
-import {startTransition, useEffect, useOptimistic, useState} from 'react'
+import { startTransition, useEffect, useOptimistic, useState } from 'react'
 
 interface UseFlashcardsReturn {
   optimisticFlashcards: Flashcard[]
@@ -40,23 +40,21 @@ export function useFlashcards(
     }
 
     fetchFlashcardsData()
-  }, [])
+  }, [chatId])
 
   async function handleAddFlashcard(id: string) {
     startTransition(() => addOptimisticUpdate(id))
     const result = await addFlashcard(id, areaId)
-    console.log(result)
     if (result.id === id) {
-      setFlashcards(optimisticFlashcards)
+      setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
     }
   }
 
   async function handleDeleteFlashcard(id: string) {
     startTransition(() => addOptimisticUpdate(id))
     const result = await deleteFlashcard(id)
-    console.log(result)
     if (result.id === id) {
-      setFlashcards(optimisticFlashcards)
+      setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
     }
   }
 

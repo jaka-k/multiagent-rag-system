@@ -22,32 +22,39 @@ const TopMenu = () => {
     React.useState<string>('Golang')
 
   return (
-    <div className="flex justify-between space-x-24 mb-4 px-8">
-      <div className="flex">
-        <Select
-          value={selectedLearningArea}
-          onValueChange={(value) => setSelectedLearningArea(value)}
+      <div className="flex items-center justify-between space-x-6 bg-white px-8 py-4 shadow-sm mb-4">
+        {/* Left side: select + button */}
+        <div className="flex items-center space-x-4">
+          <Select
+              value={selectedLearningArea}
+              onValueChange={(value) => setSelectedLearningArea(value)}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Select Area"/>
+            </SelectTrigger>
+            <SelectContent>
+              {learningAreas.map((area) => (
+                  <SelectItem key={area} value={area}>
+                    {area}
+                  </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button className="bg-stone-400 hover:bg-stone-500 text-white" size="sm">
+            <PlusIcon className="mr-2 h-4 w-4"/>
+            New Learning Area
+          </Button>
+        </div>
+
+        {/* Right side: sign out button */}
+        <Button
+            onClick={() => signOut()}
+            className="bg-pink-500 hover:bg-pink-600 text-white"
         >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Select Area" />
-          </SelectTrigger>
-          <SelectContent>
-            {learningAreas.map((area) => (
-              <SelectItem key={area} value={area}>
-                {area}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button className="bg-stone-400" variant="default" size="sm">
-          <PlusIcon className="mr-2 h-4 w-4" />
-          New Learning Area
+          <LogOutIcon className="mr-2" size={16}/>
+          Sign Out
         </Button>
       </div>
-      <Button onClick={() => signOut()}>
-        <LogOutIcon className="text-white" size={'16'} />
-      </Button>
-    </div>
   )
 }
 

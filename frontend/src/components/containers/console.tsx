@@ -13,7 +13,6 @@ import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import { useFlashcards } from '@hooks/use-flashcards'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
-  const renderCount = useRef(1)
   const [isConnected, setIsConnected] = useState(false)
   const {
     optimisticFlashcards,
@@ -22,11 +21,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
     handleDeleteFlashcard
   } = useFlashcards(chatId, areaId)
 
-  console.log('Component rendered', renderCount.current, 'times')
-  useEffect(() => {
-    renderCount.current += 1
-  })
-  console.log(optimisticFlashcards)
+
 
   useEffect(() => {
     const connectSSE = async () => {
@@ -49,6 +44,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
           }
         },
         onmessage(event) {
+          console.log(event)
           if (event.event === 'flashcards_update') {
             const data = JSON.parse(event.data)
             console.log('Flashcards Updated via SSE:', data)

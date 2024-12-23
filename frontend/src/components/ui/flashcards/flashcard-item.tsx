@@ -1,6 +1,6 @@
 import { Card } from '@components/ui/card'
 import { Flashcard } from '@types'
-import { BadgeMinus, BadgePlus } from 'lucide-react'
+import { CirclePlus } from 'lucide-react'
 
 interface FlashcardItemProps {
   flashcard: Flashcard
@@ -20,6 +20,7 @@ function FlashcardItem({
 
   const handleAdd = async () => {
     // You could also do an optimistic removal in the parent if you prefer
+    console.log('await onAddFlashcard(flashcard.id)')
     await onAddFlashcard(flashcard.id)
   }
 
@@ -27,8 +28,11 @@ function FlashcardItem({
     <Card className="relative p-4 bg-slate-50 text-sm">
       {/* ------------- Action Buttons ------------- */}
       <div className="absolute top-2 right-2 flex space-x-1">
-        <button onClick={handleDelete} className="active:animate-ping">
-          <BadgeMinus
+        <button
+          onClick={handleDelete}
+          className="active:animate-ping rotate-45"
+        >
+          <CirclePlus
             className="hover:fill-red-300 hover:stroke-red-800"
             size={18}
             strokeWidth="1.25px"
@@ -36,7 +40,7 @@ function FlashcardItem({
         </button>
 
         <button onClick={handleAdd} className="active:animate-ping">
-          <BadgePlus
+          <CirclePlus
             className="hover:fill-green-300 hover:stroke-green-800"
             size={18}
             strokeWidth="1.25px"
