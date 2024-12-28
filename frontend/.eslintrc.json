@@ -25,6 +25,7 @@
   "rules": {
     "no-undef": "off", // TypeScript handles this
     "no-use-before-define": "off", // TypeScript handles this with @typescript-eslint/no-use-before-define
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "@typescript-eslint/no-use-before-define": "error",
     "no-underscore-dangle": ["error", { "allow": ["_uid"] }],
     "no-shadow": "off", // TypeScript handles this with @typescript-eslint/no-shadow
@@ -40,6 +41,7 @@
         "ExportDeclaration": { "multiline": true, "minProperties": 2 }
       }
     ],
+
     "array-bracket-spacing": ["error", "always"],
     "block-spacing": ["error", "always"],
     "simple-import-sort/imports": "error",
@@ -83,6 +85,7 @@
           ["@containers", "./src/components/containers"],
           ["@hooks", "./src/hooks"],
           ["@images", "./images"],
+          ["@types", "./types"],
           ["@lib", "./src/lib"]
         ],
         "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
@@ -95,12 +98,12 @@
       "extends": ["plugin:prettier/recommended"],
       "rules": {
         "object-curly-newline": [
-          "error",
+          "warn",
           {
             "ObjectExpression": "always",
             "ObjectPattern": { "multiline": true },
             "ImportDeclaration": "never",
-            "ExportDeclaration": { "multiline": true, "minProperties": 2 }
+            "ExportDeclaration": { "multiline": true, "minProperties": 3 }
           }
         ]
       }

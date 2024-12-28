@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <main className="flex flex-col w-full min-h-screen mt-2">
       <TopMenu />
-      <div className="flex-shrink-0 w-full h-[33vh] lg:h-[25vh] 2xl:h-[20vh]">
+      <div className="flex-shrink-0 w-full ">
         <Dashboard />
       </div>
 
