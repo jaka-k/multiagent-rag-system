@@ -6,17 +6,23 @@ interface WorkerMessage {
   payload: EpubMetadata | string
 }
 
+type UseEpubProcessor = {
+  metadata: EpubMetadata
+  loading: boolean
+  error: string | null
+  processEpub: (file: File) => Promise<void>
+}
+
 /**
  * Custom hook to handle EPUB processing and cover extraction.
  */
-const useEpubProcessor = () => {
-  const [metadata, setMetadata] = useState<EpubMetadata | null>(null)
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const [worker, setWorker] = useState<Worker | null>(null)
+const useEpubProcessor = (): UseEpubProcessor => {
+  const [ metadata, setMetadata ] = useState<EpubMetadata | null>(null)
+  const [ loading, setLoading ] = useState<boolean>(false)
+  const [ error, setError ] = useState<string | null>(null)
+  const [ worker, setWorker ] = useState<Worker | null>(null)
 
   useEffect(() => {
-    // Initialize the Web Worker
     const workerInstance = new Worker(
       new URL('../../workers/epub-processor.worker.ts', import.meta.url),
       {
@@ -25,9 +31,11 @@ const useEpubProcessor = () => {
     )
     setWorker(workerInstance)
 
-    // Listen for messages from the worker
     workerInstance.onmessage = (e: MessageEvent<WorkerMessage>) => {
-      const { type, payload } = e.data
+      const {
+        type,
+        payload
+      } = e.data
 
       if (type === 'success') {
         setMetadata(payload as EpubMetadata)
@@ -38,7 +46,6 @@ const useEpubProcessor = () => {
       setLoading(false)
     }
 
-    // Cleanup the worker on unmount
     return () => {
       workerInstance.terminate()
     }
@@ -59,10 +66,8 @@ const useEpubProcessor = () => {
     setMetadata(null)
 
     try {
-      // Read the file as ArrayBuffer
       const arrayBuffer = await file.arrayBuffer()
 
-      // Post message to the worker
       worker.postMessage({
         type: 'extractCoverImage',
         payload: { epubBuffer: arrayBuffer }

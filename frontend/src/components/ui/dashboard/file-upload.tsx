@@ -60,9 +60,8 @@ export function FileUpload() {
 
   const { metadata, loading, error, processEpub } = useEpubProcessor()
 
-  const totalFiles = epubFiles.length
   const totalSize =
-    epubFiles.reduce((acc, epubfile) => acc + (epubfile.size || 0), 0) /
+    (file ? file.size : 0) /
     1024 /
     1024
 
@@ -80,6 +79,9 @@ export function FileUpload() {
     | React.FormEventHandler<HTMLFormElement>
     | undefined = async (event: FormEvent) => {
     event.preventDefault()
+    if (!file) {
+      fileInputRef?.current?.click()
+    }
     console.log(file)
     if (!file) return
 
@@ -106,14 +108,14 @@ export function FileUpload() {
         }
       )
 
-      const metadata = (await uploadTask).metadata
+      const metadataFirebase = (await uploadTask).metadata
       const request: CreateDocumentRequest = {
         title: file.name,
         area_id: '24057f5e-f5a9-4c89-abce-d7468fba66aa',
         user_id: '0280748e-cdd3-4501-90b5-1e8af3d1ed5d',
         description: file.name,
-        file_path: metadata.fullPath,
-        file_size: metadata.size
+        file_path: metadataFirebase.fullPath,
+        file_size: metadataFirebase.size
       }
       const response = await fetchWithAuth<CreateDocumentResponse>(
         '/api/epub',
@@ -134,18 +136,19 @@ export function FileUpload() {
       const newFile: EpubFile = {
         id: response.data.id,
         name: file.name,
-        size: metadata.size,
-        cover: metadata.fullPath,
-        url: metadata.fullPath,
+        size: metadataFirebase.size,
+        cover: metadataFirebase.fullPath,
+        url: metadataFirebase.fullPath,
         tokens,
         cost
       }
-      // Call FASTAPI
+      // TODO: Properly call FASTAPI
 
       setEpubFiles((prev) => [...prev, newFile])
 
-      // Reset the file input
       if (fileInputRef.current) fileInputRef.current.value = ''
+      setFile(undefined)
+      metadata.coverImage = null
     } catch (error) {
       console.error('Upload failed:', error)
     } finally {
@@ -153,7 +156,6 @@ export function FileUpload() {
     }
   }
 
-  // Mock function to simulate vector embedding process
   const createVectorEmbedding = (_fileUrl: string): Promise<void> => {
     return new Promise((resolve) => {
       setTimeout(() => resolve(), 3000)
@@ -164,8 +166,8 @@ export function FileUpload() {
     setProcessingFile(epubfile.name)
 
     try {
+      // Todo: create embedding endpoint
       await createVectorEmbedding(epubfile.url)
-      // In a real application, you might update the file status or add embedding information here
     } catch (error) {
       console.error('Embedding creation failed:', error)
     } finally {
@@ -215,21 +217,20 @@ export function FileUpload() {
           </CardContent>
         </Card>
 
-        {/* 2) Stats Section */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-[1fr_1fr] xl:grid-cols-[2fr_3fr]">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 ">
               <CardTitle className="text-sm font-medium">Cover</CardTitle>
               <ImageUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              {loading && <p>Processing EPUB and extracting cover image...</p>}
-              {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+            <CardContent className="h-[185px] md:h-[150px] lg:h-[200px] flex items-center justify-center">
+              {loading && <span className="text-sm text-gray-400 max-w-36 animate-pulse">Processing EPUB and extracting cover image...</span>}
+              {error && <p style={{ color: 'red' }}>Error while processing cover image.</p>}
               {metadata?.coverImage && (
-                <Card className="w-full h-full rounded-xl overflow-hidden ">
+                <Card className="h-full rounded-xl w-fit overflow-hidden flex items-center justify-center">
                   <img
                     src={`data:${metadata?.coverImage.mimeType};base64,${metadata?.coverImage.base64}`}
-                    className="contain-content "
+                    className="object-contain h-full w-auto"
                     alt="Cover"
                   />
                 </Card>
@@ -250,7 +251,6 @@ export function FileUpload() {
         </div>
       </div>
 
-      {/* 3) Table of Uploaded Files */}
       <Card className="flex-1 min-h-max overflow-hidden">
         <CardHeader>
           <CardTitle>Uploaded Files</CardTitle>
