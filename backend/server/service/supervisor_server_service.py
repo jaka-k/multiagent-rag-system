@@ -1,9 +1,11 @@
 import json
 
+## TODO: Should use DocChunk not langchain types
+from langchain_core.documents import Document
 from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from server.db.pubsub import FLASHCARDS_CHANNEL
+from server.db.pubsub import SSE_NOTIFY_CHANNEL
 from server.models.flashcard import Flashcard
 from statemachine.agents.supervisor.supervisor import SupervisorAgent
 from statemachine.dtos.flashcard_dto import FlashcardDTO
@@ -33,11 +35,12 @@ class SupervisorServerService:
             "documents": context
         })
 
-        print(result)
-
         if len(result['flashcards']) > 0:
             await self.process_flashcards(result['flashcards'])
             await self.notify_flashcards_queue(result['flashcards'])
+
+        if len(result['documents']) > 0:
+            await self.notify_doc_chunk_queue(result['documents'])
 
         pass
 
@@ -47,6 +50,22 @@ class SupervisorServerService:
                                       queue_id=self.fqueue)
             self.db_session.add(new_flashcard)
             print(flashcard)
+        await self.db_session.commit()
+
+    async def notify_doc_chunk_queue(self, documents: list[Document]):
+        doc_chunks_ids = list(map(lambda x: str(x.metadata.id), documents))
+        print("Documents", documents)
+        print("doc_chunks_ids = list(map(lambda x: str(x.metadata.id), documents))", doc_chunks_ids)
+
+        payload = {
+            "session_id": str(self.session_id),
+            "event_type": "documents",
+            "data": doc_chunks_ids
+        }
+        data = json.dumps(payload)
+
+        stmt = text("SELECT pg_notify(:channel, :payload)")
+        await self.db_session.execute(stmt, {"channel": SSE_NOTIFY_CHANNEL, "payload": data})
         await self.db_session.commit()
 
     async def notify_flashcards_queue(self, flashcards: list[FlashcardDTO]):
@@ -60,5 +79,5 @@ class SupervisorServerService:
         data = json.dumps(payload)
 
         stmt = text("SELECT pg_notify(:channel, :payload)")
-        await self.db_session.execute(stmt, {"channel": FLASHCARDS_CHANNEL, "payload": data})
+        await self.db_session.execute(stmt, {"channel": SSE_NOTIFY_CHANNEL, "payload": data})
         await self.db_session.commit()

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import { cn } from '@lib/utils'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { Bot, Club, FileText } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import ChapterViewer from '@ui/chapter-viewer/chapter-viewer'
 import FlashcardList from '@ui/flashcards/flashcard-list'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
@@ -21,11 +21,12 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
     handleDeleteFlashcard
   } = useFlashcards(chatId, areaId)
 
-
-
   useEffect(() => {
+    const controller = new AbortController()
+
     const connectSSE = async () => {
       await fetchEventSource(`http://localhost:8080/api/events/${chatId}`, {
+        signal: controller.signal,
         async onopen(response) {
           if (
             response.ok &&
@@ -45,15 +46,21 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
         },
         onmessage(event) {
           console.log(event)
-          if (event.event === 'flashcards_update') {
-            const data = JSON.parse(event.data)
+          if (event.event === 'flashcard') {
+            const data: string[] = JSON.parse(event.data)
             console.log('Flashcards Updated via SSE:', data)
+
             // Option 1: Re-fetch everything:
             // refetchAllFlashcards()
 
             // Option 2: Partial update:
             // setFlashcards((prev) => [...prev, data])
             // Make sure to check for duplicates if needed
+          }
+
+          if (event.event === 'document') {
+            const data: string[] = JSON.parse(event.data)
+            console.log('Document Updated via SSE:', data)
           }
         },
         onclose() {
@@ -70,10 +77,15 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
       })
     }
 
-    connectSSE()
+    connectSSE().catch((err) => {
+      // TODO: log
+      console.log(err)
+    })
 
     return () => {
+      controller.abort()
       console.log('SSE cleanup')
+      setIsConnected(false)
     }
   }, [chatId])
 
@@ -82,11 +94,11 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
       {/* ------------- "Bento" Card Container ------------- */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-4">
         <header className="flex items-center justify-between px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Console
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-800">Console</h2>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">SSE Connection Status:</span>
+            <span className="text-sm text-gray-600">
+              SSE Connection Status:
+            </span>
             <div
               className={cn(
                 'text-xs font-medium px-2 py-1 rounded-md',
@@ -173,7 +185,6 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
           </TabsContent>
 
           <TabsContent value="flashcards">
-            {/* Replace with your own FlashcardList usage */}
             <FlashcardList
               flashcards={optimisticFlashcards}
               onAddFlashcard={handleAddFlashcard}

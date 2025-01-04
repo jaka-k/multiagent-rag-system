@@ -5,12 +5,17 @@ import {
   deleteFlashcard,
   getFlashcards
 } from '@lib/fetchers/fetchFlashcards'
-import { Flashcard } from '@types'
-import { startTransition, useEffect, useOptimistic, useState } from 'react'
+import { Flashcard } from '@types/types'
+import React, {
+  startTransition,
+  useEffect,
+  useOptimistic,
+  useState
+} from 'react'
 
 interface UseFlashcardsReturn {
   optimisticFlashcards: Flashcard[]
-  setFlashcards: (flashcards: Flashcard[]) => void
+  setFlashcards: React.Dispatch<React.SetStateAction<Flashcard[]>>
   handleAddFlashcard: (id: string) => Promise<void>
   handleDeleteFlashcard: (id: string) => Promise<void>
 }
@@ -39,7 +44,10 @@ export function useFlashcards(
       setFlashcards(data.flashcards)
     }
 
-    fetchFlashcardsData()
+    fetchFlashcardsData().catch((err) => {
+      // TODO: log
+      console.log(err)
+    })
   }, [chatId])
 
   async function handleAddFlashcard(id: string) {

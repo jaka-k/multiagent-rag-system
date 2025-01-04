@@ -160,7 +160,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
             msg.content.length === 0 ? (
               <div key={idx} className="flex justify-center">
                 <span className="text-sm text-gray-400 animate-pulse">
-                  Agent is typing...
+                  Agent is thinking...
                 </span>
               </div>
             ) : (
