@@ -26,21 +26,23 @@ class SupervisorServerService:
         self.supervisor_agent = SupervisorAgent()
         pass
 
-    async def handle_supervisor_flow(self, question: str, response: str, context: list):
+    async def handle_supervisor_flow(self, question: str, response: str, retriever_context: list):
         # Pass the response and context to the supervisor agent
         # and execute the state graph
+
+        print("CTX \n =================== \n", retriever_context)
+        if len(retriever_context.get('context', [])) > 0:
+            await self.notify_doc_chunk_queue(retriever_context['context'])
+
         result = await self.supervisor_agent.invoke({
             "question": question,
             "llm_response": response,
-            "documents": context
+            "documents": retriever_context.get('context', [])
         })
 
-        if len(result['flashcards']) > 0:
+        if len(result.get('flashcards', [])) > 0:
             await self.process_flashcards(result['flashcards'])
             await self.notify_flashcards_queue(result['flashcards'])
-
-        if len(result['documents']) > 0:
-            await self.notify_doc_chunk_queue(result['documents'])
 
         pass
 
@@ -53,7 +55,7 @@ class SupervisorServerService:
         await self.db_session.commit()
 
     async def notify_doc_chunk_queue(self, documents: list[Document]):
-        doc_chunks_ids = list(map(lambda x: str(x.metadata.id), documents))
+        doc_chunks_ids = list(map(lambda x: str(x.metadata["id"]), documents))
         print("Documents", documents)
         print("doc_chunks_ids = list(map(lambda x: str(x.metadata.id), documents))", doc_chunks_ids)
 

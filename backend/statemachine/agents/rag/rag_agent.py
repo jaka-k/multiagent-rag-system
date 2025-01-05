@@ -25,11 +25,11 @@ class LangChainChat:
     def __init__(self, chat_id: uuid.UUID):
         self.chat_id = chat_id
         self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
+            model_name="gpt-4o-mini",
             temperature=0,
             stream_usage=True,
         )
-        self.llm_mini = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        self.llm_mini = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
         self.retriever_tool = get_retriever_tool()
 
         self.history_aware_prompt = ChatPromptTemplate.from_messages(

@@ -59,7 +59,7 @@ async def websocket_endpoint(
             response_generator = chat_service.handle_chat(chat_input)
             response_content_collector = ""
 
-            documents = []
+            context = []
 
             async for chat_output_dto in response_generator:
                 print(f"Received ChatOutputStreamDTO: {chat_output_dto}")
@@ -74,14 +74,14 @@ async def websocket_endpoint(
                         message_text = content["result"]
                         response_content_collector += message_text
                         await websocket.send_text(json.dumps({"content": message_text}))
-                    elif isinstance(content, dict) and "retriever_context" in content:
-                        documents = content["retriever_context"]
+                    elif isinstance(content, dict) and "context" in content:
+                        context = content["context"]
                         ## TODO: SEND Context to document console
-                        print(content["retriever_context"])
+
 
             await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.update_session_metadata(metadata_collector)
-            await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, documents)
+            await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
 
     except WebSocketDisconnect:
         print("Client disconnected")

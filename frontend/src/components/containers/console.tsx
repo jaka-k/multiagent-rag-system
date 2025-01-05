@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-
 'use client'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
@@ -58,7 +57,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
             // Make sure to check for duplicates if needed
           }
 
-          if (event.event === 'document') {
+          if (event.event === 'documents') {
             const data: string[] = JSON.parse(event.data)
             console.log('Document Updated via SSE:', data)
           }

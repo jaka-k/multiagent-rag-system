@@ -5,6 +5,11 @@ services:
       dockerfile: dev.Dockerfile
     networks:
       - multirag_network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080']
+      interval: 20s
+      timeout: 5s
+      retries: 3
     ports:
       - '8080:8080'
     volumes:
@@ -16,17 +21,10 @@ services:
       - POETRY_VIRTUALENVS_IN_PROJECT=1
       - POETRY_VIRTUALENVS_CREATE=1
       - POETRY_CACHE_DIR=/tmp/poetry_cache
-      - ENVIRONMENT=${ENVIRONMENT}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
-      - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT}
-      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
-      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - ENVIRONMENT=dev
       - POSTGRES_HOST=postgres-server
+    env_file:
+      - .env
     depends_on:
       - chroma-server
       - postgres-server
@@ -52,9 +50,9 @@ services:
     image: postgres:16.4-alpine
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      - POSTGRES_HOST=postgres-server
+    env_file:
+      - .env
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', 'multirag_dev', '-d', 'multirag_db']
       interval: 1s
@@ -74,8 +72,23 @@ services:
       - multirag_network
     ports:
       - 8000:8000
+    expose:
+      - 8000
     volumes:
       - chroma:/chroma/chroma
+  anki-desktop:
+    build:
+      context: ./anki
+      dockerfile: anki.Dockerfile
+    environment:
+      - VNC_PASSWORD=1990
+    networks:
+      - multirag_network
+    ports:
+      - '3100:3100' # noVNC
+      - '8765:8765' # Anki-Connect
+    volumes:
+      - ./anki/config:/home/ankiuser/.local/share/Anki2
 
 volumes:
   postgres_data:
@@ -83,4 +96,5 @@ volumes:
 
 networks:
   multirag_network:
+    driver: bridge
     external: true
