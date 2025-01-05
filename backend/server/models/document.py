@@ -12,10 +12,13 @@ class Document(SQLModel, table=True):
     title: str
     description: str = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column_kwargs={
+            "onupdate": lambda: datetime.now(timezone.utc)})
     file_path: str
     file_size: int = Field(default=None, nullable=True)
-    is_compressed: bool = Field(default=True)
+    is_compressed: bool = Field(default=False)
+    is_embedded: bool = Field(default=False)
 
     chapters: list["Chapter"] = Relationship(back_populates="document")
 

@@ -14,7 +14,9 @@ class User(SQLModel, table=True):
     hashed_password: bytes = Field(default=False)
     disabled: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column_kwargs={
+            "onupdate": lambda: datetime.now(timezone.utc)})
 
     sessions: list["Session"] = Relationship(back_populates="user")
     areas: list["Area"] = Relationship(back_populates="user")

@@ -16,7 +16,9 @@ class Area(SQLModel, table=True):
 
     label: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), sa_column_kwargs={
+            "onupdate": lambda: datetime.now(timezone.utc)})
     tokens_used: int
 
     instructions: List["Instruction"] = Relationship(back_populates="area")
