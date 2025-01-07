@@ -4,9 +4,9 @@ services:
       context: ./backend
       dockerfile: dev.Dockerfile
     networks:
-      - multirag_network
+      - app_network
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8080']
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8080' ]
       interval: 20s
       timeout: 5s
       retries: 3
@@ -33,7 +33,7 @@ services:
       context: ./frontend
       dockerfile: dev.Dockerfile
     networks:
-      - multirag_network
+      - app_network
     ports:
       - '3000:3000'
     volumes:
@@ -54,14 +54,14 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'multirag_dev', '-d', 'multirag_db']
+      test: [ 'CMD', 'pg_isready', '-U', 'multirag_dev', '-d', 'multirag_db' ]
       interval: 1s
       timeout: 5s
       retries: 10
     networks:
-      - multirag_network
+      - app_network
     ports:
-      - 5432:5432
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
   chroma-server:
@@ -71,11 +71,68 @@ services:
     networks:
       - multirag_network
     ports:
-      - 8000:8000
+      - '8000:8000'
     expose:
       - 8000
     volumes:
       - chroma:/chroma/chroma
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks:
+      - monitoring_network
+    ports:
+      - "3400:3400"
+    expose:
+      - 3400
+    environment:
+      - GF_SECURITY_ADMIN_USER=jaka
+      - GF_SECURITY_ADMIN_PASSWORD=1990
+      - GF_SERVER_HTTP_PORT=3400
+    volumes:
+      - grafana_data:/var/lib/grafana
+  loki:
+    image: grafana/tempo:latest
+    container_name: loki
+    command:
+      - -config.file=/etc/loki/loki-config.yaml
+    networks:
+      - monitoring_network
+    ports:
+      - "3410:3410"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki_data:/loki
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command:
+      - -server.http-listen-port=3420
+      - -storage.trace.backend=local
+      - -storage.trace.local.path=/tmp/tempo/traces
+      - -storage.trace.wal.path=/tmp/tempo/wal
+      - -auth.enabled=false
+    networks:
+      - monitoring_network
+    ports:
+      - "3420:3420"
+    volumes:
+      - tempo_data:/tmp/tempo
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: otel-collector
+    networks:
+      - app_network
+      - monitoring_network
+    ports:
+      - "4317:4317"
+      - "55681:55681"
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+
   anki-desktop:
     build:
       context: ./anki
@@ -93,8 +150,15 @@ services:
 volumes:
   postgres_data:
   chroma:
+  grafana_data:
+  loki_data:
+  tempo_data:
 
 networks:
   multirag_network:
     driver: bridge
     external: true
+  app_network:
+    driver: bridge
+  monitoring_network:
+    driver: bridge
