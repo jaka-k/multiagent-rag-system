@@ -2,18 +2,32 @@ auth_enabled: false
 
 server:
   http_listen_port: 3410
+  graceful_shutdown_timeout: 5s
 
-common:
+distributor:
   ring:
-    instance_addr: 127.0.0.1
     kvstore:
-      store: inmemory
-  replication_factor: 1
-  path_prefix: /tmp/loki
+      store: memberlist
+
+compactor:
+  working_directory: /loki/compactor
+
+ingester:
+  wal:
+    enabled: true
+    dir: /loki/wal
+  chunk_idle_period: 5m
+  max_chunk_age: 1h
+  chunk_target_size: 1048576
+  lifecycler:
+    ring:
+      kvstore:
+        store: memberlist
+
 
 schema_config:
   configs:
-    - from: 2020-05-15
+    - from: 2024-04-01
       store: tsdb
       object_store: filesystem
       schema: v13
@@ -22,8 +36,13 @@ schema_config:
         period: 24h
 
 storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb/index
+    cache_location: /loki/tsdb/cache
   filesystem:
-    directory: /tmp/loki/chunks
+    directory: /loki/tsdb/chunks
 
-table_manager:
-  retention_period: 336h  # 2 weeks
+limits_config:
+  max_line_size: 1024
+  max_streams_per_user: 1000
+  retention_period: 336h # 2 weeks

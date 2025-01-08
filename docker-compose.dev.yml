@@ -69,7 +69,7 @@ services:
     environment:
       - IS_PERSISTENT=1
     networks:
-      - multirag_network
+      - app_network
     ports:
       - '8000:8000'
     expose:
@@ -93,10 +93,9 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
   loki:
-    image: grafana/tempo:latest
+    image: grafana/loki:latest
     container_name: loki
-    command:
-      - -config.file=/etc/loki/loki-config.yaml
+    command: -config.file=/etc/loki/loki-config.yaml -config.expand-env=true
     networks:
       - monitoring_network
     ports:
@@ -108,18 +107,23 @@ services:
   tempo:
     image: grafana/tempo:latest
     container_name: tempo
-    command:
-      - -server.http-listen-port=3420
-      - -storage.trace.backend=local
-      - -storage.trace.local.path=/tmp/tempo/traces
-      - -storage.trace.wal.path=/tmp/tempo/wal
-      - -auth.enabled=false
+    command: [ "-config.file=/etc/tempo-config.yaml" ]
+    user: root
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        chown -R 10001:10001 /var/tempo && \
+        exec /tempo -config.file=/etc/tempo-config.yaml
     networks:
       - monitoring_network
     ports:
       - "3420:3420"
     volumes:
-      - tempo_data:/tmp/tempo
+      - ./tempo-config.yaml:/etc/tempo-config.yaml
+      - tempo_data:/var/tempo
+
+
 
   otel-collector:
     image: otel/opentelemetry-collector:latest
@@ -140,7 +144,7 @@ services:
     environment:
       - VNC_PASSWORD=1990
     networks:
-      - multirag_network
+      - app_network
     ports:
       - '3100:3100' # noVNC
       - '8765:8765' # Anki-Connect
@@ -155,9 +159,6 @@ volumes:
   tempo_data:
 
 networks:
-  multirag_network:
-    driver: bridge
-    external: true
   app_network:
     driver: bridge
   monitoring_network:
