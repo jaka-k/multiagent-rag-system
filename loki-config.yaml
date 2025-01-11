@@ -20,6 +20,7 @@ ingester:
   max_chunk_age: 1h
   chunk_target_size: 1048576
   lifecycler:
+    join_after: 15s
     ring:
       kvstore:
         store: memberlist
