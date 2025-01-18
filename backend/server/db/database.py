@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from sqlmodel import SQLModel
 
 
@@ -11,6 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from server.db.config import DATABASE_URL
 
 engine = create_async_engine(f"postgresql+psycopg://{DATABASE_URL}", echo=True, future=True)
+SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
 
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
 

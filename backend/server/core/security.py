@@ -8,10 +8,12 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.config import settings
+from server.core.logger import logger
 from server.db.database import get_session
 from server.models.user import User, Token
 
@@ -57,6 +59,7 @@ async def authenticate_user(
     """Authenticate user credentials."""
     user = await get_user(session, username)
     if not user or not verify_password(password, user.hashed_password):
+        logger.info("User password could not be verified.")
         return None
     return user
 
@@ -100,6 +103,7 @@ async def get_current_user(
         )
         user_id: str = payload.get("sub")
         if user_id is None:
+            logger.warn("Invalid user credentials.")
             raise credentials_exception
     except jwt.ExpiredSignatureError:
         raise HTTPException(
@@ -121,6 +125,7 @@ async def get_current_user(
 
     user = await get_user_by_id(session, user_uuid)
     if user is None:
+        logger.warn("Invalid user credentials.")
         raise credentials_exception
     return user
 

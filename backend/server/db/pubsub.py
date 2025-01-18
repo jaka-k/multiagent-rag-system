@@ -17,19 +17,14 @@ async def notification_listener():
     async with await psycopg.AsyncConnection.connect(dsn, autocommit=True) as conn:
         await conn.execute(f"LISTEN {SSE_NOTIFY_CHANNEL};")
         async for notify in conn.notifies():
-            print("notify", notify)
             await notifications_queue.put(notify.payload)
 
 
 async def notification_dispatcher():
     while True:
         payload_str = await notifications_queue.get()
-        print("notifications_queue.get()")
         payload = json.loads(payload_str)
-        # Expected structure: {"queue_id": "<session_id>", "event_type": "flashcard"/"document", "data": {...}}
         session_id = payload["session_id"]
-        print("payload[session_id]", session_id)
-        # dispatch to the appropriate session
         session_manager.dispatch_event(session_id, payload)
 
 
