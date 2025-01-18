@@ -36,13 +36,13 @@ opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
 python-logging-loki = "^0.3.1"
 
 [tool.poetry.group.statemachine.dependencies]
-langchain = "^0.3.8"
-langgraph = "^0.2.53"
+langchain = "^0.3.14"
+langgraph = "^0.2.64"
 langchain-openai = "^0.2.9"
 langchain-community = "^0.3.8"
 langchain-chroma = "^0.1.2"
 chromadb = "^0.5.5"
-psycopg = "^3.2.1"
+psycopg = "^3.2.4"
 psycopg-pool = "^3.2.2"
 
 [tool.poetry.group.tools.dependencies]
