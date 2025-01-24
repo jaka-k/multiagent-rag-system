@@ -7,6 +7,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.chat_controller import ChatController
+from server.core.logger import app_logger
 from server.db.database import get_session
 from server.db.dtos.session_dto import SessionDTO
 from server.models.session import Session
@@ -84,4 +85,4 @@ async def websocket_endpoint(
             await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
 
     except WebSocketDisconnect:
-        print("Client disconnected")
+        app_logger.info("WebSocket connection was closed")

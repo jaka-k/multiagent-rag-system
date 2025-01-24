@@ -4,7 +4,7 @@ from typing import Any, AsyncGenerator, Callable
 import anyio.to_thread
 from fastapi import FastAPI
 
-from server.core.logger import logger
+from server.core.logger import app_logger
 from server.db.database import init_db
 from server.db.pubsub import start_all_listeners
 
@@ -18,17 +18,17 @@ def lifespan_factory(
         create_tables_on_start: bool = True,
 ) -> Callable[[FastAPI], _AsyncGeneratorContextManager[Any]]:
     @asynccontextmanager
-    async def lifespan() -> AsyncGenerator:
+    async def lifespan(app: FastAPI) -> AsyncGenerator:
         await set_threadpool_tokens()
 
         if create_tables_on_start:
             try:
                 await init_db()
-                logger.info("Database tables created successfully.")
+                app_logger.info("Database tables created successfully.")
                 await start_all_listeners()
-                logger.info("Database listeners initiated successfully.")
+                app_logger.info("Database listeners initiated successfully.")
             except Exception as e:
-                logger.warn(f"Error during database initialization: {e}")
+                app_logger.warn(f"Error during database initialization: {e}")
                 raise e
 
         yield

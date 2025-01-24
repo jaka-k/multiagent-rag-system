@@ -4,10 +4,10 @@ server:
   http_listen_port: 3410
   graceful_shutdown_timeout: 5s
 
-distributor:
-  ring:
-    kvstore:
-      store: memberlist
+#distributor:
+#  ring:
+#    kvstore:
+#      store: memberlist
 
 compactor:
   working_directory: /loki/compactor
@@ -22,13 +22,23 @@ ingester:
   lifecycler:
     join_after: 15s
     ring:
-      kvstore:
-        store: memberlist
+      replication_factor: 1
+#      kvstore:
+#        store: memberlist
 
+common:
+  ring:
+    kvstore:
+      store: memberlist
+
+
+memberlist:
+  join_members: []
+  bind_port: 7946
 
 schema_config:
   configs:
-    - from: 2024-04-01
+    - from: 2025-01-01
       store: tsdb
       object_store: filesystem
       schema: v13
@@ -47,3 +57,4 @@ limits_config:
   max_line_size: 1024
   max_streams_per_user: 1000
   retention_period: 336h # 2 weeks
+

@@ -19,18 +19,12 @@ class SupervisorServerService:
         self._initialize_supervisor_agent()
 
     def _initialize_supervisor_agent(self):
-        # Initialize your supervisor agent here using langgraph's StateGraph
-        # You might need to set up the agents, tools, and state transitions
-        # also retrieve all info from the DB
-        # I might use this db session here to pass the summary reports
         self.supervisor_agent = SupervisorAgent()
+
         pass
 
     async def handle_supervisor_flow(self, question: str, response: str, retriever_context: list):
-        # Pass the response and context to the supervisor agent
-        # and execute the state graph
 
-        print("CTX \n =================== \n", retriever_context)
         if len(retriever_context.get('context', [])) > 0:
             await self.notify_doc_chunk_queue(retriever_context['context'])
 
@@ -41,18 +35,20 @@ class SupervisorServerService:
         })
 
         if len(result.get('flashcards', [])) > 0:
-            await self.process_flashcards(result['flashcards'])
-            await self.notify_flashcards_queue(result['flashcards'])
+            new_flashcard_ids = await self.process_flashcards(result['flashcards'])
+            await self.notify_flashcards_queue(new_flashcard_ids)
 
         pass
 
-    async def process_flashcards(self, flashcards: list[FlashcardDTO]):
+    async def process_flashcards(self, flashcards: list[FlashcardDTO]) -> list[str]:
+        flashcard_ids = []
         for flashcard in flashcards:
             new_flashcard = Flashcard(anki_id=None, deck_id=None, front=flashcard.front, back=flashcard.back,
                                       queue_id=self.fqueue)
             self.db_session.add(new_flashcard)
-            print(flashcard)
+            flashcard_ids.append(str(new_flashcard.id))
         await self.db_session.commit()
+        return flashcard_ids
 
     async def notify_doc_chunk_queue(self, documents: list[Document]):
         doc_chunks_ids = list(map(lambda x: str(x.metadata["id"]), documents))
@@ -70,9 +66,7 @@ class SupervisorServerService:
         await self.db_session.execute(stmt, {"channel": SSE_NOTIFY_CHANNEL, "payload": data})
         await self.db_session.commit()
 
-    async def notify_flashcards_queue(self, flashcards: list[FlashcardDTO]):
-        flashcard_ids = list(map(lambda x: str(x.id), flashcards))
-
+    async def notify_flashcards_queue(self, flashcard_ids: list[str]):
         payload = {
             "session_id": str(self.session_id),
             "event_type": "flashcard",
