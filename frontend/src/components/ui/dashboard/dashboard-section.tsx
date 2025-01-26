@@ -7,12 +7,7 @@ import { TabsContent } from '@ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import { FileUpload } from '@ui/dashboard/file-upload'
 
-// Mock function to estimate tokens and cost
-
 export function DashboardSection() {
-  // ---------------------------------------
-  // 3) State & Handlers: Flashcards Tab
-  // ---------------------------------------
   const [flashcardInstructions, setFlashcardInstructions] = React.useState(
     'Default instructions for flashcard creation...'
   )
@@ -24,9 +19,6 @@ export function DashboardSection() {
     )
   }
 
-  // ---------------------------------------
-  // 4) State & Handlers: Agent Instructions Tab
-  // ---------------------------------------
   const [agentInstructions, setAgentInstructions] = React.useState(
     'Default instructions for web_research agent...'
   )
@@ -40,9 +32,7 @@ export function DashboardSection() {
 
   return (
     <div className="p-2 h-full w-full flex flex-col space-y-4">
-      {/* Top-level TabsContent is rendered in Dashboard, so we just style the internals */}
       <FileUpload />
-      {/* ------------------ FLASHCARDS TAB ------------------ */}
       <TabsContent
         value="Flashcards"
         className="flex-1 bg-gray-50 rounded-lg p-6 space-y-6 overflow-auto"
@@ -53,7 +43,6 @@ export function DashboardSection() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              {/* Instructions Textarea */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Current Instructions
@@ -64,8 +53,6 @@ export function DashboardSection() {
                   onChange={(e) => setFlashcardInstructions(e.target.value)}
                 />
               </div>
-
-              {/* Anki Deck Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Anki Deck Name
@@ -76,8 +63,6 @@ export function DashboardSection() {
                   onChange={(e) => setAnkiDeckName(e.target.value)}
                 />
               </div>
-
-              {/* Submit Button */}
               <div className="flex justify-end">
                 <Button onClick={handleSubmitFlashcards}>Submit</Button>
               </div>
@@ -85,8 +70,6 @@ export function DashboardSection() {
           </CardContent>
         </Card>
       </TabsContent>
-
-      {/* ------------------ AGENT INSTRUCTIONS TAB ------------------ */}
       <TabsContent
         value="Agent Instructions"
         className="flex-1 bg-gray-50 rounded-lg p-6 space-y-6 overflow-auto"
@@ -97,7 +80,6 @@ export function DashboardSection() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              {/* Agent Instructions Textarea */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Instructions
@@ -108,8 +90,6 @@ export function DashboardSection() {
                   onChange={(e) => setAgentInstructions(e.target.value)}
                 />
               </div>
-
-              {/* Additional Websites */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Additional Blogs/Websites
@@ -120,8 +100,6 @@ export function DashboardSection() {
                   onChange={(e) => setAdditionalWebsites(e.target.value)}
                 />
               </div>
-
-              {/* Submit Button */}
               <div className="flex justify-end">
                 <Button onClick={handleSubmitAgentInstructions}>Submit</Button>
               </div>

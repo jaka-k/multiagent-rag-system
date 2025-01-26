@@ -2,17 +2,17 @@
 'use client'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
-import { cn } from '@lib/utils'
-import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { Bot, Club, FileText } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import ChapterViewer from '@ui/chapter-viewer/chapter-viewer'
 import FlashcardList from '@ui/flashcards/flashcard-list'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import { useFlashcards } from '@hooks/use-flashcards'
+import { useSSE } from '@hooks/use-sse'
+import { StatusIndicator } from '@ui/status-indicator'
+import { useMemo } from 'react'
+import { getSingleFlashcard } from '@lib/fetchers/fetchFlashcards'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
-  const [isConnected, setIsConnected] = useState(false)
   const {
     optimisticFlashcards,
     setFlashcards,
@@ -20,73 +20,25 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
     handleDeleteFlashcard
   } = useFlashcards(chatId, areaId)
 
-  useEffect(() => {
-    const controller = new AbortController()
-
-    const connectSSE = async () => {
-      await fetchEventSource(`http://localhost:8080/api/events/${chatId}`, {
-        signal: controller.signal,
-        async onopen(response) {
-          if (
-            response.ok &&
-            response.headers.get('content-type') === 'text/event-stream'
-          ) {
-            console.log('EventSource connected')
-            setIsConnected(true)
-          } else if (
-            response.status >= 400 &&
-            response.status < 500 &&
-            response.status !== 429
-          ) {
-            throw new Error('Fatal error')
-          } else {
-            throw new Error('Retriable error')
-          }
-        },
-        onmessage(event) {
-          console.log(event)
-          if (event.event === 'flashcard') {
-            const data: string[] = JSON.parse(event.data)
-            console.log('Flashcards Updated via SSE:', data)
-
-            // Option 1: Re-fetch everything:
-            // refetchAllFlashcards()
-
-            // Option 2: Partial update:
-            // setFlashcards((prev) => [...prev, data])
-            // Make sure to check for duplicates if needed
-          }
-
-          if (event.event === 'documents') {
-            const data: string[] = JSON.parse(event.data)
-            console.log('Document Updated via SSE:', data)
-          }
-        },
-        onclose() {
-          console.log('SSE closed, retrying...')
-          setIsConnected(false)
-          throw new Error('Connection closed')
-        },
-        onerror(err) {
-          console.error('SSE error:', err)
-          if (err.message === 'Fatal error') {
-            throw err
-          }
+  const { isConnected } = useSSE({
+    chatId,
+    onFlashcardUpdate: useMemo(
+      () => async (flashcardIds) => {
+        for (const id of flashcardIds) {
+          console.log(id)
+          const flashcard = await getSingleFlashcard(id)
+          setFlashcards((prev) => [...prev, flashcard])
         }
-      })
-    }
-
-    connectSSE().catch((err) => {
-      // TODO: log
-      console.log(err)
-    })
-
-    return () => {
-      controller.abort()
-      console.log('SSE cleanup')
-      setIsConnected(false)
-    }
-  }, [chatId])
+      },
+      []
+    ),
+    onDocumentUpdate: useMemo(
+      () => (documentIds) => {
+        console.log('Document Update:', documentIds)
+      },
+      []
+    )
+  })
 
   return (
     <section className="h-full w-full overflow-y-auto px-2 py-4">
@@ -98,22 +50,10 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
             <span className="text-sm text-gray-600">
               SSE Connection Status:
             </span>
-            <div
-              className={cn(
-                'text-xs font-medium px-2 py-1 rounded-md',
-                isConnected
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-700'
-              )}
-            >
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </div>
+            <StatusIndicator isConnected={isConnected} />
           </div>
         </header>
-        {/* You could add more small status indicators here */}
       </div>
-
-      {/* ------------- Another "Bento" Card for Tabs ------------- */}
       <div className="bg-white rounded-lg shadow-lg p-4 ">
         <Tabs defaultValue="flashcards">
           <TabsList
