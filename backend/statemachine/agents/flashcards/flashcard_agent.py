@@ -40,7 +40,7 @@ class FlashcardAgent:
               </div>
               
               <div class="back">
-                <div class="definition" style="color: #718096; font-size: 1.1em; margin-bottom: 1.2em;">
+                <div class="definition" style="color: #cbd5e0; font-size: 1.1em; margin-bottom: 1.2em;">
                   <<definition>>
                 </div>
                 
@@ -56,7 +56,7 @@ class FlashcardAgent:
                 <<#anti_pattern>>
                 <div class="anti-pattern" style="border-left: 4px solid #f56565; padding: 8px 12px; margin: 10px 0;">
                   <div style="color: #f56565; font-weight: 500; margin-bottom: 6px;">⚠️ Anti-Pattern</div>
-                  <div style="color: #718096;">
+                  <div style="color: #feb2b2;">
                     <<anti_pattern>>
                   </div>
                 </div>
@@ -125,7 +125,7 @@ class FlashcardAgent:
               </div>
               
               <div class="back">
-                <div class="definition" style="color: #718096; font-size: 1.1em; margin-bottom: 1.2em;">
+                <div class="definition" style="color: #cbd5e0; font-size: 1.1em; margin-bottom: 1.2em;">
                   Reduces image size by separating <u>build environment</u> from <u>runtime environment</u>
                 </div>
                 
@@ -138,7 +138,7 @@ class FlashcardAgent:
             
                 <div class="anti-pattern" style="border-left: 4px solid #f56565; padding: 8px 12px; margin: 10px 0;">
                   <div style="color: #f56565; font-weight: 500; margin-bottom: 6px;">⚠️ Anti-Pattern</div>
-                  <div style="color: #718096;">
+                  <div style="color: #feb2b2;">
                     Including build tools in final production images
                   </div>
                 </div>
