@@ -133,6 +133,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# Cert
+
+*.crt
+*.key
+
 # Spyder project settings
 .spyderproject
 .spyproject
