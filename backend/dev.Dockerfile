@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-RUN pip install poetry==1.4.2
+RUN pip install poetry==2.0.1
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -18,6 +18,6 @@ COPY ./ ./
 
 RUN touch README.md
 
-RUN poetry install
+RUN poetry install --no-interaction
 
 ENTRYPOINT ["poetry", "run", "fastapi", "dev", "server/main.py", "--host", "0.0.0.0", "--port", "8080" ]
