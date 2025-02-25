@@ -4,7 +4,7 @@ import {
   addFlashcard,
   deleteFlashcard,
   getFlashcards
-} from '@lib/fetchers/fetchFlashcards'
+} from '@lib/fetchers/fetch-flashcards.ts'
 import { Flashcard } from '@types/types'
 import React, {
   startTransition,

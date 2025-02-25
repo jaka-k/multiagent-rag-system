@@ -113,8 +113,8 @@ const ChatTable = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center py-4">
-        <Button className="bg-stone-400 pr-4" variant="default" size="sm">
+      <div className="flex items-center py-4 space-x-2">
+        <Button className="bg-black pr-4" variant="default" size="sm">
           <PlusIcon className="mr-2 h-4 w-4" />
           New Chat
         </Button>

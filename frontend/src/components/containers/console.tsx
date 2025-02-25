@@ -10,7 +10,7 @@ import { useFlashcards } from '@hooks/use-flashcards'
 import { useSSE } from '@hooks/use-sse'
 import { StatusIndicator } from '@ui/status-indicator'
 import { useMemo } from 'react'
-import { getSingleFlashcard } from '@lib/fetchers/fetchFlashcards'
+import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const {

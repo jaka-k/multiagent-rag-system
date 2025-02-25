@@ -1,13 +1,15 @@
 import { Chat } from '@/components/containers/chat'
 import Console from '@/components/containers/console'
-import { fetchWithAuth } from '@lib/fetchers/fetchWithAuth'
+import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
 import { ChatData } from '@types'
+import { logger } from '@lib/logger.ts'
 
-const ChatPage = async ({ params }: { params: { chatId: string } }) => {
-  const response = await fetchWithAuth<ChatData>(`/api/chat/${params.chatId}`)
+const ChatPage = async ({ params }: { params: Promise<{ chatId: string }> }) => {
+  const { chatId } = await params
+  const response = await fetchWithAuth<ChatData>(`/api/chat/${chatId}`)
+
   if (!response.ok) {
-    // TODO: Log
-    console.log('Error while fetching chat data')
+    logger.error('Error while fetching chat data')
   }
 
   return (
@@ -16,7 +18,7 @@ const ChatPage = async ({ params }: { params: { chatId: string } }) => {
         <Chat chatData={response.data} />
       </div>
       <div className="w-[350px] md:w-[470px] h-full flex-shrink-0">
-        <Console chatId={params.chatId} areaId={response.data.area_id} />
+        <Console chatId={chatId} areaId={response.data.area_id} />
       </div>
     </div>
   )

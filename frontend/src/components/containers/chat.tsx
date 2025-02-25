@@ -33,7 +33,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
   const [input, setInput] = React.useState('')
   const inputLength = input.trim().length
 
-  // 2) Auto-scroll ref
+  // auto-scroll ref
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -86,6 +86,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         const messageData = JSON.parse(event.data)
 
         if (messageData.content) {
+
           appendToLastAgentMessage(messageData.content)
         } else if (messageData.metadata) {
           // Handle metadata
@@ -94,7 +95,9 @@ export function Chat({ chatData }: { chatData: ChatData }) {
       } catch (error) {
         console.error('Error parsing WebSocket message:', error)
       }
-    }
+    },
+    onClose: () => {},
+    shouldReconnect: () => true
   })
   const connectionStatus = connectionStatusMapping(readyState)
 
