@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+import { logger } from '@lib/logger.ts'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
@@ -16,7 +16,7 @@ export function middleware(req: NextRequest) {
   }
 
   if (!token) {
-    console.log('No token found. Redirecting to /login')
+    logger.info('No token found. Redirecting to /login')
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
