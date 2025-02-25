@@ -19,7 +19,6 @@ class Area(SQLModel, table=True):
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), sa_column_kwargs={
             "onupdate": lambda: datetime.now(timezone.utc)})
-    tokens_used: int
 
     instructions: List["Instruction"] = Relationship(back_populates="area")
     deck: Deck = Relationship(back_populates="area")

@@ -40,12 +40,18 @@ def populate(placeholderPath):
 def add_to_chroma(epub_dto_: str):
     client = get_chroma_db_client()
 
+## client.create_collection()
+
+
+
     # Load the existing database.
     db = Chroma(
         client=client,
         persist_directory=CHROMA_PATH,
         embedding_function=get_embedding_function(),
     )
+
+
 
     # SHOULD HAPPEN WAY BEFOR
     # Initialize the parser

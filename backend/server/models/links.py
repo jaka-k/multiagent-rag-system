@@ -1,11 +1,14 @@
 import uuid
+
 from sqlmodel import Field, SQLModel
 
 
-class DocChunkQueueLink(SQLModel, table=True):
-    doc_chunk_queue_id: uuid.UUID = Field(
-        foreign_key="docchunkqueue.id", primary_key=True
+class ChapterQueueLink(SQLModel, table=True):
+    chapter_queue_id: uuid.UUID = Field(
+        foreign_key="chapterqueue.id",
+        primary_key=True
     )
-    document_chunk_id: uuid.UUID = Field(
-        foreign_key="documentchunk.id", primary_key=True
+    chapter_id: uuid.UUID = Field(
+        foreign_key="chapter.id",
+        primary_key=True
     )

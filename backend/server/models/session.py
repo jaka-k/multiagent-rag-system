@@ -4,9 +4,9 @@ from typing import List
 
 from sqlmodel import SQLModel, Field, Relationship
 
-from server.models.document import DocumentChunk
+from server.models.document import Chapter
 from server.models.flashcard import Flashcard
-from server.models.links import DocChunkQueueLink
+from server.models.links import ChapterQueueLink
 
 
 class Session(SQLModel, table=True):
@@ -37,7 +37,7 @@ class Session(SQLModel, table=True):
         back_populates="session",
         sa_relationship_kwargs={"uselist": False, "lazy": "selectin"},
     )
-    doc_chunk_queue: "DocChunkQueue" = Relationship(
+    chapter_queue: "ChapterQueue" = Relationship(
         back_populates="session",
         sa_relationship_kwargs={"uselist": False, "lazy": "selectin"},
     )
@@ -74,18 +74,19 @@ class FlashcardQueue(SQLModel, table=True):
     flashcards: list["Flashcard"] = Relationship(back_populates="queue")
 
 
-class DocChunkQueue(SQLModel, table=True):
+class ChapterQueue(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     session_id: uuid.UUID = Field(foreign_key="session.id", nullable=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    session: "Session" = Relationship(back_populates="doc_chunk_queue")
-    doc_chunks: list["DocumentChunk"] = Relationship(
-        back_populates="queues",
-        link_model=DocChunkQueueLink,
-        sa_relationship_kwargs={"uselist": False, "lazy": "selectin"},
-    )
+    session: "Session" = Relationship(back_populates="chapter_queue")
 
+    # Many-to-many
+    chapters: List["Chapter"] = Relationship(
+        back_populates="queues",
+        link_model=ChapterQueueLink,
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
 
 class CustomInstructionQueue(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

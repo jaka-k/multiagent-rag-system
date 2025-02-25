@@ -17,14 +17,14 @@ SYSTEM_PROMPT = (
     "\n\n"
     "{context}"
     "---"
-    "Answer the question based on the above context: {question}"
+    "Answer the question based on the above context: {modified_input}"
 )
 
 ### Contextualize question ###
-contextualize_q_system_prompt = (
-    "Given a chat history and the latest user question "
-    "which might reference context in the chat history, "
-    "formulate a standalone question which can be understood "
-    "without the chat history. Do NOT answer the question, "
-    "just reformulate it if needed and otherwise return it as is."
+CONTEXTUALIZE_Q_SYSTEM_PROMPT = (
+    "Your task is to rewrite the user's input into a self-contained question that includes all necessary context from the chat history."
+    "The reformulated question must be clear and independent, making sense without requiring access to the original chat history."
+    "Additionally, identify and include any keywords, phrases, or tokens that could help enhance retrieval performance in a vector-based system."
+    "Do NOT answer the question or provide explanations—focus solely on creating a standalone reformulated question with contextually useful tokens."
+    "If the input is already self-contained, return it unchanged while appending any relevant keywords or phrases."
 )

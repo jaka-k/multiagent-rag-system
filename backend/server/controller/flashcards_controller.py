@@ -4,13 +4,16 @@ import asyncio
 
 queues: Dict[str, asyncio.Queue] = {}
 
-
+## each client session has a custom queue generator and consumer
 def get_queue_by_id(id: str):
     print("get_queue_by_id(id: str):", id)
     if id not in queues:
         queues[id] = asyncio.Queue()
     return queues[id]
 
+## only if there is an active session the queue should be established
+## in case of a new connection a new queue should be created
+## flashcards that are fetched with the bulk method should not be in the queue
 
 async def flashcard_sse_generator(queue: asyncio.Queue):
     print("Started event generator")

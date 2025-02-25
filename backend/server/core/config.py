@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     langchain_endpoint: Optional[str] = None
     langchain_tracing_v2: Optional[str] = None
 
+    next_public_firebase_api_key: Optional[str] = None
+    next_public_firebase_project_id: Optional[str] = None
+    next_public_firebase_bucket: Optional[str] = None
+
+    grafana_api_key: Optional[str] = None
+
     @property
     def database_url(self) -> Optional[str]:
         if all(
