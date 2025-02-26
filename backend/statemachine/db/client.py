@@ -4,7 +4,7 @@ from chromadb.config import Settings
 from tools.env import get_environment_variable
 
 Environment = get_environment_variable("ENVIRONMENT")
-ssl_enabled = not Environment == "dev"
+isProd = not Environment == "dev"
 
 
 def get_chroma_db_client():

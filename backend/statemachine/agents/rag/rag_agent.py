@@ -7,7 +7,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
 
 from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.templates import (
@@ -15,10 +14,6 @@ from statemachine.agents.rag.templates import (
     CONTEXTUALIZE_Q_SYSTEM_PROMPT,
 )
 from statemachine.embeddings.retriever import get_retriever_tool
-
-
-class HistoryRetrieverOutput(BaseModel):
-    anwser: str
 
 
 class LangChainChat:

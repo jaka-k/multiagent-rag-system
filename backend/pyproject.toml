@@ -34,6 +34,7 @@ opentelemetry-instrumentation-fastapi = "^0.50b0"
 opentelemetry-instrumentation-requests = "^0.50b0"
 opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
 google-cloud-storage = "^3.0.0"
+aperturedb = "^0.4.42"
 
 
 [tool.poetry.group.statemachine.dependencies]
