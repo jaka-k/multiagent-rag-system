@@ -80,20 +80,6 @@ services:
       - 8000
     volumes:
       - chroma:/chroma/chroma
-  aperturedb:
-    image: aperturedata/aperturedb-standalone
-    container_name: aperturedb
-    networks:
-      - app_network
-    ports:
-      - 6767:6767
-    expose:
-      - 6767
-    environment:
-      ADB_PORT: 6767
-    volumes:
-      - ./aperturedb/db:/aperturedb/db
-      - ./aperturedb/logs:/aperturedb/logs
 
   grafana:
     image: grafana/grafana:latest

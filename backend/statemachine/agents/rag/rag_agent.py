@@ -9,15 +9,16 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_openai import ChatOpenAI
 
 from statemachine.agents.rag.rag_agent_history import get_chat_history
+from statemachine.agents.rag.retriever import get_retriever_tool
 from statemachine.agents.rag.templates import (
     SYSTEM_PROMPT,
     CONTEXTUALIZE_Q_SYSTEM_PROMPT,
 )
-from statemachine.embeddings.retriever import get_retriever_tool
+
 
 
 class LangChainChat:
-    def __init__(self, chat_id: uuid.UUID):
+    def __init__(self, chat_id: uuid.UUID, area: str):
         self.chat_id = chat_id
         self.llm = ChatOpenAI(
             model_name="gpt-4o-mini",
@@ -25,7 +26,7 @@ class LangChainChat:
             stream_usage=True,
         )
         self.llm_mini = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
-        self.retriever_tool = get_retriever_tool()
+        self.retriever_tool = get_retriever_tool(area)
 
         self.history_aware_prompt = ChatPromptTemplate.from_messages(
             [

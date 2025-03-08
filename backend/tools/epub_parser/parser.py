@@ -1,19 +1,13 @@
-from abc import ABC, abstractmethod
 import os
+from abc import ABC
 
-from statemachine.dtos.epub_dto import ChapterDTO, EpubDTO
+from server.db.dtos.epub_dto import ChapterDTO, EpubDTO
 from tools.epub_parser.utils.chapter_extractor import extract_chapters
 from tools.epub_parser.utils.inspector import inspect_epub
 from tools.epub_parser.utils.logging import log_empty_chapters
 
 
-class EpubParserInterface(ABC):
-    @abstractmethod
-    def parse(self, file_path: str) -> EpubDTO:
-        pass
-
-
-class EpubParser(EpubParserInterface):
+class EpubParser(ABC):
     def parse(self, file_path: str) -> EpubDTO:
         title, parsed_chapters = self._parse_epub(file_path)
         log_empty_chapters(parsed_chapters)
@@ -23,6 +17,7 @@ class EpubParser(EpubParserInterface):
                 label=chapter_info["label"],
                 parent_label=chapter_info["parent_label"],
                 content=chapter_info["content"],
+                play_order=chapter_info["play_order"]
             )
             for chapter_info in parsed_chapters
         ]

@@ -42,8 +42,12 @@ async def websocket_endpoint(
         chat_id: uuid.UUID,
         session: AsyncSession = Depends(get_session),
 ):
+    stmt = select(Session).where(session.id == chat_id)
+    result = await session.execute(stmt)
+    session = result.scalars().first()
+
     # TODO: Error handling is non-existent, The service should be integrated inside the controller
-    chat_service = ChatService(chat_id, session)
+    chat_service = ChatService(chat_id, area, session)
     chat_controller = ChatController(chat_id, session)
 
     flashcard_queue = await chat_service.get_flashcard_queue()

@@ -1,25 +1,34 @@
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
 
-import { base64ToUint8Array, cn, estimateTokensAndCost, getImageExtension, noSpaceFilename } from '@lib/utils'
+import { cn, estimateTokensAndCost, noSpaceFilename } from '@lib/utils'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import { Input } from '@ui/input'
 import { Progress } from '@ui/progress'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@ui/table/table'
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@ui/table/table'
 import { TabsContent } from '@ui/tabs'
-import { FileText, ImageUp, Loader2, Loader2Icon, UploadIcon } from 'lucide-react'
+import { FileText, ImageUp, Loader2Icon, UploadIcon } from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
 
 import useEpubProcessor from '@hooks/use-epub-processor'
 import { logger } from '@lib/logger.ts'
-import { CreateDocumentRequest, CreateDocumentResponse, EpubFile } from '../../../../types/types'
+import {
+  CreateDocumentRequest,
+  CreateDocumentResponse,
+  EpubFile
+} from '../../../../types/types'
 import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
-
+import EpubElement from '@ui/dashboard/epub-element.tsx'
 
 export function FileUpload() {
-  const [ file, setFile ] = useState<File | undefined>(undefined)
-  const [ epubFiles, setEpubFiles ] = useState<EpubFile[]>([])
-  const [ processingFile, setProcessingFile ] = useState<string | null>(null)
+  const [file, setFile] = useState<File | undefined>(undefined)
+  const [epubFiles, setEpubFiles] = useState<EpubFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -81,11 +90,14 @@ export function FileUpload() {
         file_size: mainFileMetadata.size,
         cover_image: coverFileMetadata.fullPath
       }
-      const response = await fetchWithAuth<CreateDocumentResponse>('/api/epub-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request)
-      })
+      const response = await fetchWithAuth<CreateDocumentResponse>(
+        '/api/epub-upload',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request)
+        }
+      )
 
       if (!response.ok) {
         throw Error(
@@ -113,185 +125,132 @@ export function FileUpload() {
       logger.error('Epub upload failed in handler:', error)
     }
   }
-const createVectorEmbedding = (
-  doc_id: string
-): Promise<{ ok: boolean; data: { message: string; id: string } }> => {
-  return fetchWithAuth<{ message: string; id: string }>(
-    '/api/embedding/' + doc_id,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    }
-  )
-}
 
-const handleCreateEmbedding = async (epubfile: EpubFile) => {
-
-  try {
-    // Todo: create embedding endpoint
-    const response = await createVectorEmbedding(epubfile.id)
-    if (!response.ok) {
-      throw Error('Failed to create vector embed')
-    }
-  } catch (error) {
-    logger.error('Embedding creation failed:', error)
-  } finally {
-  }
-}
-
-return (
-  <TabsContent
-    value="File Upload"
-    className="flex-1 bg-gray-50 rounded-lg space-y-6 p-6"
-  >
-    <div className="grid gap-6 md:grid-cols-2">
-      {/* 1) Card: EPUB Upload */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload EPUB File</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleFileUpload}>
-            <div className="flex flex-col space-y-4">
-              <Input
-                type="file"
-                accept=".epub"
-                onChange={handleFileChange}
-                disabled={isUploading}
-                ref={fileInputRef}
-              />
-              <Button type="submit" disabled={isUploading} className="w-full">
-                {isUploading ? (
-                  <>
-                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading
-                  </>
-                ) : (
-                  <>
-                    <UploadIcon className="mr-2 h-4 w-4" />
-                    Upload EPUB
-                  </>
-                )}
-              </Button>
-              {isUploading && (
-                <Progress value={uploadProgress} className="w-full" />
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 sm:grid-cols-[1fr_1fr] xl:grid-cols-[2fr_3fr]">
+  return (
+    <TabsContent
+      value="File Upload"
+      className="flex-1 bg-gray-50 rounded-lg space-y-6 p-6"
+    >
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* 1) Card: EPUB Upload */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 ">
-            <CardTitle className="text-sm font-medium">Cover</CardTitle>
-            <ImageUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="h-[185px] md:h-[150px] lg:h-[200px] flex items-center justify-center">
-            {loading && (
-              <span className="text-sm text-gray-400 max-w-36 animate-pulse">
-                  Processing EPUB and extracting cover image...
-                </span>
-            )}
-            {error && (
-              <p style={{ color: 'red' }}>
-                Error while processing cover image.
-              </p>
-            )}
-            {metadataWorker?.coverImage && (
-              <Card
-                className={cn(
-                  'h-full rounded-xl w-fit overflow-hidden flex items-center justify-center transition-all duration-500',
-                  uploadCoverProgress !== 0 && uploadCoverProgress < 100
-                    ? 'opacity-50 grayscale'
-                    : '',
-                  uploadCoverProgress === 100 ? 'animate-[pulse_1s_ease-in-out]' : ''
-                )}
-              >
-                <img
-                  src={`data:${metadataWorker?.coverImage.mimeType};base64,${metadataWorker?.coverImage.base64}`}
-                  className="object-contain h-full w-auto"
-                  alt="Cover"
-                />
-              </Card>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">File Size</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Upload EPUB File</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {totalSize.toFixed(2)} MB
-            </div>
+            <form onSubmit={handleFileUpload}>
+              <div className="flex flex-col space-y-4">
+                <Input
+                  type="file"
+                  accept=".epub"
+                  onChange={handleFileChange}
+                  disabled={isUploading}
+                  ref={fileInputRef}
+                />
+                <Button type="submit" disabled={isUploading} className="w-full">
+                  {isUploading ? (
+                    <>
+                      <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading
+                    </>
+                  ) : (
+                    <>
+                      <UploadIcon className="mr-2 h-4 w-4" />
+                      Upload EPUB
+                    </>
+                  )}
+                </Button>
+                {isUploading && (
+                  <Progress value={uploadProgress} className="w-full" />
+                )}
+              </div>
+            </form>
           </CardContent>
         </Card>
-      </div>
-    </div>
 
-    <Card className="flex-1 min-h-max overflow-hidden">
-      <CardHeader>
-        <CardTitle>Uploaded Files</CardTitle>
-      </CardHeader>
-      <CardContent className="h-full overflow-auto">
-        {epubFiles.length > 0 ? (
-          <Table className="overflow-auto">
-            <TableHeader>
-              <TableRow>
-                <TableHead>File Name</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Estimated Tokens</TableHead>
-                <TableHead>Estimated Cost (EUR)</TableHead>
-                <TableHead>Status/Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {epubFiles.map((epubfile) => (
-                <TableRow key={epubfile.name}>
-                  <TableCell className="font-medium">
-                    {epubfile.name}
-                  </TableCell>
-                  <TableCell>
-                    {(epubfile.size / 1024 / 1024).toFixed(2)} MB
-                  </TableCell>
-                  <TableCell>
-                    {(epubfile.tokens || 0).toLocaleString()}
-                  </TableCell>
-                  <TableCell>€{(epubfile.cost || 0).toFixed(4)}</TableCell>
-                  <TableCell>
-                    <Button
-                      onClick={() => handleCreateEmbedding(epubfile)}
-                      disabled={processingFile === epubfile.name}
-                      size="sm"
-                    >
-                      {processingFile === epubfile.name ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing
-                        </>
-                      ) : (
-                        <>
-                          <FileText className="mr-2 h-4 w-4" />
-                          Create Embedding
-                        </>
-                      )}
-                    </Button>
-                  </TableCell>
+        <div className="grid gap-4 sm:grid-cols-[1fr_1fr] xl:grid-cols-[2fr_3fr]">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 ">
+              <CardTitle className="text-sm font-medium">Cover</CardTitle>
+              <ImageUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="h-[185px] md:h-[150px] lg:h-[200px] flex items-center justify-center">
+              {loading && (
+                <span className="text-sm text-gray-400 max-w-36 animate-pulse">
+                  Processing EPUB and extracting cover image...
+                </span>
+              )}
+              {error && (
+                <p style={{ color: 'red' }}>
+                  Error while processing cover image.
+                </p>
+              )}
+              {metadataWorker?.coverImage && (
+                <Card
+                  className={cn(
+                    'h-full rounded-xl w-fit overflow-hidden flex items-center justify-center transition-all duration-500',
+                    uploadCoverProgress !== 0 && uploadCoverProgress < 100
+                      ? 'opacity-50 grayscale'
+                      : '',
+                    uploadCoverProgress === 100
+                      ? 'animate-[pulse_1s_ease-in-out]'
+                      : ''
+                  )}
+                >
+                  <img
+                    src={`data:${metadataWorker?.coverImage.mimeType};base64,${metadataWorker?.coverImage.base64}`}
+                    className="object-contain h-full w-auto"
+                    alt="Cover"
+                  />
+                </Card>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">File Size</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {totalSize.toFixed(2)} MB
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card className="flex-1 min-h-max overflow-hidden">
+        <CardHeader>
+          <CardTitle>Uploaded Files</CardTitle>
+        </CardHeader>
+        <CardContent className="h-full overflow-auto">
+          {epubFiles.length > 0 ? (
+            <Table className="overflow-auto">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>File Name</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Estimated Tokens</TableHead>
+                  <TableHead>Estimated Cost (EUR)</TableHead>
+                  <TableHead>Status/Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <CardContent className="h-full overflow-auto">
-            <div className="text-center text-muted-foreground">
-              No files uploaded yet.
-            </div>
-          </CardContent>
-        )}
-      </CardContent>
-    </Card>
-  </TabsContent>
-)
+              </TableHeader>
+              <TableBody>
+                {epubFiles.map((epubfile) => (
+                  <EpubElement key={epubfile.id} epubFile={epubfile} />
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <CardContent className="h-full overflow-auto">
+              <div className="text-center text-muted-foreground">
+                No files uploaded yet.
+              </div>
+            </CardContent>
+          )}
+        </CardContent>
+      </Card>
+    </TabsContent>
+  )
 }

@@ -33,8 +33,7 @@ anyio = "^4.6.2.post1"
 opentelemetry-instrumentation-fastapi = "^0.50b0"
 opentelemetry-instrumentation-requests = "^0.50b0"
 opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
-google-cloud-storage = "^3.0.0"
-aperturedb = "^0.4.42"
+firebase-admin = "^6.6.0"
 
 
 [tool.poetry.group.statemachine.dependencies]

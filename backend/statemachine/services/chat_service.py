@@ -11,10 +11,10 @@ from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputStreamDTO
 
 
 class ChatService:
-    def __init__(self, chat_id: uuid.UUID, db_session: AsyncSession):
+    def __init__(self, chat_id: uuid.UUID, area: str, db_session: AsyncSession):
         self.chat_id = chat_id
         self.db_session = db_session
-        self.langchain_chat = LangChainChat(chat_id)
+        self.langchain_chat = LangChainChat(chat_id, area)
 
     async def handle_chat(self, chat_input: ChatInputDTO):
         with get_openai_callback() as cb:

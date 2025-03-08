@@ -2,16 +2,12 @@ import argparse
 import os
 import shutil
 
-from langchain.schema.document import Document
-
 # {page_content: str, metadata: dict}
 from langchain_chroma import Chroma
 
-from statemachine.db.client import get_chroma_db_client
-from statemachine.dtos.epub_dto import EpubDTO
-from statemachine.embeddings.utils import get_embedding_function
-from statemachine.services.document_chunks_service import DocumentChunkService
-from statemachine.services.epub_service import EpubService
+
+from server.db.dtos.epub_dto import EpubDTO
+
 from tools.epub_parser.parser import EpubParser
 
 
@@ -38,7 +34,7 @@ def populate(placeholderPath):
 
 
 def add_to_chroma(epub_dto_: str):
-    client = get_chroma_db_client()
+    # client = get_chroma_db_client()
 
 ## client.create_collection()
 
@@ -46,9 +42,9 @@ def add_to_chroma(epub_dto_: str):
 
     # Load the existing database.
     db = Chroma(
-        client=client,
+        # client=client,
         persist_directory=CHROMA_PATH,
-        embedding_function=get_embedding_function(),
+        # embedding_function=get_embedding_function(),
     )
 
 
@@ -60,10 +56,7 @@ def add_to_chroma(epub_dto_: str):
 
     # Parse the EPUB file
     epub_dto = epub_parser.parse(epub_dto_)
-    parsed_epub = EpubService().transform_dto_to_domain(epub_dto)
 
-    document = DocumentChunkService(parsed_epub)
-    document_chunks = document.create_document_chunks()
 
     # Add or Update the documents.
     existing_items = db.get(include=[])  # IDs are always included by default
@@ -73,9 +66,9 @@ def add_to_chroma(epub_dto_: str):
 
     # Only add documents that don't exist in the DB.
     new_chunks = []
-    for chunk in document_chunks:
-        if chunk.metadata["id"] not in existing_ids:
-            new_chunks.append(chunk)
+    # for chunk in document_chunks:
+    #     if chunk.metadata["id"] not in existing_ids:
+    #         new_chunks.append(chunk)
 
     if len(new_chunks):
         print(f"👉 Adding new documents: {len(new_chunks)}")

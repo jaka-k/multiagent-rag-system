@@ -76,7 +76,7 @@ def extract_chapters(file_path):
                                     "content": chapter_text,
                                     "label": entry["label"],
                                     "parent_label": entry["parent_label"],
-                                    "playOrder": entry["playOrder"],
+                                    "play_order": entry["playOrder"],
                                 }
                             )
 
