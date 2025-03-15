@@ -1,10 +1,7 @@
 import chromadb
 from chromadb.config import Settings
 
-from tools.env import get_environment_variable
 
-Environment = get_environment_variable("ENVIRONMENT")
-isProd = not Environment == "dev"
 
 
 def get_vector_db_client():
