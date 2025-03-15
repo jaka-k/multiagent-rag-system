@@ -7,19 +7,16 @@ import {
   UploadTaskSnapshot
 } from 'firebase/storage'
 import { useState } from 'react'
-import { CoverImage, EpubMetadata } from '../../types/epub-processor'
-import {
-  base64ToUint8Array, getCoverMetadata,
-  getImageExtension,
-  noSpaceFilename
-} from '@lib/utils'
+
+import { getCoverMetadata } from '@lib/utils'
+import { CoverImage } from '../../types/epub-processor'
 
 interface UseFirebaseUploadReturn {
   isUploading: boolean
   uploadProgress: number
   uploadCoverProgress: number
   uploadFile: (file: File, path: string) => Promise<FullMetadata>
-  uploadCover: (file: File, cover: EpubMetadata) => Promise<FullMetadata>
+  uploadCover: (file: File, cover: CoverImage) => Promise<FullMetadata>
 }
 
 export function useFirebaseUpload(): UseFirebaseUploadReturn {
@@ -57,15 +54,12 @@ export function useFirebaseUpload(): UseFirebaseUploadReturn {
 
   async function uploadCover(
     file: File,
-    cover: EpubMetadata
+    cover: CoverImage
   ): Promise<FullMetadata> {
     setIsUploading(true)
     setUploadCoverProgress(0)
 
-    const { coverFile, coverFilename } = getCoverMetadata(
-      file,
-      cover.coverImage
-    )
+    const { coverFile, coverFilename } = getCoverMetadata(file, cover)
     const coverPath = `covers/${coverFilename}`
 
     try {

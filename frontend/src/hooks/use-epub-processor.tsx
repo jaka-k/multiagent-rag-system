@@ -7,7 +7,7 @@ interface WorkerMessage {
 }
 
 type UseEpubProcessor = {
-  metadata: EpubMetadata
+  metadata: EpubMetadata | null
   loading: boolean
   error: string | null
   processEpub: (file: File) => Promise<void>
@@ -17,10 +17,10 @@ type UseEpubProcessor = {
  * Custom hook to handle EPUB processing and cover extraction.
  */
 const useEpubProcessor = (): UseEpubProcessor => {
-  const [ metadata, setMetadata ] = useState<EpubMetadata | null>(null)
-  const [ loading, setLoading ] = useState<boolean>(false)
-  const [ error, setError ] = useState<string | null>(null)
-  const [ worker, setWorker ] = useState<Worker | null>(null)
+  const [metadata, setMetadata] = useState<EpubMetadata | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const [worker, setWorker] = useState<Worker | null>(null)
 
   useEffect(() => {
     const workerInstance = new Worker(
@@ -32,10 +32,7 @@ const useEpubProcessor = (): UseEpubProcessor => {
     setWorker(workerInstance)
 
     workerInstance.onmessage = (e: MessageEvent<WorkerMessage>) => {
-      const {
-        type,
-        payload
-      } = e.data
+      const { type, payload } = e.data
 
       if (type === 'success') {
         setMetadata(payload as EpubMetadata)
@@ -72,9 +69,9 @@ const useEpubProcessor = (): UseEpubProcessor => {
         type: 'extractCoverImage',
         payload: { epubBuffer: arrayBuffer }
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error processing EPUB:', err)
-      setError(err.message || 'Unknown error')
+      setError((err as Error).message || 'Unknown error')
       setLoading(false)
     }
   }

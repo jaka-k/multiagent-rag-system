@@ -1,10 +1,16 @@
+import {
+  extractMetadata,
+  resolveRelativePath,
+  uint8ArrayToBase64
+} from '@workers/worker-utils.ts'
 import { unzipSync } from 'fflate'
 import { DOMParser } from 'xmldom'
+
 import {
+  EpubMetadata,
   WorkerIncomingMessage,
   WorkerOutgoingMessage
-} from '@types/epub-processor'
-import { EpubMetadata, Metadata } from '../types/epub-processor'
+} from '../types/epub-processor'
 
 function extractEpubMetadata(epubBuffer: ArrayBuffer): EpubMetadata {
   const buffer = new Uint8Array(epubBuffer)
@@ -51,9 +57,9 @@ function extractEpubMetadata(epubBuffer: ArrayBuffer): EpubMetadata {
 
       if (coverId && /\.(png|jpe?g)$/i.test(coverId)) {
         console.log(/\.(png|jpe?g)$/i.test(coverId))
-        coverHref = coverId;
+        coverHref = coverId
         console.log(coverHref)
-        break; // Exit the loop once the cover image path is found
+        break // Exit the loop once the cover image path is found
       }
 
       if (coverId) {
@@ -134,64 +140,13 @@ self.onmessage = async (e: MessageEvent<WorkerIncomingMessage>) => {
       }
       // eslint-disable-next-line no-restricted-globals
       self.postMessage(successMessage)
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage: WorkerOutgoingMessage = {
         type: 'error',
-        payload: error.message || 'Unknown error'
+        payload: (error as Error).message || 'Unknown error'
       }
       // eslint-disable-next-line no-restricted-globals
       self.postMessage(errorMessage)
     }
-  }
-}
-
-function resolveRelativePath(basePath: string, relativePath: string): string {
-  const baseParts = basePath.split('/')
-  baseParts.pop()
-
-  const relativeParts = relativePath.split('/')
-
-  for (const part of relativeParts) {
-    if (part === '..') {
-      baseParts.pop()
-    } else if (part !== '.' && part !== '') {
-      baseParts.push(part)
-    }
-  }
-
-  return baseParts.join('/')
-}
-
-function uint8ArrayToBase64(buffer: Uint8Array): string {
-  let binary = ''
-  const chunkSize = 0x8000 // 32768 characters per chunk
-
-  for (let i = 0; i < buffer.length; i += chunkSize) {
-    const chunk = buffer.subarray(i, i + chunkSize)
-    binary += String.fromCharCode.apply(null, Array.from(chunk))
-  }
-
-  return btoa(binary)
-}
-
-function extractMetadata(contentDoc: Document): Metadata {
-  const getText = (tagName: string): string | undefined => {
-    const elements = contentDoc.getElementsByTagName(tagName)
-    if (elements.length > 0) {
-      return elements[0].textContent?.trim() || undefined
-    }
-    return undefined
-  }
-
-  const title = getText('dc:title')
-  const creator = getText('dc:creator')
-  const publisher = getText('dc:publisher')
-  const description = getText('dc:description')
-
-  return {
-    title,
-    creator,
-    publisher,
-    description
   }
 }
