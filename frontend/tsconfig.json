@@ -38,14 +38,17 @@
       "@hooks*": [
         "./src/hooks*"
       ],
+      "@context*": [
+        "./src/contextØ*"
+      ],
       "@workers*": [
         "./workers*"
       ],
       "@images*": [
-        "./images"
+        "./images*"
       ],
-      "@types*": [
-        "./types"
+      "@mytypes*": [
+        "./types*"
       ],
       "@lib*": [
         "./src/lib*"
@@ -61,7 +64,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules"

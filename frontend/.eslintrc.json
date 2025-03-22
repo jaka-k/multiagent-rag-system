@@ -23,12 +23,27 @@
     }
   },
   "rules": {
-    "no-undef": "off", // TypeScript handles this
-    "no-use-before-define": "off", // TypeScript handles this with @typescript-eslint/no-use-before-define
-    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
+    "no-undef": "off",
+    // TypeScript handles this
+    "no-use-before-define": "off",
+    // TypeScript handles this with @typescript-eslint/no-use-before-define
+    "no-plusplus": [
+      "error",
+      {
+        "allowForLoopAfterthoughts": true
+      }
+    ],
     "@typescript-eslint/no-use-before-define": "error",
-    "no-underscore-dangle": ["error", { "allow": ["_uid"] }],
-    "no-shadow": "off", // TypeScript handles this with @typescript-eslint/no-shadow
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": [
+          "_uid"
+        ]
+      }
+    ],
+    "no-shadow": "off",
+    // TypeScript handles this with @typescript-eslint/no-shadow
     "@typescript-eslint/no-shadow": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
@@ -36,14 +51,24 @@
       "error",
       {
         "ObjectExpression": "always",
-        "ObjectPattern": { "multiline": true },
+        "ObjectPattern": {
+          "multiline": true
+        },
         "ImportDeclaration": "never",
-        "ExportDeclaration": { "multiline": true, "minProperties": 2 }
+        "ExportDeclaration": {
+          "multiline": true,
+          "minProperties": 2
+        }
       }
     ],
-
-    "array-bracket-spacing": ["error", "always"],
-    "block-spacing": ["error", "always"],
+    "array-bracket-spacing": [
+      "error",
+      "always"
+    ],
+    "block-spacing": [
+      "error",
+      "always"
+    ],
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
     "import/no-unresolved": "error",
@@ -51,17 +76,41 @@
     "import/order": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
-      { "argsIgnorePattern": "^_" }
+      {
+        "argsIgnorePattern": "^_"
+      }
     ],
     "unused-imports/no-unused-imports": "error",
-    "unused-imports/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "jsx-a11y/role-supports-aria-props": "off", // TODO: Turn on once refactoring is finished
+    "unused-imports/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "jsx-a11y/role-supports-aria-props": "off",
+    // TODO: Turn on once refactoring is finished
     "padding-line-between-statements": [
       "error",
-      { "blankLine": "always", "prev": "*", "next": "block" },
-      { "blankLine": "always", "prev": "block", "next": "*" },
-      { "blankLine": "always", "prev": "*", "next": "block-like" },
-      { "blankLine": "always", "prev": "block-like", "next": "*" }
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "block"
+      },
+      {
+        "blankLine": "always",
+        "prev": "block",
+        "next": "*"
+      },
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "block-like"
+      },
+      {
+        "blankLine": "always",
+        "prev": "block-like",
+        "next": "*"
+      }
     ],
     "prettier/prettier": [
       "error",
@@ -80,36 +129,89 @@
       },
       "alias": {
         "map": [
-          ["@", "./src"],
-          ["@components", "./src/components"],
-          ["@containers", "./src/components/containers"],
-          ["@hooks", "./src/hooks"],
-          ["@images", "./images"],
-          ["@types", "./types"],
-          ["@lib", "./src/lib"]
+          [
+            "@",
+            "./src"
+          ],
+          [
+            "@components",
+            "./src/components"
+          ],
+          [
+            "@containers",
+            "./src/components/containers"
+          ],
+          [
+            "@ui",
+            "./src/components/ui"
+          ],
+          [
+            "@hooks",
+            "./src/hooks"
+          ],          [
+            "@context",
+            "./src/context"
+          ],
+          [
+            "@images",
+            "./images"
+          ],
+          [
+            "@workers",
+            "./workers"
+          ],
+          [
+            "@mytypes",
+            "./types"
+          ],
+          [
+            "@lib",
+            "./src/lib"
+          ]
         ],
-        "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx",
+          ".d.ts",
+          ".json"
+        ]
       }
     }
   },
   "overrides": [
     {
-      "files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
-      "extends": ["plugin:prettier/recommended"],
+      "files": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx"
+      ],
+      "extends": [
+        "plugin:prettier/recommended"
+      ],
       "rules": {
         "object-curly-newline": [
           "warn",
           {
             "ObjectExpression": "always",
-            "ObjectPattern": { "multiline": true },
+            "ObjectPattern": {
+              "multiline": true
+            },
             "ImportDeclaration": "never",
-            "ExportDeclaration": { "multiline": true, "minProperties": 3 }
+            "ExportDeclaration": {
+              "multiline": true,
+              "minProperties": 3
+            }
           }
         ]
       }
     },
     {
-      "files": ["**/*.stories.jsx"],
+      "files": [
+        "**/*.stories.jsx"
+      ],
       "rules": {
         "import/no-anonymous-default-export": "off"
       }
