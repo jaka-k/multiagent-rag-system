@@ -5,7 +5,7 @@ import {
   deleteFlashcard,
   getFlashcards
 } from '@lib/fetchers/fetch-flashcards.ts'
-import { Flashcard } from '@types/types'
+import { Flashcard } from '@mytypes/types'
 import React, {
   startTransition,
   useEffect,

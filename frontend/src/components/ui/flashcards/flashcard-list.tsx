@@ -1,4 +1,4 @@
-import { Flashcard } from '@types'
+import { Flashcard } from '@mytypes/types'
 import FlashcardItem from '@ui/flashcards/flashcard-item'
 
 interface FlashcardListProps {
@@ -15,7 +15,7 @@ function FlashcardList({
 
   return (
     <div className="flex flex-col gap-4">
-      {flashcards.map((flashcard) => (
+      {flashcards?.map((flashcard) => (
         <FlashcardItem
           key={flashcard.id}
           flashcard={flashcard}
