@@ -2,21 +2,23 @@ import { logger } from '@lib/logger.ts'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-export function middleware(req: NextRequest) {
-  const token = req.cookies.get('token')?.value || ''
+export const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080'
+
+export async function middleware(req: NextRequest) {
+  const refreshToken = req.cookies.get('refreshToken')?.value
   const { pathname } = req.nextUrl
   const publicRoutes = ['/login']
 
   if (publicRoutes.includes(pathname)) {
-    if (token && pathname === '/login') {
+    if (refreshToken && pathname === '/login') {
       return NextResponse.redirect(new URL('/', req.url))
     }
 
     return NextResponse.next()
   }
 
-  if (!token) {
-    logger.info('No token found. Redirecting to /login')
+  if (!refreshToken) {
+    logger.info('No refresh token found. Redirecting to /login')
     return NextResponse.redirect(new URL('/login', req.url))
   }
 

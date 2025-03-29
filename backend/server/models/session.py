@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, timezone
-from typing import List
 
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -28,7 +27,7 @@ class Session(SQLModel, table=True):
     completion_tokens: int = Field(default=0)
     total_cost: float = Field(default=0.0)
 
-    messages: List["Message"] = Relationship(
+    messages: list["Message"] = Relationship(
         back_populates="session",
         sa_relationship_kwargs={"lazy": "selectin", "order_by": "Message.created_at.asc()"},
     )
@@ -66,7 +65,6 @@ class FlashcardQueue(SQLModel, table=True):
     flashcard_data: str = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
     session: "Session" = Relationship(
         back_populates="flashcard_queue",
         sa_relationship_kwargs={"uselist": False, "lazy": "selectin"},
@@ -82,11 +80,12 @@ class ChapterQueue(SQLModel, table=True):
     session: "Session" = Relationship(back_populates="chapter_queue")
 
     # Many-to-many
-    chapters: List["Chapter"] = Relationship(
+    chapters: list["Chapter"] = Relationship(
         back_populates="queues",
         link_model=ChapterQueueLink,
         sa_relationship_kwargs={"lazy": "selectin"},
     )
+
 
 class CustomInstructionQueue(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

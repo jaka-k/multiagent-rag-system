@@ -1,14 +1,13 @@
 'use client'
 
-import React from 'react'
-import { Button } from '../button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '../select'
+import useAreaStore from '@context/area-store.tsx'
+import { useToast } from '@hooks/use-toast.ts'
+import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
+import { logger } from '@lib/logger.ts'
+import { signOut } from '@lib/session/auth.ts'
+import { CreateAreaResponse } from '@mytypes/types'
+import { Button } from '@ui/button'
+import AreaSelector from '@ui/dashboard/area-selector.tsx'
 import {
   Dialog,
   DialogClose,
@@ -20,69 +19,69 @@ import {
   DialogTrigger
 } from '@ui/dialog'
 import { Input } from '@ui/input'
-import { signOut } from '@lib/auth'
-import { LogOutIcon } from 'lucide-react'
 import { Label } from '@ui/label.tsx'
-import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
-import { useToast } from '@hooks/use-toast.ts'
-import { logger } from '@lib/logger.ts'
+import { LogOutIcon } from 'lucide-react'
+import React, { useEffect } from 'react'
 
 const TopMenu = () => {
-  const [areas, setAreas] = React.useState<string[]>([
-    'Golang',
-    'Linux',
-    'Sys-Design'
-  ])
-  const [selectedArea, setSelectedArea] = React.useState<string>(areas[0])
+  // Hydration fix for server components
+  const [isMounted, setIsMounted] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
   const [newAreaName, setNewAreaName] = React.useState('')
   const [newAreaLabel, setNewAreaLabel] = React.useState('')
 
   const { toast } = useToast()
 
+  const { fetchAreas, setActiveArea, addArea } = useAreaStore.getState()
+
+  useEffect(() => {
+    setIsMounted(true)
+    fetchAreas()
+  }, [fetchAreas])
+
+  if (!isMounted) {
+    return null
+  }
+
   async function handleCreateArea() {
     if (!newAreaName) return
-    const response = await fetchWithAuth('/api/area', {
+    const response = await fetchWithAuth<CreateAreaResponse>('/api/area', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: newAreaName,
-        label: newAreaLabel,
-        user_id: '0280748e-cdd3-4501-90b5-1e8af3d1ed5d'
+        label: newAreaLabel
       })
     })
 
     if (!response.ok) {
-      console.log(response)
+      logger.error(
+        `Area could not be created: ${JSON.stringify(response.data)}`
+      )
       toast({
         title: 'Area not created ⛔️',
         description:
           'We encountered an internal error, when creating your area.'
       })
-      logger.error('Area could not be created', response.data)
       return
     }
-    setAreas((prev) => [...prev, newAreaName])
-    setSelectedArea(newAreaName)
+
+    addArea({
+      ...response.data,
+      documents: []
+    })
+    setActiveArea(response.data.id)
     setNewAreaName('')
+    setNewAreaLabel('')
+    setOpen(false)
   }
 
   return (
     <div className="flex items-center justify-between p-4 border-b">
-      {/* 1) Area Selection with shadcn/ui Select */}
       <div className="flex space-x-4">
-        <Select value={selectedArea} onValueChange={setSelectedArea}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select area" />
-          </SelectTrigger>
-          <SelectContent>
-            {areas.map((area) => (
-              <SelectItem key={area} value={area}>
-                {area}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <AreaSelector />
 
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="secondary">Create New Area</Button>
           </DialogTrigger>
@@ -122,7 +121,7 @@ const TopMenu = () => {
       </div>
       <Button
         onClick={() => signOut()}
-        className="bg-violet-400 hover:bg-violet-500 text-white"
+        className="bg-indigo-400 hover:bg-indigo-500 text-white"
       >
         <LogOutIcon size={16} />
       </Button>

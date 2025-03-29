@@ -1,17 +1,14 @@
+import uuid
 from datetime import timedelta, datetime, timezone
 from typing import List
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.config import settings
-from server.models.session import Session
-
-from sqlmodel import select, and_
-
 from server.core.security import (
     RefreshTokenSchema,
     authenticate_user,
@@ -22,8 +19,9 @@ from server.core.security import (
     get_password_hash,
     get_user_by_id,
 )
-from server.db.database import drop_all_tables, get_session
+from server.db.database import get_session
 from server.models.area import Area
+from server.models.session import Session
 from server.models.user import User, Token
 
 
@@ -42,8 +40,8 @@ router = APIRouter()
 
 @router.post("/token", response_model=TokenSchema)
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_session),
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     user = await authenticate_user(session, form_data.username, form_data.password)
     if not user:
@@ -66,29 +64,25 @@ async def login_for_access_token(
 
 @router.post("/refresh", response_model=TokenSchema)
 async def refresh_access_token(
-    refresh_data: RefreshTokenSchema,
-    session: AsyncSession = Depends(get_session),
+        refresh_data: RefreshTokenSchema,
+        session: AsyncSession = Depends(get_session),
 ):
-    token = await session.execute(
-        select(Token).where(
-            and_(
-                Token.token == refresh_data.refresh_token,
-                Token.revoked == False,
-                Token.expires_at > datetime.now(timezone.utc),
-            )
-        )
-    )
-    token = token.scalars().first()
+    print("refresh_data Y21", refresh_data)
+    stmt = select(Token).where(
+        Token.token == refresh_data.refresh_token,
+        Token.revoked == False,
+        Token.expires_at > datetime.now(timezone.utc))
+
+    result = await session.execute(stmt)
+    token = result.scalar_one_or_none()
+
     if not token:
+        print("Token Y22", token)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    token.revoked = True
-    session.add(token)
-    await session.commit()
 
     user = await get_user_by_id(session, token.user_id)
     if not user:
@@ -112,10 +106,10 @@ async def refresh_access_token(
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout_user(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
 ):
-
+    ## TODO: FIX
     stmt = select(Token).where(Token.user_id == current_user.id)
     result = await session.execute(stmt)
 
@@ -138,18 +132,25 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 
 @router.get("/users/me/areas/", response_model=List[Area])
 async def read_own_areas(
-    current_user: User = Depends(get_current_active_user),
-    session: AsyncSession = Depends(get_session),
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
 ):
-    return current_user.areas
+    stmt = select(Area).where(Area.user_id == current_user.id)
+    result = await session.execute(stmt)
+
+    return result.scalars().all()
 
 
 @router.get("/users/me/sessions/", response_model=None)
 async def read_own_sessions(
-    current_user: User = Depends(get_current_active_user),
-    session: AsyncSession = Depends(get_session),
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
 ):
-    return current_user.sessions
+    # TODO: Pagination
+    stmt = select(Session).where(Session.user_id == current_user.id)
+    result = await session.execute(stmt)
+
+    return result.scalars().all()
 
 
 @router.get("/status/")
@@ -174,10 +175,9 @@ async def create_test_user(session: AsyncSession = Depends(get_session)):
 
 @router.get("/test-session/", tags=["dev-test"])
 async def create_session(
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+        current_user: User = Depends(get_current_active_user),
 ):
-
     chat_session = Session(
         title="test session",
         user_id=current_user.id,
@@ -191,17 +191,11 @@ async def create_session(
 
 @router.get("/test-area/", tags=["dev-test"])
 async def create_area(
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+        current_user: User = Depends(get_current_active_user),
 ):
     area = Area(name="Go", label="golang", user_id=current_user.id, tokens_used=1)
     session.add(area)
     await session.commit()
     print(f"Test area created.")
     return {"status": "ok"}
-
-
-@router.get("/test-delete/", tags=["dev-test"])
-async def delte_tables(session: AsyncSession = Depends(get_session)):
-    await drop_all_tables()
-    print(f"Test deleting completed.")

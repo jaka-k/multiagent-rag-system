@@ -3,13 +3,13 @@
 import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
 import { Label } from '@components/ui/label'
-import { signIn } from '@lib/auth'
+import { signIn } from '@lib/session/auth.ts'
 import { LoaderCircle } from 'lucide-react'
 import * as React from 'react'
-import { useFormState } from 'react-dom'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@lib/utils'
 import { useToast } from '@hooks/use-toast'
+import { logger } from '@lib/logger.ts'
 
 type ButtonEvent =
   | React.MouseEvent<HTMLButtonElement>
@@ -24,21 +24,23 @@ export function UserAuthForm() {
 
   const { toast } = useToast()
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
-  const [state, dispatch, isPending] = useFormState<void, typeof formValues>(
-    async (_, formData) => {
-      try {
-        await signIn(formData)
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          setErrorMessage(error.message)
-        } else {
-          setErrorMessage('An unexpected error occurred')
-        }
+  const [_state, dispatch, isPending] = React.useActionState<
+    void,
+    typeof formValues
+  >(async (_, formData) => {
+    try {
+      await signIn(formData)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error('Handled sign in error', error)
+        setErrorMessage(error.message)
+      } else {
+        logger.error(
+          `An unexpected error occurred when trying to login: ${error}`
+        )
       }
-    },
-    undefined as void
-  )
+    }
+  }, undefined as void)
 
   const handleSubmit = () => {
     toast({

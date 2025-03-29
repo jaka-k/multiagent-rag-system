@@ -1,11 +1,10 @@
+import ChatTable from '@components/containers/chat-table'
 import { Dashboard } from '@components/ui/dashboard/dashboard'
 import TopMenu from '@components/ui/dashboard/top-menu'
 
-import ChatTable from '../components/containers/chat-table'
-
 // Something like this: https://ui.shadcn.com/examples/tasks
 
-export default function Home() {
+export default async function Home() {
   return (
     <main className="flex flex-col w-full min-h-screen mt-2">
       <TopMenu />
