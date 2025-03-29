@@ -1,3 +1,22 @@
+export interface Area {
+  id: string
+  created: Date
+  name: string
+  label: string
+  documents: Document[]
+}
+
+export interface Document {
+  id: string
+  user_id: string
+  area_id: string
+  created_at: Date
+  title: string
+  description: string
+  cover_image: string
+  embedding_status: 'idle' | 'processing' | 'embedding' | 'completed'
+}
+
 export interface Message {
   id?: string
   session_id?: string
@@ -51,7 +70,6 @@ export type EpubFile = {
 export type CreateDocumentRequest = {
   title: string
   area_id: string
-  user_id: string
   description: string
   file_path: string
   file_size: number
@@ -61,4 +79,15 @@ export type CreateDocumentRequest = {
 export type CreateDocumentResponse = {
   message: string
   id: string
+}
+
+export type CreateAreaResponse = {
+  id: string
+  created: Date
+  name: string
+  label: string
+}
+
+export type WithRefreshedToken<T> = T & {
+  refreshToken: string | null
 }

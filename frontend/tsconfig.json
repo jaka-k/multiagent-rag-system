@@ -39,7 +39,7 @@
         "./src/hooks*"
       ],
       "@context*": [
-        "./src/contextØ*"
+        "./src/context*"
       ],
       "@workers*": [
         "./workers*"
