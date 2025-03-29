@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -48,3 +49,6 @@ class HealthCheck(BaseModel):
 def get_health() -> HealthCheck:
     """Perform a health check."""
     return HealthCheck(status="200")
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True)

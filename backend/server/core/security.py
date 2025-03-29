@@ -1,14 +1,13 @@
-from datetime import datetime, timedelta, timezone
 import secrets
-from typing import Optional
 import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
-
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -54,7 +53,7 @@ async def get_user_by_id(session: AsyncSession, user_id: uuid.UUID) -> Optional[
 
 
 async def authenticate_user(
-    session: AsyncSession, username: str, password: str
+        session: AsyncSession, username: str, password: str
 ) -> Optional[User]:
     """Authenticate user credentials."""
     user = await get_user(session, username)
@@ -89,7 +88,7 @@ async def create_refresh_token(session: AsyncSession, user: User) -> Token:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)
+        token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)
 ) -> User:
     """Retrieve the current user based on the JWT token."""
     credentials_exception = HTTPException(
@@ -99,11 +98,12 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(
-            token, settings.hashing_secret_key, algorithms=[settings.hashing_algorithm]
+            token, settings.hashing_secret_key, algorithms=[settings.hashing_algorithm],
+            options={"require": ["exp", "sub"]}
         )
         user_id: str = payload.get("sub")
         if user_id is None:
-            app_logger.warn("Invalid user credentials.")
+            app_logger.warning(f"Invalid credentials attempt: token={token[:10]}... (truncated)")
             raise credentials_exception
     except jwt.ExpiredSignatureError:
         raise HTTPException(
@@ -125,13 +125,13 @@ async def get_current_user(
 
     user = await get_user_by_id(session, user_uuid)
     if user is None:
-        app_logger.warn("Invalid user credentials.")
+        app_logger.warning(f"User not found for token: {user_id}")
         raise credentials_exception
     return user
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+        current_user: User = Depends(get_current_user),
 ) -> User:
     """Ensure the current user is active."""
     if current_user.disabled:
