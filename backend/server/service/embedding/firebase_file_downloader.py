@@ -13,7 +13,6 @@ firebase_admin.initialize_app(cred, {
 
 class FirebaseFileDownloader:
     def __init__(self):
-        # Retrieve configuration from environment variables if not provided
         self.temp_file = None
         self.temp_file_destination = None
 
@@ -43,7 +42,7 @@ class FirebaseFileDownloader:
         Removes the temporary file if it exists.
         """
         if self.temp_file_destination and os.path.exists(self.temp_file_destination):
-            self.temp_file.cleanup()
+            os.remove(self.temp_file_destination)
             logging.info(f"Temporary file {self.temp_file_destination} removed.")
             self.temp_file = None
             self.temp_file_destination = None

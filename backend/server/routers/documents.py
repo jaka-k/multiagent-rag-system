@@ -5,8 +5,10 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.embedding_controller import background_embedding_process
+from server.core.security import get_current_active_user
 from server.db.database import get_session
-from server.models.document import Document
+from server.models.document import Document, EmbeddingStatus
+from server.models.user import User
 from statemachine.embeddings.model import populate
 
 router = APIRouter()
@@ -30,13 +32,13 @@ async def populate1():
 
 
 @router.post("/epub-upload")
-async def parse_uploaded_epub(request: EpubUploadRequest, session: AsyncSession = Depends(get_session)):
-    print(request)
+async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = Depends(get_current_active_user),
+                              session: AsyncSession = Depends(get_session)):
     body = request.model_dump()
 
     doc = Document(title=body["title"],
                    area_id=body["area_id"],
-                   user_id=body["user_id"],
+                   user_id=current_user.id,
                    description=body["description"],
                    file_path=body["file_path"],
                    file_size=body["file_size"],
@@ -71,5 +73,8 @@ async def embedding_status(document_id: str, session: AsyncSession = Depends(get
 
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    if document.embedding_status == EmbeddingStatus.IDLE:
+        raise HTTPException(status_code=500, detail="Document embedding stopped abruptly")
 
     return {"status": document.embedding_status}

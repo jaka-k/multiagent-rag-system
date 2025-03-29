@@ -42,12 +42,12 @@ async def websocket_endpoint(
         chat_id: uuid.UUID,
         session: AsyncSession = Depends(get_session),
 ):
-    stmt = select(Session).where(session.id == chat_id)
+    stmt = select(Session).options(selectinload(Session.area)).where(Session.id == chat_id)
     result = await session.execute(stmt)
-    session = result.scalars().first()
+    chat = result.scalars().first()
 
     # TODO: Error handling is non-existent, The service should be integrated inside the controller
-    chat_service = ChatService(chat_id, area, session)
+    chat_service = ChatService(chat_id, chat.area.label, session)
     chat_controller = ChatController(chat_id, session)
 
     flashcard_queue = await chat_service.get_flashcard_queue()
@@ -67,9 +67,7 @@ async def websocket_endpoint(
             context = []
 
             async for chat_output_dto in response_generator:
-                print(f"Received ChatOutputStreamDTO: {chat_output_dto}")
                 async for content in chat_output_dto.stream_messages():
-                    print(f"Received Content: {content}")
                     if isinstance(content, MetaDataDTO):
                         metadata_collector = content
                         await websocket.send_text(
@@ -81,8 +79,8 @@ async def websocket_endpoint(
                         await websocket.send_text(json.dumps({"content": message_text}))
                     elif isinstance(content, dict) and "context" in content:
                         context = content["context"]
+                        print(context)
                         ## TODO: SEND Context to document console
-
 
             await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.update_session_metadata(metadata_collector)

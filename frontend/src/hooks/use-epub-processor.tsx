@@ -1,4 +1,4 @@
-import { EpubMetadata } from '@types/epub-processor'
+import { EpubMetadata } from '@mytypes/epub-processor'
 import { useEffect, useState } from 'react'
 
 interface WorkerMessage {

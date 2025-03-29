@@ -1,11 +1,10 @@
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth'
 import { logger } from '@lib/logger'
+import { EpubFile } from '@mytypes/types'
 import { Button } from '@ui/button'
 import { TableCell, TableRow } from '@ui/table/table'
 import { Check, DrumIcon, Loader2Icon } from 'lucide-react'
 import React, { useState } from 'react'
-
-import { EpubFile } from '../../../../types/types'
 
 function EpubElement({ epubFile }: { epubFile: EpubFile }) {
   const [currentStep, setCurrentStep] = useState<string>()
@@ -57,32 +56,42 @@ function EpubElement({ epubFile }: { epubFile: EpubFile }) {
       <TableCell>{(epubFile.size / 1024 / 1024).toFixed(2)} MB</TableCell>
       <TableCell>{(epubFile.tokens || 0).toLocaleString()}</TableCell>
       <TableCell>€{(epubFile.cost || 0).toFixed(4)}</TableCell>
-      <TableCell>
-        <Button
-          onClick={() => createVectorEmbedding()}
-          className={`w-full ${
-            currentStep === 'completed' ? 'bg-green-500' : 'bg-black'
-          }`}
-        >
-          {currentStep === 'processing' ? (
-            <>
-              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : currentStep === 'embedding' ? (
-            <>
-              <DrumIcon className="mr-2 h-4 w-4 animate-pulse" />
-              Embedding...
-            </>
-          ) : currentStep === 'completed' ? (
-            <>
-              <Check className="mr-2 h-4 w-4" />
-              Done
-            </>
-          ) : (
-            <>Create Embedding</>
-          )}
-        </Button>
+      <TableCell className="text-right">
+        {currentStep === 'processing' ? (
+          <div
+            className={
+              'bg-purple-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
+            }
+          >
+            <Loader2Icon className="mr-4 h-4 w-4 animate-spin" />
+            Processing...
+          </div>
+        ) : currentStep === 'embedding' ? (
+          <div
+            className={
+              'bg-indigo-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
+            }
+          >
+            <DrumIcon className="mr-2 h-4 w-4 animate-pulse" />
+            Embedding...
+          </div>
+        ) : currentStep === 'completed' ? (
+          <div
+            className={
+              'bg-green-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
+            }
+          >
+            <Check className="mr-2 h-4 w-4" />
+            Done
+          </div>
+        ) : (
+          <Button
+            onClick={() => createVectorEmbedding()}
+            className={'w-full bg-black'}
+          >
+            Create Embedding
+          </Button>
+        )}
       </TableCell>
     </TableRow>
   )

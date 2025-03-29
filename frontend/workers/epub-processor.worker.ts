@@ -10,7 +10,7 @@ import {
   EpubMetadata,
   WorkerIncomingMessage,
   WorkerOutgoingMessage
-} from '../types/epub-processor'
+} from '@mytypes/epub-processor'
 
 function extractEpubMetadata(epubBuffer: ArrayBuffer): EpubMetadata {
   const buffer = new Uint8Array(epubBuffer)

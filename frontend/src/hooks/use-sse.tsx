@@ -40,7 +40,7 @@ export const useSSE = ({
         onmessage(event) {
           const data = JSON.parse(event.data)
           if (event.event === 'flashcard') onFlashcardUpdate(data)
-          if (event.event === 'document') onDocumentUpdate(data)
+          if (event.event === 'documents') onDocumentUpdate(data)
         },
         onclose() {
           console.log('SSE closed, retrying...')

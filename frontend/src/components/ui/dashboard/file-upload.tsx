@@ -13,7 +13,13 @@ import {
   TableRow
 } from '@ui/table/table'
 import { TabsContent } from '@ui/tabs'
-import { FileText, ImageUp, Loader2Icon, UploadIcon } from 'lucide-react'
+import {
+  FileText,
+  ImageDown,
+  ImageUp,
+  Loader2Icon,
+  UploadIcon
+} from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
 
 import useEpubProcessor from '@hooks/use-epub-processor'
@@ -22,14 +28,19 @@ import {
   CreateDocumentRequest,
   CreateDocumentResponse,
   EpubFile
-} from '../../../../types/types'
+} from '@mytypes/types'
 import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
 import EpubElement from '@ui/dashboard/epub-element.tsx'
+import useAreaStore from '@context/area-store.tsx'
+import { Skeleton } from '@ui/skeleton.tsx'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)
   const [epubFiles, setEpubFiles] = useState<EpubFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const {activeArea} = useAreaStore()
+
+  if (!activeArea) return <Skeleton />
 
   const {
     metadata: metadataWorker,
@@ -72,7 +83,6 @@ export function FileUpload() {
     }
 
     try {
-      // 1) Upload the main EPUB
       const filename = noSpaceFilename(file.name)
       const mainFileMetadata = await uploadFile(file, `epubs/${filename}`)
       const coverFileMetadata = await uploadCover(
@@ -83,8 +93,7 @@ export function FileUpload() {
       // 3) Create your document
       const request: CreateDocumentRequest = {
         title: filename,
-        area_id: '24057f5e-f5a9-4c89-abce-d7468fba66aa',
-        user_id: '0280748e-cdd3-4501-90b5-1e8af3d1ed5d',
+        area_id: activeArea.id,
         description: filename,
         file_path: mainFileMetadata.fullPath,
         file_size: mainFileMetadata.size,
@@ -120,7 +129,7 @@ export function FileUpload() {
 
       if (fileInputRef.current) fileInputRef.current.value = ''
       setFile(undefined)
-      metadataWorker.coverImage = null
+      metadataWorker.coverImage = undefined
     } catch (error) {
       logger.error('Epub upload failed in handler:', error)
     }
@@ -147,10 +156,18 @@ export function FileUpload() {
                   disabled={isUploading}
                   ref={fileInputRef}
                 />
-                <Button type="submit" disabled={isUploading} className="w-full">
-                  {isUploading ? (
+                <Button
+                  type="submit"
+                  disabled={isUploading || loading}
+                  className="w-full"
+                >
+                  {isUploading || loading ? (
                     <>
-                      <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                      {loading ? (
+                        <ImageDown className="mr-2 h-4 w-4 animate-pulse" />
+                      ) : (
+                        <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Uploading
                     </>
                   ) : (

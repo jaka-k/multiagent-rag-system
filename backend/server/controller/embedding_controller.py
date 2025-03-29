@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from server.core.logger import app_logger
 from server.models.document import Document, EmbeddingStatus
 from server.service.embedding.embedding_service import EmbeddingService
 from server.service.embedding.epub_processing_service import EpubProcessingService
@@ -36,7 +37,8 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
         file_path = downloader.download_epub(document.file_path)
     except Exception as e:
         await update_document_status(session, document_id, EmbeddingStatus.IDLE)
-        raise HTTPException(status_code=501, detail=f"Failed to download EPUB: {str(e)}")
+        app_logger.error(f"Error during downloading of epub {document_id}: {e}")
+        raise e
 
     epub_service = EpubProcessingService(document, session)
 
@@ -44,17 +46,20 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
         await epub_service.process_and_commit(file_path)
     except Exception as e:
         await update_document_status(session, document_id, EmbeddingStatus.IDLE)
-        raise HTTPException(status_code=502, detail=f"Failed to process EPUB: {str(e)}")
+        app_logger.error(f"Error during parsing of document {document_id}: {e}")
+        raise e
 
     await update_document_status(session, document_id, EmbeddingStatus.EMBEDDING)
-    embedding_service = EmbeddingService(document, session)
+    embedding_service = EmbeddingService(document_id, session)
 
     try:
         await embedding_service.parse_chapters()
     except Exception as e:
         await update_document_status(session, document_id, EmbeddingStatus.IDLE)
-        raise HTTPException(status_code=503, detail=f"Failed to embed chapters: {str(e)}")
+        app_logger.error(f"Error during embedding process for document {document_id}: {e}")
+        raise e
 
     await update_document_status(session, document_id, EmbeddingStatus.COMPLETED)
 
     downloader.cleanup()
+    await session.close()
