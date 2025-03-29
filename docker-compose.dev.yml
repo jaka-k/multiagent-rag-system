@@ -68,7 +68,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
   chroma-server:
-    image: ghcr.io/chroma-core/chroma:latest
+    image: chromadb/chroma:latest
     container_name: chroma
     environment:
       - IS_PERSISTENT=1

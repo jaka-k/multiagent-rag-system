@@ -17,7 +17,7 @@ async def notification_listener():
 
     async with await psycopg.AsyncConnection.connect(dsn, autocommit=True) as conn:
 
-        await conn.execute(LiteralString(f"LISTEN {SSE_NOTIFY_CHANNEL};"))
+        await conn.execute(f"LISTEN {SSE_NOTIFY_CHANNEL};")
         async for notify in conn.notifies():
             await notifications_queue.put(notify.payload)
 

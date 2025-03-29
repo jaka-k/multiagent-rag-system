@@ -24,9 +24,9 @@ def lifespan_factory(
         if create_tables_on_start:
             try:
                 await init_db()
-                app_logger.info("Database tables created successfully.")
+                app_logger.info("🗄 Database tables created successfully.")
                 await start_all_listeners()
-                app_logger.info("Database listeners initiated successfully.")
+                app_logger.info("👂 Database listeners initiated successfully.")
             except Exception as e:
                 app_logger.warn(f"Error during database initialization: {e}")
                 raise e

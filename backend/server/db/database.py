@@ -9,9 +9,10 @@ from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from server.core.logger import app_logger
 from server.db.config import DATABASE_URL
 
-engine = create_async_engine(f"postgresql+psycopg://{DATABASE_URL}", echo=True, future=True)
+engine = create_async_engine(f"postgresql+psycopg://{DATABASE_URL}", future=True)
 SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
 
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
@@ -19,10 +20,10 @@ async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 async def init_db():
     """Initialize the database with all the tables defined in SQLModel models."""
-    print("Starting DB Initialization...")
+    app_logger.info("🚀 Starting DB Initialization...")
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    print("DB Initialization Completed.")
+    app_logger.info("✅  DB Initialization Completed!")
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
