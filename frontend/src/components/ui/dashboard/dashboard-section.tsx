@@ -1,11 +1,11 @@
 'use client'
 
-import React from 'react'
 import { Button } from '@ui/button'
-import { Input } from '@ui/input'
-import { TabsContent } from '@ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import { FileUpload } from '@ui/dashboard/file-upload'
+import { Input } from '@ui/input'
+import { TabsContent } from '@ui/tabs'
+import React from 'react'
 
 export function DashboardSection() {
   const [flashcardInstructions, setFlashcardInstructions] = React.useState(

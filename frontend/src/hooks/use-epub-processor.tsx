@@ -1,3 +1,4 @@
+import { logger } from '@lib/logger.ts'
 import { EpubMetadata } from '@mytypes/epub-processor'
 import { useEffect, useState } from 'react'
 
@@ -67,10 +68,12 @@ const useEpubProcessor = (): UseEpubProcessor => {
 
       worker.postMessage({
         type: 'extractCoverImage',
-        payload: { epubBuffer: arrayBuffer }
+        payload: {
+          epubBuffer: arrayBuffer
+        }
       })
     } catch (err) {
-      console.error('Error processing EPUB:', err)
+      logger.error('Error processing EPUB:', err)
       setError((err as Error).message || 'Unknown error')
       setLoading(false)
     }

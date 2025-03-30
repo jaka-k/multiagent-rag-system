@@ -12,7 +12,6 @@ function FlashcardList({
   onAddFlashcard,
   onDeleteFlashcard
 }: FlashcardListProps) {
-
   return (
     <div className="flex flex-col gap-4">
       {flashcards?.map((flashcard) => (

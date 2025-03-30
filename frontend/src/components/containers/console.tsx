@@ -1,16 +1,17 @@
 /* eslint-disable no-console */
+
 'use client'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
-import { Bot, Club, FileText } from 'lucide-react'
-import ChapterViewer from '@ui/chapter-viewer/chapter-viewer'
-import FlashcardList from '@ui/flashcards/flashcard-list'
-import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import { useFlashcards } from '@hooks/use-flashcards'
 import { useSSE } from '@hooks/use-sse'
-import { StatusIndicator } from '@ui/status-indicator'
-import { useMemo } from 'react'
 import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
+import ChapterViewer from '@ui/chapter-viewer/chapter-viewer'
+import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
+import FlashcardList from '@ui/flashcards/flashcard-list'
+import { StatusIndicator } from '@ui/status-indicator'
+import { Bot, Club, FileText } from 'lucide-react'
+import { useMemo } from 'react'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const {

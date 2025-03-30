@@ -1,27 +1,26 @@
 'use client'
 
+// TODO: handle locally
+// eslint-disable-next-line import/no-unresolved
+import 'highlight.js/styles/nnfx-light.css'
+
 import { Avatar, AvatarFallback } from '@components/ui/avatar'
 import { Button } from '@components/ui/button'
-import {
-  Dialog,
+import {Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle
-} from '@components/ui/dialog'
+  DialogTitle} from '@components/ui/dialog'
 import { cn, connectionStatusMapping } from '@lib/utils'
-import { ChatData, Message } from '@types'
-import {ArrowLeft, Plus, Send} from 'lucide-react'
+import { ChatData, Message } from '@mytypes/types'
+import { Textarea } from '@ui/textarea'
+import { ArrowLeft, Plus, Send } from 'lucide-react'
+import Link from 'next/link'
 import * as React from 'react'
 import { useEffect, useRef } from 'react'
 import Markdown from 'react-markdown'
 import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
-// TODO: handle locally
-// eslint-disable-next-line import/no-unresolved
-import 'highlight.js/styles/nnfx-light.css'
-import { Textarea } from '@ui/textarea'
-import Link from "next/link";
 
 export function Chat({ chatData }: { chatData: ChatData }) {
   const socketUrl = `ws://localhost:8080/api/ws/${chatData.id}`
@@ -86,7 +85,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         const messageData = JSON.parse(event.data)
 
         if (messageData.content) {
-
           appendToLastAgentMessage(messageData.content)
         } else if (messageData.metadata) {
           // Handle metadata
@@ -127,10 +125,9 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         <header className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <Link href="/">
-            <Button variant="outline" size="icon">
-
-            <ArrowLeft className="h-4 w-4" />
-            </Button>
+              <Button variant="outline" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
             </Link>
             <Avatar className="h-8 w-8">
               <AvatarFallback>
@@ -176,7 +173,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
                     ? 'ml-auto bg-cyan-800 text-white'
                     : 'bg-gray-100 text-gray-800'
                 )}
-
               >
                 {msg.content}
               </Markdown>

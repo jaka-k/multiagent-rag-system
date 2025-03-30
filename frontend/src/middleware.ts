@@ -2,8 +2,6 @@ import { logger } from '@lib/logger.ts'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-export const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080'
-
 export async function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value
   const { pathname } = req.nextUrl

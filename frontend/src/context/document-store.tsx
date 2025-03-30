@@ -99,7 +99,12 @@ const useDocumentStore = create(
             documentsByArea: {
               ...state.documentsByArea,
               [areaId]: areaDocuments.map((doc) =>
-                doc.id === docId ? { ...doc, ...updatedFields } : doc
+                doc.id === docId
+                  ? {
+                      ...doc,
+                      ...updatedFields
+                    }
+                  : doc
               )
             }
           }
@@ -107,7 +112,9 @@ const useDocumentStore = create(
       },
 
       setCurrentAreaId: (areaId: string | null) => {
-        set({ currentAreaId: areaId })
+        set({
+          currentAreaId: areaId
+        })
 
         if (areaId) {
           const { documentsByArea, loadingStates } = get()

@@ -1,8 +1,8 @@
 'use client'
 
+import { DashboardSection } from '@ui/dashboard/dashboard-section'
 import { Tabs, TabsList, TabsTrigger } from '@ui/tabs'
 import React from 'react'
-import { DashboardSection } from '@ui/dashboard/dashboard-section'
 
 export function Dashboard() {
   return (

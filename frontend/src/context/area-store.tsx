@@ -1,8 +1,8 @@
+import useDocumentStore from '@context/document-store'
+import { getAreas } from '@lib/fetchers/fetch-areas.ts'
 import type { Area } from '@mytypes/types'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getAreas } from '@lib/fetchers/fetch-areas.ts'
-import useDocumentStore from '@context/document-store'
 
 interface AreaStoreState {
   areas: Area[]
@@ -38,8 +38,11 @@ const useAreaStore = create(
           })
 
           const state = get()
+
           if (!state.activeArea && areas.length > 0) {
-            set({ activeArea: areas[0] })
+            set({
+              activeArea: areas[0]
+            })
           }
         } catch (error) {
           set({
@@ -55,8 +58,10 @@ const useAreaStore = create(
       error: null,
       activeArea: null,
       setActiveArea: (areaId) => {
-        const area = get().areas.find((area) => area.id === areaId)
-        set({ activeArea: area || null })
+        const area = get().areas.find((a) => a.id === areaId)
+        set({
+          activeArea: area || null
+        })
 
         const documentStore = useDocumentStore.getState()
         documentStore.setCurrentAreaId(areaId)

@@ -1,7 +1,7 @@
 'use client'
 
+import { TabsList, TabsTrigger } from '@ui/tabs'
 import { FolderInput, ScanFace, SwatchBookIcon } from 'lucide-react'
-import { TabsList, TabsTrigger } from '../tabs'
 
 const Sidebar = () => {
   return (

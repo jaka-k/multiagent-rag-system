@@ -1,5 +1,5 @@
 import { Card } from '@components/ui/card'
-import { Flashcard } from '@types'
+import { Flashcard } from '@mytypes/types'
 import { CirclePlus } from 'lucide-react'
 
 interface FlashcardItemProps {

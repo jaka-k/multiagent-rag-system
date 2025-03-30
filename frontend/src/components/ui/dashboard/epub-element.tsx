@@ -15,7 +15,9 @@ function EpubElement({ epubFile }: { epubFile: EpubFile }) {
 
       const response = await fetchWithAuth(`/api/embedding/${epubFile.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
 
       if (!response.ok) {
@@ -28,6 +30,7 @@ function EpubElement({ epubFile }: { epubFile: EpubFile }) {
             `/api/embedding-status/${epubFile.id}`
           )
           const { data } = statusResponse
+
           if (!statusResponse.ok) {
             throw new Error(
               'Embedding failed with status 400: ' +

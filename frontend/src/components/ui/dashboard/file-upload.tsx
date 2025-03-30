@@ -1,46 +1,36 @@
+import useAreaStore from '@context/area-store.tsx'
+import useEpubProcessor from '@hooks/use-epub-processor'
+import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
-
+import { logger } from '@lib/logger.ts'
 import { cn, estimateTokensAndCost, noSpaceFilename } from '@lib/utils'
+import {CreateDocumentRequest,
+  CreateDocumentResponse,
+  EpubFile} from '@mytypes/types'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
+import EpubElement from '@ui/dashboard/epub-element.tsx'
 import { Input } from '@ui/input'
 import { Progress } from '@ui/progress'
-import {
-  Table,
+import { Skeleton } from '@ui/skeleton.tsx'
+import {Table,
   TableBody,
   TableHead,
   TableHeader,
-  TableRow
-} from '@ui/table/table'
+  TableRow} from '@ui/table/table'
 import { TabsContent } from '@ui/tabs'
-import {
-  FileText,
+import {FileText,
   ImageDown,
   ImageUp,
   Loader2Icon,
-  UploadIcon
-} from 'lucide-react'
+  UploadIcon} from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
-
-import useEpubProcessor from '@hooks/use-epub-processor'
-import { logger } from '@lib/logger.ts'
-import {
-  CreateDocumentRequest,
-  CreateDocumentResponse,
-  EpubFile
-} from '@mytypes/types'
-import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
-import EpubElement from '@ui/dashboard/epub-element.tsx'
-import useAreaStore from '@context/area-store.tsx'
-import { Skeleton } from '@ui/skeleton.tsx'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)
   const [epubFiles, setEpubFiles] = useState<EpubFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const {activeArea} = useAreaStore()
-
-  if (!activeArea) return <Skeleton />
+  const { activeArea } = useAreaStore()
 
   const {
     metadata: metadataWorker,
@@ -59,8 +49,11 @@ export function FileUpload() {
 
   const totalSize = (file ? file.size : 0) / 1024 / 1024
 
+  if (!activeArea) return <Skeleton />
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (file && file.name.endsWith('.epub')) {
       setFile(file)
       await processEpub(file)
@@ -73,10 +66,12 @@ export function FileUpload() {
     | React.FormEventHandler<HTMLFormElement>
     | undefined = async (event: FormEvent) => {
     event.preventDefault()
+
     if (!file) {
       fileInputRef.current?.click()
       return
     }
+
     if (!metadataWorker?.coverImage) {
       logger.error('Cover image metadata is not available.')
       return
@@ -103,7 +98,9 @@ export function FileUpload() {
         '/api/epub-upload',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(request)
         }
       )
@@ -198,7 +195,11 @@ export function FileUpload() {
                 </span>
               )}
               {error && (
-                <p style={{ color: 'red' }}>
+                <p
+                  style={{
+                    color: 'red'
+                  }}
+                >
                   Error while processing cover image.
                 </p>
               )}

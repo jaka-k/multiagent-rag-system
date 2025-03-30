@@ -53,6 +53,7 @@ export function useFlashcards(
   async function handleAddFlashcard(id: string) {
     startTransition(() => addOptimisticUpdate(id))
     const result = await addFlashcard(id, areaId)
+
     if (result.id === id) {
       setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
     }
@@ -61,6 +62,7 @@ export function useFlashcards(
   async function handleDeleteFlashcard(id: string) {
     startTransition(() => addOptimisticUpdate(id))
     const result = await deleteFlashcard(id)
+
     if (result.id === id) {
       setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
     }

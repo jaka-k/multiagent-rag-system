@@ -1,3 +1,5 @@
+import useAreaStore from '@context/area-store.tsx'
+import { Area } from '@mytypes/types'
 import {
   Select,
   SelectContent,
@@ -5,11 +7,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@ui/select.tsx'
-
-import React from 'react'
 import { Skeleton } from '@ui/skeleton.tsx'
-import useAreaStore from '@context/area-store.tsx'
-import { Area } from '@mytypes/types'
+import React from 'react'
 
 function AreaSelector() {
   const { activeArea, setActiveArea, areas, isLoading, error } = useAreaStore()

@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,41 +19,18 @@
       }
     ],
     "paths": {
-      "@*": [
-        "./src/*"
-      ],
-      "@components*": [
-        "./src/components*"
-      ],
-      "@ui*": [
-        "./src/components/ui*"
-      ],
-      "@containers*": [
-        "./src/components/containers*"
-      ],
-      "@hooks*": [
-        "./src/hooks*"
-      ],
-      "@context*": [
-        "./src/context*"
-      ],
-      "@workers*": [
-        "./workers*"
-      ],
-      "@images*": [
-        "./images*"
-      ],
-      "@mytypes*": [
-        "./types*"
-      ],
-      "@lib*": [
-        "./src/lib*"
-      ]
+      "@*": ["./src/*"],
+      "@components*": ["./src/components*"],
+      "@ui*": ["./src/components/ui*"],
+      "@containers*": ["./src/components/containers*"],
+      "@hooks*": ["./src/hooks*"],
+      "@context*": ["./src/context*"],
+      "@workers*": ["./workers*"],
+      "@images*": ["./images*"],
+      "@mytypes*": ["./types*"],
+      "@lib*": ["./src/lib*"]
     },
-    "typeRoots": [
-      "./types",
-      "./node_modules/@types"
-    ],
+    "typeRoots": ["./types", "./node_modules/@types"],
     "target": "ES2017"
   },
   "include": [
@@ -67,7 +40,5 @@
     ".next/types/**/*.ts",
     "types/**/*.d.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

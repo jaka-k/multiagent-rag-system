@@ -24,9 +24,18 @@ const books = [
     id: 1,
     title: 'The Great Gatsby',
     chapters: [
-      { id: 1, name: 'Chapter 1: The Carraway Residence' },
-      { id: 2, name: 'Chapter 2: The Valley of Ashes' },
-      { id: 3, name: 'Chapter 3: Gatsby’s Mansion' }
+      {
+        id: 1,
+        name: 'Chapter 1: The Carraway Residence'
+      },
+      {
+        id: 2,
+        name: 'Chapter 2: The Valley of Ashes'
+      },
+      {
+        id: 3,
+        name: 'Chapter 3: Gatsby’s Mansion'
+      }
     ],
     coverUrl: '/efficient-go.png'
   },
@@ -34,9 +43,18 @@ const books = [
     id: 2,
     title: 'To Kill a Mockingbird',
     chapters: [
-      { id: 1, name: 'Chapter 1: Maycomb, Alabama' },
-      { id: 2, name: 'Chapter 2: Scout Goes to School' },
-      { id: 3, name: 'Chapter 3: Atticus Takes the Case' }
+      {
+        id: 1,
+        name: 'Chapter 1: Maycomb, Alabama'
+      },
+      {
+        id: 2,
+        name: 'Chapter 2: Scout Goes to School'
+      },
+      {
+        id: 3,
+        name: 'Chapter 3: Atticus Takes the Case'
+      }
     ],
     coverUrl: '/mastering-go.jpg'
   }
@@ -50,7 +68,10 @@ export default function ChapterViewer() {
 
   const toggleChapter = (bookId: number, chapterId: number) => {
     const key = `${bookId}-${chapterId}`
-    setExpandedChapters((prev) => ({ ...prev, [key]: !prev[key] }))
+    setExpandedChapters((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
   }
 
   return (
@@ -139,6 +160,7 @@ function ChapterContent({
     async function loadChapter() {
       setLoading(true)
       const fetchedContent = await fetchChapterContent(bookId, chapterId)
+
       if (!isCancelled) {
         setContent(fetchedContent)
         setLoading(false)

@@ -1,5 +1,7 @@
 import { logger } from '@lib/logger'
 import { storage } from '@lib/storage/storage'
+import { getCoverMetadata } from '@lib/utils'
+import { CoverImage } from '@mytypes/epub-processor'
 import {
   FullMetadata,
   ref,
@@ -7,9 +9,6 @@ import {
   UploadTaskSnapshot
 } from 'firebase/storage'
 import { useState } from 'react'
-
-import { getCoverMetadata } from '@lib/utils'
-import { CoverImage } from '../../types/epub-processor'
 
 interface UseFirebaseUploadReturn {
   isUploading: boolean

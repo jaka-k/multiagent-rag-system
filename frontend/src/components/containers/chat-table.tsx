@@ -19,6 +19,7 @@ import {
   numberComparison
 } from '@components/ui/table/table-schemas'
 import {
+  ColumnFilter,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -33,7 +34,7 @@ import { placeholderTable } from '../../../mock/mockData'
 const ChatTable = () => {
   const data = placeholderTable
   const router = useRouter()
-  const [columnFilters, setColumnFilters] = useState([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Collect unique labels from the data

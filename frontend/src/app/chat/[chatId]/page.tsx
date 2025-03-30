@@ -1,10 +1,14 @@
-import { Chat } from '@/components/containers/chat'
-import Console from '@/components/containers/console'
+import { Chat } from '@components/containers/chat'
+import Console from '@components/containers/console'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
-import { ChatData } from '@mytypes/types'
 import { logger } from '@lib/logger.ts'
+import { ChatData } from '@mytypes/types'
 
-const ChatPage = async ({ params }: { params: Promise<{ chatId: string }> }) => {
+const ChatPage = async ({
+  params
+}: {
+  params: Promise<{ chatId: string }>
+}) => {
   const { chatId } = await params
   const response = await fetchWithAuth<ChatData>(`/api/chat/${chatId}`)
 

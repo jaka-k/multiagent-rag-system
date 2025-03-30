@@ -3,13 +3,12 @@
 import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
 import { Label } from '@components/ui/label'
-import { signIn } from '@lib/session/auth.ts'
-import { LoaderCircle } from 'lucide-react'
-import * as React from 'react'
-
-import { cn } from '@lib/utils'
 import { useToast } from '@hooks/use-toast'
 import { logger } from '@lib/logger.ts'
+import { signIn } from '@lib/session/auth.ts'
+import { cn } from '@lib/utils'
+import { LoaderCircle } from 'lucide-react'
+import * as React from 'react'
 
 type ButtonEvent =
   | React.MouseEvent<HTMLButtonElement>

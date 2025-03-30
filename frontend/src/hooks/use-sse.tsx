@@ -25,6 +25,7 @@ export const useSSE = ({
             response.ok &&
             response.headers.get('content-type') === 'text/event-stream'
           ) {
+            // TODO: Logging?
             console.log('EventSource connected')
             setIsConnected(true)
           } else if (
@@ -69,5 +70,7 @@ export const useSSE = ({
     }
   }, [chatId])
 
-  return { isConnected }
+  return {
+    isConnected
+  }
 }
