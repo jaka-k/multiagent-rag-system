@@ -4,26 +4,32 @@ import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
 import { logger } from '@lib/logger.ts'
 import { cn, estimateTokensAndCost, noSpaceFilename } from '@lib/utils'
-import {CreateDocumentRequest,
+import {
+  CreateDocumentRequest,
   CreateDocumentResponse,
-  EpubFile} from '@mytypes/types'
+  EpubFile
+} from '@mytypes/types'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import EpubElement from '@ui/dashboard/epub-element.tsx'
 import { Input } from '@ui/input'
 import { Progress } from '@ui/progress'
 import { Skeleton } from '@ui/skeleton.tsx'
-import {Table,
+import {
+  Table,
   TableBody,
   TableHead,
   TableHeader,
-  TableRow} from '@ui/table/table'
+  TableRow
+} from '@ui/table/table'
 import { TabsContent } from '@ui/tabs'
-import {FileText,
+import {
+  FileText,
   ImageDown,
   ImageUp,
   Loader2Icon,
-  UploadIcon} from 'lucide-react'
+  UploadIcon
+} from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
 
 export function FileUpload() {
