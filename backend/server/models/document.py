@@ -7,11 +7,13 @@ from sqlmodel import SQLModel, Field, Relationship
 
 from server.models.links import ChapterQueueLink
 
+
 class EmbeddingStatus(str, Enum):
     IDLE = "idle"
     PROCESSING = "processing"
     EMBEDDING = "embedding"
     COMPLETED = "completed"
+
 
 class Document(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -34,7 +36,8 @@ class Document(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc), sa_column_kwargs={
             "onupdate": lambda: datetime.now(timezone.utc)})
 
-    chapters: List["Chapter"] = Relationship(back_populates="document")
+    chapters: List["Chapter"] = Relationship(back_populates="document",
+                                             sa_relationship_kwargs={"uselist": False, "lazy": "selectin"}, )
 
 
 class Chapter(SQLModel, table=True):

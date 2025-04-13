@@ -5,12 +5,13 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface DocumentStoreState {
-  documentsByArea: Record<string, Document[]>
+  documentsByArea: Record<string, Record<string, Document>>
   loadingStates: Record<string, boolean>
   errorStates: Record<string, string | null>
   currentAreaId: string | null
 
   fetchDocumentsForArea: (areaId: string) => Promise<void>
+  getDocument: (docId: string) => Document | null
   addDocument: (areaId: string, document: Document) => void
   updateDocument: (
     areaId: string,
@@ -50,7 +51,9 @@ const useDocumentStore = create(
           set((state) => ({
             documentsByArea: {
               ...state.documentsByArea,
-              [areaId]: documents
+              [areaId]: Object.fromEntries(
+                documents.map((doc) => [doc.id, doc])
+              )
             },
             loadingStates: {
               ...state.loadingStates,
@@ -76,13 +79,28 @@ const useDocumentStore = create(
         }
       },
 
+      getDocument: (docId: string) => {
+        const { currentAreaId, documentsByArea } = get()
+        console.log('currentAreaId', currentAreaId)
+        if (!currentAreaId) return null
+        console.log(
+          'documentsByArea[currentAreaId]?.[docId]',
+          documentsByArea[currentAreaId]?.[docId]
+        )
+
+        return documentsByArea[currentAreaId]?.[docId] || null
+      },
+
       addDocument: (areaId: string, document: Document) => {
         set((state) => {
           const areaDocuments = state.documentsByArea[areaId] || []
           return {
             documentsByArea: {
               ...state.documentsByArea,
-              [areaId]: [...areaDocuments, document]
+              [areaId]: {
+                ...areaDocuments,
+                [document.id]: document
+              }
             }
           }
         })
@@ -94,18 +112,16 @@ const useDocumentStore = create(
         updatedFields: Partial<Document>
       ) => {
         set((state) => {
-          const areaDocuments = state.documentsByArea[areaId] || []
+          const areaDocs = state.documentsByArea[areaId] || []
+          const existing = areaDocs[docId]
+
           return {
             documentsByArea: {
               ...state.documentsByArea,
-              [areaId]: areaDocuments.map((doc) =>
-                doc.id === docId
-                  ? {
-                      ...doc,
-                      ...updatedFields
-                    }
-                  : doc
-              )
+              [areaId]: {
+                ...areaDocs,
+                [docId]: existing ? { ...existing, ...updatedFields } : existing
+              }
             }
           }
         })

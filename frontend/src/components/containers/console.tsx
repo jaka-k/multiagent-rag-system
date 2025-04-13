@@ -1,45 +1,24 @@
-/* eslint-disable no-console */
-
 'use client'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
-import { useFlashcards } from '@hooks/use-flashcards'
-import { useSSE } from '@hooks/use-sse'
-import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
-import ChapterViewer from '@ui/chapter-viewer/chapter-viewer'
+import ChapterViewer from '@ui/console/chapter-viewer.tsx'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import FlashcardList from '@ui/flashcards/flashcard-list'
-import { StatusIndicator } from '@ui/status-indicator'
 import { Bot, Club, FileText } from 'lucide-react'
-import { useMemo } from 'react'
+import useConsoleStore from '@context/console-store.tsx'
+import SSEPill from '@ui/console/sse-pill'
+import { useEffect } from 'react'
+import useAreaStore from '@context/area-store.tsx'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
-  const {
-    optimisticFlashcards,
-    setFlashcards,
-    handleAddFlashcard,
-    handleDeleteFlashcard
-  } = useFlashcards(chatId, areaId)
-
-  const { isConnected } = useSSE({
-    chatId,
-    onFlashcardUpdate: useMemo(
-      () => async (flashcardIds) => {
-        for (const id of flashcardIds) {
-          console.log(id)
-          const flashcard = await getSingleFlashcard(id)
-          setFlashcards((prev) => [...prev, flashcard])
-        }
-      },
-      []
-    ),
-    onDocumentUpdate: useMemo(
-      () => (documentIds) => {
-        console.log('Document Update:', documentIds)
-      },
-      []
-    )
-  })
+  const { setActiveArea } = useAreaStore.getState()
+  const { fetchConsoleQueues, setCurrentConsole } = useConsoleStore.getState()
+  useEffect(() => {
+    console.log(areaId)
+    setActiveArea(areaId)
+    setCurrentConsole(chatId)
+    fetchConsoleQueues(chatId)
+  }, [chatId])
 
   return (
     <section className="h-full w-full overflow-y-auto px-2 py-4">
@@ -47,22 +26,18 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
       <div className="bg-white rounded-lg shadow-md p-4 mb-4">
         <header className="flex items-center justify-between px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-800">Console</h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">
-              SSE Connection Status:
-            </span>
-            <StatusIndicator isConnected={isConnected} />
-          </div>
+          <SSEPill chatId={chatId} />
         </header>
       </div>
       <div className="bg-white rounded-lg shadow-lg p-4 ">
         <Tabs defaultValue="flashcards">
           <TabsList
             className="
-      inline-flex items-center 
-      bg-gray-100 
+      inline-flex items-center
+      bg-gray-100
       p-1
-      rounded-full
+      py-6
+      rounded-lg
       gap-1
       w-full
       justify-around
@@ -71,9 +46,9 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
             <TabsTrigger
               value="documents"
               className="
-        flex items-center gap-1 px-3 py-1.5 
-        text-sm font-medium text-gray-600 
-        rounded-full 
+        flex items-center gap-1 px-3 py-1.5
+        text-sm font-medium text-gray-600
+        rounded-lg
         transition-colors
         data-[state=active]:bg-white
         data-[state=active]:text-gray-800
@@ -90,7 +65,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
               className="
         flex items-center gap-1 px-3 py-1.5
         text-sm font-medium text-gray-600
-        rounded-full
+        rounded-lg
         transition-colors
         data-[state=active]:bg-white
         data-[state=active]:text-gray-800
@@ -107,7 +82,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
               className="
         flex items-center gap-1 px-3 py-1.5
         text-sm font-medium text-gray-600
-        rounded-full
+        rounded-lg
         transition-colors
         data-[state=active]:bg-white
         data-[state=active]:text-gray-800
@@ -121,15 +96,11 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
           </TabsList>
 
           <TabsContent value="documents">
-            <ChapterViewer />
+            <ChapterViewer chatId={chatId} />
           </TabsContent>
 
           <TabsContent value="flashcards">
-            <FlashcardList
-              flashcards={optimisticFlashcards}
-              onAddFlashcard={handleAddFlashcard}
-              onDeleteFlashcard={handleDeleteFlashcard}
-            />
+            <FlashcardList chatId={chatId} areaId={areaId} />
           </TabsContent>
           <TabsContent value="creator">
             <FlashcardCreator />

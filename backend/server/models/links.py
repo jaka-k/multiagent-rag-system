@@ -2,7 +2,7 @@ import uuid
 
 from sqlmodel import Field, SQLModel
 
-
+## ASSOCIATION TABLE
 class ChapterQueueLink(SQLModel, table=True):
     chapter_queue_id: uuid.UUID = Field(
         foreign_key="chapterqueue.id",

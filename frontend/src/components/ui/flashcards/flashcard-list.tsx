@@ -1,25 +1,28 @@
-import { Flashcard } from '@mytypes/types'
+'use client'
+
+import { useFlashcards } from '@hooks/use-flashcards.tsx'
 import FlashcardItem from '@ui/flashcards/flashcard-item'
 
 interface FlashcardListProps {
-  flashcards: Flashcard[]
-  onAddFlashcard: (id: string) => Promise<void>
-  onDeleteFlashcard: (id: string) => Promise<void>
+  chatId: string
+  areaId: string
 }
 
-function FlashcardList({
-  flashcards,
-  onAddFlashcard,
-  onDeleteFlashcard
-}: FlashcardListProps) {
+function FlashcardList({ chatId, areaId }: FlashcardListProps) {
+  const {
+    optimisticFlashcards,
+    handleAddFlashcard,
+    handleDeleteFlashcard
+  } = useFlashcards(chatId, areaId)
+
   return (
     <div className="flex flex-col gap-4">
-      {flashcards?.map((flashcard) => (
+      {optimisticFlashcards?.map((flashcard) => (
         <FlashcardItem
           key={flashcard.id}
           flashcard={flashcard}
-          onAddFlashcard={onAddFlashcard}
-          onDeleteFlashcard={onDeleteFlashcard}
+          onAddFlashcard={handleAddFlashcard}
+          onDeleteFlashcard={handleDeleteFlashcard}
         />
       ))}
     </div>

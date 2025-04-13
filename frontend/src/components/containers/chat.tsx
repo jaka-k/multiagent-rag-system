@@ -6,7 +6,8 @@ import 'highlight.js/styles/nnfx-light.css'
 
 import { Avatar, AvatarFallback } from '@components/ui/avatar'
 import { Button } from '@components/ui/button'
-import {Dialog,
+import {
+  Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,

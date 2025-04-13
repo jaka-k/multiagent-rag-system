@@ -22,7 +22,7 @@ const ChatPage = async ({
         <Chat chatData={response.data} />
       </div>
       <div className="w-[350px] md:w-[470px] h-full flex-shrink-0">
-        <Console chatId={chatId} areaId={response.data.area_id} />
+        <Console chatId={chatId} areaId={response.data.areaId} />
       </div>
     </div>
   )
