@@ -22,7 +22,6 @@ router = APIRouter()
 class EpubUploadRequest(BaseModel):
     title: str
     area_id: str
-    user_id: str
     description: str
     file_path: str
     file_size: int
@@ -55,6 +54,7 @@ class ChapterQueueRead(SQLModel):
 async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = Depends(get_current_active_user),
                               session: AsyncSession = Depends(get_session)):
     body = request.model_dump()
+    print("BODY",body)
     try:
         doc = Document(title=body["title"],
                        area_id=body["area_id"],
@@ -66,13 +66,13 @@ async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = D
         ## TODO: Handle all endpoints like this
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=422, detail={"ok": False, "message": f"Could not create document, {e}"})
+        raise HTTPException(status_code=423, detail={"ok": False, "message": f"Could not create document, {e}"})
 
     try:
         session.add(doc)
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=422, detail={"ok": False, "message": f"Could not add document, {e}"})
+        raise HTTPException(status_code=424, detail={"ok": False, "message": f"Could not add document, {e}"})
 
     await session.commit()
     await session.refresh(doc)

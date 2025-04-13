@@ -96,8 +96,9 @@ export function FileUpload() {
         title: metadataFromWorker.metadata.title ?? mainFileMetadata.name,
         area_id: activeArea.id,
         description:
-          metadataFromWorker.metadata.title ||
+          metadataFromWorker.metadata.description ||
           mainFileMetadata.customMetadata?.description ||
+          metadataFromWorker.metadata.title ||
           '',
         file_path: mainFileMetadata.fullPath,
         file_size: mainFileMetadata.size,
