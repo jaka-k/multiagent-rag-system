@@ -13,28 +13,28 @@ export interface Document {
   created_at: Date
   title: string
   description: string
-  cover_image: string
+  coverImage: string
   embedding_status: 'idle' | 'processing' | 'embedding' | 'completed'
 }
 
 export interface Message {
   id?: string
-  session_id?: string
+  sessionId?: string
   role: 'user' | 'agent'
   content: string
-  created_at?: string
+  createdAt?: string
 }
 
 export interface ChatData {
   id: string
-  total_tokens: number
-  prompt_tokens: number
-  completion_tokens: number
-  total_cost: number
+  totalTokens: number
+  promptTokens: number
+  completionTokens: number
+  totalCost: number
   messages: Message[]
-  flashcard_queue_id: string
-  doc_chunk_queue_id: string
-  area_id: string
+  flashcardQueueId: string
+  docChunkQueueId: string
+  areaId: string
 }
 
 export interface Flashcard {
@@ -45,16 +45,34 @@ export interface Flashcard {
 
 export interface FlashcardQueue {
   id: string
-  session_id: string
-  flashcard_data: string
-  created_at: Date
-  session: string
+  sessionId: string
+  flashcardData: string
+  createdAt: Date
   flashcards: Flashcard[]
 }
 
 export interface FlashcardHandler {
   message: string
   id: string
+}
+
+export interface Chapter {
+  id: string
+  documentId: string
+  contentSnippet: string
+  chapterTitle?: string
+}
+
+export interface ChapterQueue {
+  id: string
+  sessionId: string
+  createdAt: Date
+  chapters: Chapter[]
+}
+
+export interface Console {
+  flashcardQueue: FlashcardQueue | null
+  chapterQueue: ChapterQueue | null
 }
 
 export type EpubFile = {

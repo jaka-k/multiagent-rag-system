@@ -5,6 +5,14 @@ const nextConfig = {
       'thread-stream': 'commonjs thread-stream'
     })
     return config
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: "firebasestorage.googleapis.com"
+      }
+    ]
   }
 }
 
