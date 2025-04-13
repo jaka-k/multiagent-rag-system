@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.params import Depends
 from pydantic import BaseModel
-from sqlmodel import select, SQLModel, Field
 from sqlalchemy.orm import selectinload
+from sqlmodel import select, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.embedding_controller import background_embedding_process
@@ -27,9 +28,11 @@ class EpubUploadRequest(BaseModel):
     file_size: int
     cover_image: str
 
+
 class ChapterRequest(BaseModel):
     chapter_tag: str
     document_id: str
+
 
 class ChapterRead(SQLModel):
     id: uuid.UUID
@@ -40,29 +43,42 @@ class ChapterRead(SQLModel):
     is_embedded: bool
     document_id: uuid.UUID
 
+
 class ChapterQueueRead(SQLModel):
     id: uuid.UUID
     session_id: uuid.UUID
     created_at: datetime
     chapters: List[ChapterRead] = []
 
+
 @router.post("/epub-upload")
 async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = Depends(get_current_active_user),
                               session: AsyncSession = Depends(get_session)):
     body = request.model_dump()
+    try:
+        doc = Document(title=body["title"],
+                       area_id=body["area_id"],
+                       user_id=current_user.id,
+                       description=body["description"],
+                       file_path=body["file_path"],
+                       file_size=body["file_size"],
+                       cover_image=body["cover_image"])
+        ## TODO: Handle all endpoints like this
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=422, detail={"ok": False, "message": f"Could not create document, {e}"})
 
-    doc = Document(title=body["title"],
-                   area_id=body["area_id"],
-                   user_id=current_user.id,
-                   description=body["description"],
-                   file_path=body["file_path"],
-                   file_size=body["file_size"],
-                   cover_image=body["cover_image"])
-    session.add(doc)
+    try:
+        session.add(doc)
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=422, detail={"ok": False, "message": f"Could not add document, {e}"})
+
     await session.commit()
     await session.refresh(doc)
 
-    return {"message": "ok", "id": doc.id}
+
+    return {"ok": True, "message": "Document created successfully", "id": doc.id}
 
 
 @router.post("/embedding/{document_id}")
@@ -94,6 +110,7 @@ async def embedding_status(document_id: str, session: AsyncSession = Depends(get
 
     return {"status": document.embedding_status}
 
+
 @router.get("/document/{document_id}")
 async def get_document(document_id: str, session: AsyncSession = Depends(get_session)):
     stmt = select(Document).where(Document.id == document_id)
@@ -118,9 +135,7 @@ async def get_chapter(request: ChapterRequest, session: AsyncSession = Depends(g
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 
-
     return chapter
-
 
 
 @router.get("/chapter-queue/{chat_id}", response_model=ChapterQueueRead)

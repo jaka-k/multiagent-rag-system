@@ -1,14 +1,14 @@
 'use client'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
+import useAreaStore from '@context/area-store.tsx'
+import useConsoleStore from '@context/console-store.tsx'
 import ChapterViewer from '@ui/console/chapter-viewer.tsx'
+import SSEPill from '@ui/console/sse-pill'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import FlashcardList from '@ui/flashcards/flashcard-list'
 import { Bot, Club, FileText } from 'lucide-react'
-import useConsoleStore from '@context/console-store.tsx'
-import SSEPill from '@ui/console/sse-pill'
 import { useEffect } from 'react'
-import useAreaStore from '@context/area-store.tsx'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const { setActiveArea } = useAreaStore.getState()

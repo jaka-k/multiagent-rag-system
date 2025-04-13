@@ -1,15 +1,7 @@
 import { ColumnDef, FilterFn } from '@tanstack/react-table'
 import { CheckCircleIcon, LucideIcon, XCircleIcon } from 'lucide-react'
 import { z } from 'zod'
-
-export type Chat = {
-  id: string
-  label: string
-  title: string
-  status: string
-  tokensUsed: number
-  lastUpdated: string
-}
+import { Chat } from '@mytypes/types'
 
 type StatusType = 'active' | 'non-active'
 
@@ -18,7 +10,7 @@ export const tableSchema = z.object({
   label: z.string(),
   title: z.string(),
   status: z.enum(['active', 'non-active']),
-  tokensUsed: z.number(),
+  totalTokens: z.number(),
   lastUpdated: z.string()
 })
 
@@ -81,7 +73,7 @@ export const dateBetween: FilterFn<Chat> = (row, columnId, filterValue) => {
 
 // Define columns for the table
 export const getColumns = (
-  getLabelColorClass: (label: string) => string
+  getAreaMeta: (areaId: string) => { label: string; color: string }
 ): ColumnDef<Chat>[] => [
   {
     accessorKey: 'id',
@@ -92,17 +84,16 @@ export const getColumns = (
     )
   },
   {
-    accessorKey: 'label',
-    header: 'Label',
+    accessorKey: 'areaId',
+    header: 'Area',
     cell: ({ getValue }) => {
-      const labelValue = getValue() as string
-      const colorClass =
-        getLabelColorClass(labelValue) || 'bg-gray-100 text-gray-800'
+      const areaId = getValue<string>()
+      const meta = getAreaMeta(areaId)
       return (
         <span
-          className={`px-2 py-1 rounded-full text-sm font-medium ${colorClass}`}
+          className={`px-2 py-1 rounded-full text-sm font-medium ${meta.color}`}
         >
-          {labelValue}
+          {meta.label}
         </span>
       )
     },
@@ -122,7 +113,7 @@ export const getColumns = (
       const statusInfo = statusMappings[statusValue]
       return (
         <div className="flex items-center">
-          <span>{statusInfo.label}</span>
+          <span>{statusInfo?.label}</span>
           {statusInfo && (
             <statusInfo.icon className="ml-2 h-4 w-4 text-muted-foreground" />
           )}
@@ -132,7 +123,7 @@ export const getColumns = (
     filterFn: 'arrIncludes'
   },
   {
-    accessorKey: 'tokensUsed',
+    accessorKey: 'totalTokens',
     header: 'Tokens Used',
     cell: ({ getValue }) => getValue<number>().toLocaleString(),
     filterFn: numberComparison

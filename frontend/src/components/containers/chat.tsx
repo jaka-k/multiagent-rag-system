@@ -6,12 +6,6 @@ import 'highlight.js/styles/nnfx-light.css'
 
 import { Avatar, AvatarFallback } from '@components/ui/avatar'
 import { Button } from '@components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle} from '@components/ui/dialog'
 import { cn, connectionStatusMapping } from '@lib/utils'
 import { ChatData, Message } from '@mytypes/types'
 import { Textarea } from '@ui/textarea'
@@ -22,6 +16,7 @@ import { useEffect, useRef } from 'react'
 import Markdown from 'react-markdown'
 import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
+import CreateChat from '@ui/create-chat/create-chat.tsx'
 
 export function Chat({ chatData }: { chatData: ChatData }) {
   const socketUrl = `ws://localhost:8080/api/ws/${chatData.id}`
@@ -92,6 +87,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
           appendMetadataMessage(messageData.metadata)
         }
       } catch (error) {
+        // TODO: Logging
         console.error('Error parsing WebSocket message:', error)
       }
     },
@@ -199,19 +195,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
           </form>
         </div>
       </div>
-
-      {/* Dialog for new group chat */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>New Chat</DialogTitle>
-          </DialogHeader>
-          {/* your user list or selection UI */}
-          <DialogFooter>
-            <Button onClick={() => setOpen(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateChat open={open} setOpen={setOpen} />
     </div>
   )
 }

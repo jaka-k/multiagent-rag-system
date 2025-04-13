@@ -25,16 +25,21 @@ export interface Message {
   createdAt?: string
 }
 
-export interface ChatData {
+export interface Chat {
   id: string
+  title: string
+  status: string | null
   totalTokens: number
   promptTokens: number
   completionTokens: number
   totalCost: number
+  areaId: string
+}
+
+export interface ChatData extends Chat {
   messages: Message[]
   flashcardQueueId: string
   docChunkQueueId: string
-  areaId: string
 }
 
 export interface Flashcard {

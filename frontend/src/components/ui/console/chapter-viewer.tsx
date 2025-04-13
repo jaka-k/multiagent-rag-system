@@ -1,5 +1,9 @@
 'use client'
 
+import { useConsoleStore } from '@context/console-store.tsx'
+import useDocumentStore from '@context/document-store.tsx'
+import { containerStyles, textStyles } from '@lib/styles.ts'
+import { cn } from '@lib/utils.ts'
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,15 +17,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@ui/select.tsx'
-import { useConsoleStore } from '@context/console-store.tsx'
-import { containerStyles, textStyles } from '@lib/styles.ts'
-import { cn } from '@lib/utils.ts'
 import { Book, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import * as React from 'react'
 
 import mockChapters from '../../../../mock/mockChapters.ts'
-import useDocumentStore from '@context/document-store.tsx'
 
 export default function ChapterViewer({ chatId }: { chatId: string }) {
   const [view, setView] = React.useState<'index' | 'content'>('index')

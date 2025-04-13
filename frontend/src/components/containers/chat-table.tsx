@@ -13,11 +13,13 @@ import {
 import { DataTableFacetedFilter } from '@components/ui/table/table-faceted-filter'
 import { TablePagination } from '@components/ui/table/table-pagination'
 import {
-  Chat,
   dateBetween,
   getColumns,
   numberComparison
 } from '@components/ui/table/table-schemas'
+import useAreaStore from '@context/area-store.tsx'
+import useChatStore from '@context/chats-store.tsx'
+import { Chat } from '@mytypes/types'
 import {
   ColumnFilter,
   flexRender,
@@ -25,46 +27,57 @@ import {
   getFilteredRowModel,
   useReactTable
 } from '@tanstack/react-table'
+import CreateChat from '@ui/create-chat/create-chat.tsx'
 import { PlusIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
-
-import { placeholderTable } from '../../../mock/mockData'
+import { useEffect, useMemo, useState } from 'react'
 
 const ChatTable = () => {
-  const data = placeholderTable
+  const { chats, fetchChatsForUser, isLoading, error } = useChatStore()
+  const { areas } = useAreaStore()
   const router = useRouter()
+  const [openModal, setOpenModal] = useState(false)
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10
+  })
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
 
-  // Collect unique labels from the data
-  const labels = useMemo(
-    () => Array.from(new Set(data.map((chat) => chat.label))),
-    [data]
-  )
-  const labelColorMap: Record<string, string> = useMemo(() => {
-    const labelColorClasses = [
-      'bg-cyan-100 text-cyan-800',
-      'bg-teal-100 text-teal-800',
-      'bg-fuchsia-100 text-fuchsia-800',
-      'bg-lime-100 text-lime-800',
-      'bg-amber-100 text-amber-800',
-      'bg-purple-100 text-purple-800',
-      'bg-stone-100 text-stone-800',
-      'bg-indigo-100 text-indigo-800',
-      'bg-sky-100 text-sky-800'
-    ]
-    const map: Record<string, string> = {}
-    labels.forEach((label, index) => {
-      map[label] = labelColorClasses[index % labelColorClasses.length]
-    })
-    return map
-  }, [labels])
+  useEffect(() => {
+    fetchChatsForUser()
+  }, [])
 
-  // Get columns with getLabelColorClass
+  const areaColorMap: Record<string, { label: string; color: string }> =
+    useMemo(() => {
+      const labelColorClasses = [
+        'bg-cyan-100 text-cyan-800',
+        'bg-teal-100 text-teal-800',
+        'bg-fuchsia-100 text-fuchsia-800',
+        'bg-lime-100 text-lime-800',
+        'bg-amber-100 text-amber-800',
+        'bg-purple-100 text-purple-800',
+        'bg-stone-100 text-stone-800',
+        'bg-indigo-100 text-indigo-800',
+        'bg-sky-100 text-sky-800'
+      ]
+      const map: Record<string, { label: string; color: string }> = {}
+      areas.forEach((area, index) => {
+        map[area.id] = {
+          label: area.label,
+          color: labelColorClasses[index % labelColorClasses.length]
+        }
+      })
+      return map
+    }, [areas])
+
   const columns = useMemo(
-    () => getColumns((label: string) => labelColorMap[label]),
-    [labelColorMap]
+    () =>
+      getColumns((areaId) => ({
+        label: areaColorMap[areaId]?.label ?? 'Unknown',
+        color: areaColorMap[areaId]?.color ?? 'bg-gray-100 text-gray-800'
+      })),
+    [areaColorMap]
   )
 
   const filterFns = {
@@ -73,22 +86,19 @@ const ChatTable = () => {
   }
 
   const table = useReactTable<Chat>({
-    data,
+    data: chats,
     columns,
     state: {
       columnFilters,
-      globalFilter
+      globalFilter,
+      pagination
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    filterFns,
-    initialState: {
-      pagination: {
-        pageSize: 10 // Show 10 chats per page
-      }
-    }
+    filterFns
   })
 
   const statusOptions = [
@@ -102,20 +112,25 @@ const ChatTable = () => {
     }
   ]
 
-  const labelOptions = labels.map((label) => ({
-    label,
-    value: label
+  const labelOptions = areas.map((area) => ({
+    label: area.label,
+    value: area.id
   }))
 
   const statusColumn = table.getColumn('status')
-  const labelColumn = table.getColumn('label')
-  const tokensUsedColumn = table.getColumn('tokensUsed')
+  const labelColumn = table.getColumn('areaId')
+  const totalTokensColumn = table.getColumn('totalTokens')
   const lastUpdatedColumn = table.getColumn('lastUpdated')
 
   return (
     <div className="space-y-4">
       <div className="flex items-center py-4 space-x-2">
-        <Button className="bg-black pr-4" variant="default" size="sm">
+        <Button
+          onClick={() => setOpenModal(true)}
+          className="bg-black pr-4"
+          variant="default"
+          size="sm"
+        >
           <PlusIcon className="mr-2 h-4 w-4" />
           New Chat
         </Button>
@@ -140,9 +155,9 @@ const ChatTable = () => {
             options={labelOptions}
           />
         )}
-        {tokensUsedColumn && (
+        {totalTokensColumn && (
           <DataTableFacetedFilter
-            column={tokensUsedColumn}
+            column={totalTokensColumn}
             title="Tokens Used"
             type="number"
           />
@@ -173,8 +188,45 @@ const ChatTable = () => {
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
-            {table.getRowModel().rows.length ? (
+            {isLoading && (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <span className="text-muted-foreground animate-pulse">
+                    Loading chats...
+                  </span>
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading && error && (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-red-500"
+                >
+                  Failed to retrieve the chats from the backend.
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading && !error && table.getRowModel().rows.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading &&
+              !error &&
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -193,21 +245,12 @@ const ChatTable = () => {
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
+              ))}
           </TableBody>
         </Table>
       </div>
       <TablePagination table={table} />
+      <CreateChat open={openModal} setOpen={setOpenModal} />
     </div>
   )
 }

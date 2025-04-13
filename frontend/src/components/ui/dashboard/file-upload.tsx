@@ -1,7 +1,6 @@
 import useAreaStore from '@context/area-store.tsx'
 import useEpubProcessor from '@hooks/use-epub-processor'
 import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
-import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
 import { logger } from '@lib/logger.ts'
 import {
   cn,
@@ -9,11 +8,7 @@ import {
   estimateTokensAndCost,
   noSpaceFilename
 } from '@lib/utils'
-import {
-  CreateDocumentRequest,
-  CreateDocumentResponse,
-  EpubFile
-} from '@mytypes/types'
+import { CreateDocumentRequest, EpubFile } from '@mytypes/types'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import EpubElement from '@ui/dashboard/epub-element.tsx'
@@ -36,6 +31,7 @@ import {
   UploadIcon
 } from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
+import { createDocument } from '@lib/services/epub-api.ts'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)
@@ -96,7 +92,6 @@ export function FileUpload() {
         metadataFromWorker.coverImage
       )
 
-      // 3) Create your document
       const request: CreateDocumentRequest = {
         title: metadataFromWorker.metadata.title ?? mainFileMetadata.name,
         area_id: activeArea.id,
@@ -108,27 +103,12 @@ export function FileUpload() {
         file_size: mainFileMetadata.size,
         cover_image: createPersistentDownloadUrl(coverFileMetadata)
       }
-      const response = await fetchWithAuth<CreateDocumentResponse>(
-        '/api/epub-upload',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(request)
-        }
-      )
 
-      if (!response.ok) {
-        throw Error(
-          `Could not create document reference: ${response.data.message}`
-        )
-      }
+      const response = await createDocument(request)
 
-      // 4) Update local state
       const { tokens, cost } = estimateTokensAndCost(file.size)
       const newFile: EpubFile = {
-        id: response.data.id,
+        id: response.id,
         name: filename,
         size: mainFileMetadata.size,
         cover: coverFileMetadata.fullPath,

@@ -81,12 +81,7 @@ const useDocumentStore = create(
 
       getDocument: (docId: string) => {
         const { currentAreaId, documentsByArea } = get()
-        console.log('currentAreaId', currentAreaId)
         if (!currentAreaId) return null
-        console.log(
-          'documentsByArea[currentAreaId]?.[docId]',
-          documentsByArea[currentAreaId]?.[docId]
-        )
 
         return documentsByArea[currentAreaId]?.[docId] || null
       },

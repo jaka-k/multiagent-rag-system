@@ -12,7 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from server.core.logger import app_logger
 from server.db.config import DATABASE_URL
 
-engine = create_async_engine(f"postgresql+psycopg://{DATABASE_URL}", future=True)
+engine = create_async_engine(f"postgresql+psycopg://{DATABASE_URL}", echo=True, future=True)
 SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
 
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
