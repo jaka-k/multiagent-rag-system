@@ -56,10 +56,8 @@ function extractEpubMetadata(epubBuffer: ArrayBuffer): EpubMetadata {
       const coverId = meta.getAttribute('content')
 
       if (coverId && /\.(png|jpe?g)$/i.test(coverId)) {
-        console.log(/\.(png|jpe?g)$/i.test(coverId))
         coverHref = coverId
-        console.log(coverHref)
-        break // Exit the loop once the cover image path is found
+        break // exit loop once cover image is found
       }
 
       if (coverId) {

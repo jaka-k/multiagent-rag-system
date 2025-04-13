@@ -3,7 +3,12 @@ import useEpubProcessor from '@hooks/use-epub-processor'
 import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
 import { logger } from '@lib/logger.ts'
-import { cn, estimateTokensAndCost, noSpaceFilename } from '@lib/utils'
+import {
+  cn,
+  createPersistentDownloadUrl,
+  estimateTokensAndCost,
+  noSpaceFilename
+} from '@lib/utils'
 import {
   CreateDocumentRequest,
   CreateDocumentResponse,
@@ -39,7 +44,7 @@ export function FileUpload() {
   const { activeArea } = useAreaStore()
 
   const {
-    metadata: metadataWorker,
+    metadata: metadataFromWorker,
     loading,
     error,
     processEpub
@@ -58,11 +63,11 @@ export function FileUpload() {
   if (!activeArea) return <Skeleton />
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const formFile = e.target.files?.[0]
 
-    if (file && file.name.endsWith('.epub')) {
-      setFile(file)
-      await processEpub(file)
+    if (formFile && formFile.name.endsWith('.epub')) {
+      setFile(formFile)
+      await processEpub(formFile)
     } else {
       alert('Please upload a valid .epub file')
     }
@@ -78,7 +83,7 @@ export function FileUpload() {
       return
     }
 
-    if (!metadataWorker?.coverImage) {
+    if (!metadataFromWorker?.coverImage) {
       logger.error('Cover image metadata is not available.')
       return
     }
@@ -88,17 +93,20 @@ export function FileUpload() {
       const mainFileMetadata = await uploadFile(file, `epubs/${filename}`)
       const coverFileMetadata = await uploadCover(
         file,
-        metadataWorker.coverImage
+        metadataFromWorker.coverImage
       )
 
       // 3) Create your document
       const request: CreateDocumentRequest = {
-        title: filename,
+        title: metadataFromWorker.metadata.title ?? mainFileMetadata.name,
         area_id: activeArea.id,
-        description: filename,
+        description:
+          metadataFromWorker.metadata.title ||
+          mainFileMetadata.customMetadata?.description ||
+          '',
         file_path: mainFileMetadata.fullPath,
         file_size: mainFileMetadata.size,
-        cover_image: coverFileMetadata.fullPath
+        cover_image: createPersistentDownloadUrl(coverFileMetadata)
       }
       const response = await fetchWithAuth<CreateDocumentResponse>(
         '/api/epub-upload',
@@ -132,9 +140,9 @@ export function FileUpload() {
 
       if (fileInputRef.current) fileInputRef.current.value = ''
       setFile(undefined)
-      metadataWorker.coverImage = undefined
-    } catch (error) {
-      logger.error('Epub upload failed in handler:', error)
+      metadataFromWorker.coverImage = undefined
+    } catch (err) {
+      logger.error('Epub upload failed in handler:', err)
     }
   }
 
@@ -209,7 +217,7 @@ export function FileUpload() {
                   Error while processing cover image.
                 </p>
               )}
-              {metadataWorker?.coverImage && (
+              {metadataFromWorker?.coverImage && (
                 <Card
                   className={cn(
                     'h-full rounded-xl w-fit overflow-hidden flex items-center justify-center transition-all duration-500',
@@ -222,7 +230,7 @@ export function FileUpload() {
                   )}
                 >
                   <img
-                    src={`data:${metadataWorker?.coverImage.mimeType};base64,${metadataWorker?.coverImage.base64}`}
+                    src={`data:${metadataFromWorker?.coverImage.mimeType};base64,${metadataFromWorker?.coverImage.base64}`}
                     className="object-contain h-full w-auto"
                     alt="Cover"
                   />

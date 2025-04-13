@@ -1,3 +1,5 @@
+'use client'
+
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useEffect, useState } from 'react'
 

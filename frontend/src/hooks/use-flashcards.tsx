@@ -1,76 +1,105 @@
 'use client'
 
+import useConsoleStore from '@context/console-store.tsx'
+import { useToast } from '@hooks/use-toast.ts'
 import {
   addFlashcard,
-  deleteFlashcard,
-  getFlashcards
+  deleteFlashcard
 } from '@lib/fetchers/fetch-flashcards.ts'
+import { logger } from '@lib/logger.ts'
 import { Flashcard } from '@mytypes/types'
-import React, {
-  startTransition,
-  useEffect,
-  useOptimistic,
-  useState
-} from 'react'
+import { startTransition, useEffect, useOptimistic, useState } from 'react'
 
 interface UseFlashcardsReturn {
   optimisticFlashcards: Flashcard[]
-  setFlashcards: React.Dispatch<React.SetStateAction<Flashcard[]>>
   handleAddFlashcard: (id: string) => Promise<void>
   handleDeleteFlashcard: (id: string) => Promise<void>
 }
 
-/**
- * Custom hook for:
- *  - Initial fetch of flashcards
- *  - Optimistic updates for add/delete
- *
- * SSE is handled outside this hook,
- * so we do NOT subscribe to SSE here.
- */
 export function useFlashcards(
   chatId: string,
   areaId: string
 ): UseFlashcardsReturn {
+  const { toast } = useToast()
   const [flashcards, setFlashcards] = useState<Flashcard[]>([])
-  const [optimisticFlashcards, addOptimisticUpdate] = useOptimistic(
+  console.log(flashcards)
+
+  const removeFlashcardFromStore = useConsoleStore((s) => s.removeFlashcard)
+
+  const [optimisticFlashcards, applyOptimistic] = useOptimistic(
     flashcards,
     (prev: Flashcard[], fid: string) => prev.filter((fc) => fc.id !== fid)
   )
 
-  useEffect(() => {
-    async function fetchFlashcardsData() {
-      const data = await getFlashcards(chatId)
-      setFlashcards(data.flashcards)
-    }
+  console.log(optimisticFlashcards)
 
-    fetchFlashcardsData().catch((err) => {
-      // TODO: log
-      console.log(err)
-    })
+  useEffect(() => {
+    const console = useConsoleStore.getState().consolesByChat[chatId]
+    const storeFlashcards = console?.flashcardQueue?.flashcards ?? []
+
+    setFlashcards(storeFlashcards)
   }, [chatId])
 
   async function handleAddFlashcard(id: string) {
-    startTransition(() => addOptimisticUpdate(id))
-    const result = await addFlashcard(id, areaId)
+    console.log('handleAddFlashcard', id)
+    startTransition(() => applyOptimistic(id))
 
-    if (result.id === id) {
-      setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
+    try {
+      const result = await addFlashcard(id, areaId)
+
+      if (result.id !== id) {
+        logger.warn(`Flashcard ${id} was not confirmed in backend`)
+        toast({
+          title: 'Ups something went wrong! 🫣',
+          description: `Flashcard ${id} was not confirmed in backend`
+        })
+      } else {
+        setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
+        removeFlashcardFromStore(chatId, id)
+      }
+    } catch (err) {
+      logger.error(`Failed to add flashcard ${id}:`, err)
+
+      toast({
+        title: 'Something went wrong! 📛',
+        description:
+          'We could not commit your flashcard to the deck. Reloading...'
+      })
+      useConsoleStore.getState().fetchConsoleQueues(chatId)
     }
   }
 
   async function handleDeleteFlashcard(id: string) {
-    startTransition(() => addOptimisticUpdate(id))
-    const result = await deleteFlashcard(id)
+    console.log('handleDeleteFlashcard', id)
+    startTransition(() => applyOptimistic(id))
 
-    if (result.id === id) {
-      setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
+    try {
+      const result = await deleteFlashcard(id)
+
+      if (result.id !== id) {
+        logger.warn(`Flashcard ${id} was not deleted in backend`)
+        toast({
+          title: 'Ups something went wrong! 🫣',
+          description: `Flashcard ${id} was not confirmed in backend`
+        })
+      } else {
+        setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
+        removeFlashcardFromStore(chatId, id)
+      }
+    } catch (err) {
+      logger.error(`Failed to delete flashcard ${id}:`, err)
+
+      toast({
+        title: 'Something went wrong! 📛',
+        description:
+          'We could not delete your flashcard in the backend. Reloading...'
+      })
+      useConsoleStore.getState().fetchConsoleQueues(chatId)
     }
   }
 
   return {
     optimisticFlashcards,
-    setFlashcards,
     handleAddFlashcard,
     handleDeleteFlashcard
   }

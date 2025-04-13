@@ -25,7 +25,7 @@ const useEpubProcessor = (): UseEpubProcessor => {
 
   useEffect(() => {
     const workerInstance = new Worker(
-      new URL('../../workers/epub-processor.worker.ts', import.meta.url),
+      new URL('@workers/epub-processor.worker.ts', import.meta.url),
       {
         type: 'module'
       }
