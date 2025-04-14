@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover'
 import { Separator } from '@ui/separator'
 import { CheckIcon, PlusCircleIcon } from 'lucide-react'
 import React from 'react'
+import { DateRangeFilter } from '@ui/table/table-date-filter.tsx'
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>
@@ -101,73 +102,7 @@ export function DataTableFacetedFilter<TData, TValue>({
     )
   }
 
-  if (type === 'date') {
-    // Date range filter
-    const [startDate, setStartDate] = React.useState<string | undefined>()
-    const [endDate, setEndDate] = React.useState<string | undefined>()
-
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2 h-8 border-dashed"
-          >
-            <PlusCircleIcon className="mr-2 h-4 w-4" />
-            {title}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[250px] p-4" align="start">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Start Date</label>
-            <input
-              type="date"
-              className="w-full rounded-md border-gray-300"
-              value={startDate ?? ''}
-              onChange={(e) => {
-                const value = e.target.value || undefined
-                setStartDate(value)
-                column?.setFilterValue(
-                  (old: [string | undefined, string | undefined]) => [
-                    value,
-                    old?.[1]
-                  ]
-                )
-              }}
-            />
-            <label className="block text-sm font-medium">End Date</label>
-            <input
-              type="date"
-              className="w-full rounded-md border-gray-300"
-              value={endDate ?? ''}
-              onChange={(e) => {
-                const value = e.target.value || undefined
-                setEndDate(value)
-                column?.setFilterValue(
-                  (old: [string | undefined, string | undefined]) => [
-                    old?.[0],
-                    value
-                  ]
-                )
-              }}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setStartDate(undefined)
-                setEndDate(undefined)
-                column?.setFilterValue(undefined)
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
-    )
-  }
+  if (type === 'date') return <DateRangeFilter column={column} title={title} />
 
   // Existing string and array filter code
   const facets = column?.getFacetedUniqueValues()

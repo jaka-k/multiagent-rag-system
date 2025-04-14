@@ -12,6 +12,7 @@ export interface Document {
   area_id: string
   created_at: Date
   title: string
+  fileSize: number
   description: string
   coverImage: string
   embedding_status: 'idle' | 'processing' | 'embedding' | 'completed'
