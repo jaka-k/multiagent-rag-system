@@ -54,7 +54,6 @@ class ChapterQueueRead(SQLModel):
 async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = Depends(get_current_active_user),
                               session: AsyncSession = Depends(get_session)):
     body = request.model_dump()
-    print("BODY",body)
     try:
         doc = Document(title=body["title"],
                        area_id=body["area_id"],

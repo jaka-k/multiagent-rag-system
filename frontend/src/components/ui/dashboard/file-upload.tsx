@@ -2,13 +2,8 @@ import useAreaStore from '@context/area-store.tsx'
 import useEpubProcessor from '@hooks/use-epub-processor'
 import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
 import { logger } from '@lib/logger.ts'
-import {
-  cn,
-  createPersistentDownloadUrl,
-  estimateTokensAndCost,
-  noSpaceFilename
-} from '@lib/utils'
-import { CreateDocumentRequest, EpubFile } from '@mytypes/types'
+import { cn, createPersistentDownloadUrl, noSpaceFilename } from '@lib/utils'
+import { CreateDocumentRequest } from '@mytypes/types'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import EpubElement from '@ui/dashboard/epub-element.tsx'
@@ -32,12 +27,13 @@ import {
 } from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
 import { createDocument } from '@lib/services/epub-api.ts'
+import useDocumentStore from '@context/document-store.tsx'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)
-  const [epubFiles, setEpubFiles] = useState<EpubFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { activeArea } = useAreaStore()
+  const { documentsByArea, fetchDocumentsForArea } = useDocumentStore()
 
   const {
     metadata: metadataFromWorker,
@@ -57,6 +53,7 @@ export function FileUpload() {
   const totalSize = (file ? file.size : 0) / 1024 / 1024
 
   if (!activeArea) return <Skeleton />
+  const documents = Object.entries(documentsByArea[activeArea.id])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const formFile = e.target.files?.[0]
@@ -107,17 +104,11 @@ export function FileUpload() {
 
       const response = await createDocument(request)
 
-      const { tokens, cost } = estimateTokensAndCost(file.size)
-      const newFile: EpubFile = {
-        id: response.id,
-        name: filename,
-        size: mainFileMetadata.size,
-        cover: coverFileMetadata.fullPath,
-        url: mainFileMetadata.fullPath,
-        tokens,
-        cost
+      if (!response.id) {
+        logger.error('Document creation failed', response)
       }
-      setEpubFiles((prev) => [...prev, newFile])
+
+      await fetchDocumentsForArea(activeArea.id)
 
       if (fileInputRef.current) fileInputRef.current.value = ''
       setFile(undefined)
@@ -238,7 +229,7 @@ export function FileUpload() {
           <CardTitle>Uploaded Files</CardTitle>
         </CardHeader>
         <CardContent className="h-full overflow-auto">
-          {epubFiles.length > 0 ? (
+          {documents.length > 0 ? (
             <Table className="overflow-auto">
               <TableHeader>
                 <TableRow>
@@ -250,8 +241,8 @@ export function FileUpload() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {epubFiles.map((epubfile) => (
-                  <EpubElement key={epubfile.id} epubFile={epubfile} />
+                {documents.map((e) => (
+                  <EpubElement key={e[0]} doc={e[1]} />
                 ))}
               </TableBody>
             </Table>

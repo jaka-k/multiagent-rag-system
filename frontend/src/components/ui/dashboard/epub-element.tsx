@@ -1,19 +1,21 @@
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth'
 import { logger } from '@lib/logger'
-import { EpubFile } from '@mytypes/types'
+import { Document } from '@mytypes/types'
 import { Button } from '@ui/button'
 import { TableCell, TableRow } from '@ui/table/table'
 import { Check, DrumIcon, Loader2Icon } from 'lucide-react'
 import React, { useState } from 'react'
+import { estimateTokensAndCost } from '@lib/utils.ts'
 
-function EpubElement({ epubFile }: { epubFile: EpubFile }) {
-  const [currentStep, setCurrentStep] = useState<string>()
+function EpubElement({ doc }: { doc: Document }) {
+  const [currentStep, setCurrentStep] = useState<string>(doc?.embedding_status)
+  const { tokens, cost } = estimateTokensAndCost(doc.fileSize)
 
   const createVectorEmbedding = async () => {
     try {
       setCurrentStep('processing')
 
-      const response = await fetchWithAuth(`/api/embedding/${epubFile.id}`, {
+      const response = await fetchWithAuth(`/api/embedding/${doc.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -27,14 +29,14 @@ function EpubElement({ epubFile }: { epubFile: EpubFile }) {
       const interval = setInterval(async () => {
         try {
           const statusResponse = await fetchWithAuth<{ status: string }>(
-            `/api/embedding-status/${epubFile.id}`
+            `/api/embedding-status/${doc.id}`
           )
           const { data } = statusResponse
 
           if (!statusResponse.ok) {
             throw new Error(
               'Embedding failed with status 400: ' +
-                `/api/embedding-status/${epubFile.id}`
+                `/api/embedding-status/${doc.id}`
             )
           }
 
@@ -54,11 +56,11 @@ function EpubElement({ epubFile }: { epubFile: EpubFile }) {
   }
 
   return (
-    <TableRow key={epubFile.name}>
-      <TableCell className="font-medium">{epubFile.name}</TableCell>
-      <TableCell>{(epubFile.size / 1024 / 1024).toFixed(2)} MB</TableCell>
-      <TableCell>{(epubFile.tokens || 0).toLocaleString()}</TableCell>
-      <TableCell>€{(epubFile.cost || 0).toFixed(4)}</TableCell>
+    <TableRow key={doc.id}>
+      <TableCell className="font-medium">{doc.title}</TableCell>
+      <TableCell>{(doc.fileSize / 1024 / 1024).toFixed(2)} MB</TableCell>
+      <TableCell>{(tokens || 0).toLocaleString()}</TableCell>
+      <TableCell>€{(cost || 0).toFixed(4)}</TableCell>
       <TableCell className="text-right">
         {currentStep === 'processing' ? (
           <div
