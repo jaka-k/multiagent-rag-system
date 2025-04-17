@@ -15,6 +15,7 @@ import { Separator } from '@ui/separator'
 import { CheckIcon, PlusCircleIcon } from 'lucide-react'
 import React from 'react'
 import { DateRangeFilter } from '@ui/table/table-date-filter.tsx'
+import { NumberFilter } from '@ui/table/table-number-filter.tsx'
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>
@@ -33,74 +34,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   options = [],
   type = 'string'
 }: DataTableFacetedFilterProps<TData, TValue>) {
-  if (type === 'number') {
-    // Number comparison filter
-    const [operator, setOperator] = React.useState<'greaterThan' | 'lessThan'>(
-      'greaterThan'
-    )
-    const [numberValue, setNumberValue] = React.useState<number | undefined>()
-
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2 h-8 border-dashed"
-          >
-            <PlusCircleIcon className="mr-2 h-4 w-4" />
-            {title}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-4" align="start">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Filter</label>
-            <select
-              className="w-full rounded-md border-gray-300"
-              value={operator}
-              onChange={(e) => {
-                const value = e.target.value as 'greaterThan' | 'lessThan'
-                setOperator(value)
-                column?.setFilterValue({
-                  operator: value,
-                  value: numberValue
-                })
-              }}
-            >
-              <option value="greaterThan">Greater than</option>
-              <option value="lessThan">Less than</option>
-            </select>
-            <input
-              type="number"
-              className="w-full rounded-md border-gray-300"
-              value={numberValue ?? ''}
-              onChange={(e) => {
-                const value = e.target.value
-                  ? Number(e.target.value)
-                  : undefined
-                setNumberValue(value)
-                column?.setFilterValue({
-                  operator,
-                  value
-                })
-              }}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setOperator('greaterThan')
-                setNumberValue(undefined)
-                column?.setFilterValue(undefined)
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
-    )
-  }
+  if (type === 'number') return <NumberFilter column={column} title={title} />
 
   if (type === 'date') return <DateRangeFilter column={column} title={title} />
 
