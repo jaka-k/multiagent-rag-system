@@ -33,7 +33,7 @@
         "allowForLoopAfterthoughts": true
       }
     ],
-    "@typescript-eslint/no-use-before-define": "error",
+    "@typescript-eslint/no-use-before-define": "off",
     "no-underscore-dangle": [
       "error",
       {

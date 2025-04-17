@@ -65,8 +65,10 @@ export interface FlashcardHandler {
 export interface Chapter {
   id: string
   documentId: string
-  contentSnippet: string
-  chapterTitle?: string
+  label: string
+  order: number
+  parentLabel: string
+  content?: string
 }
 
 export interface ChapterQueue {
@@ -76,9 +78,14 @@ export interface ChapterQueue {
   chapters: Chapter[]
 }
 
+export interface ChapterQueueSorted {
+  byBook: Record<string, OrganizedBook>
+}
+
 export interface Console {
   flashcardQueue: FlashcardQueue | null
   chapterQueue: ChapterQueue | null
+  chaptersSorted: ChapterQueueSorted | null
 }
 
 export type EpubFile = {
