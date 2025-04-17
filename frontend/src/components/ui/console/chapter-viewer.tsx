@@ -1,29 +1,29 @@
 'use client'
 
-import { useConsoleStore } from '@context/console-store.tsx'
-import useDocumentStore from '@context/document-store.tsx'
-import { containerStyles, textStyles } from '@lib/styles.ts'
-import { cn } from '@lib/utils.ts'
+import { useConsoleStore } from '@context/console-store'
+import { ParentGroup } from '@lib/organize-chapters.ts'
+import { containerStyles, textStyles } from '@lib/styles'
+import { cn } from '@lib/utils'
+import { Chapter } from '@mytypes/types'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
-} from '@ui/collapsible.tsx'
-import { ScrollArea } from '@ui/scroll-area.tsx'
+} from '@ui/collapsible'
+import ChapterContent from '@ui/console/chapter-content'
+import { ScrollArea } from '@ui/scroll-area'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@ui/select.tsx'
-import { Book, ChevronRight } from 'lucide-react'
+} from '@ui/select'
+import { Book, BookOpen, ChevronRight, FileText } from 'lucide-react'
 import Image from 'next/image'
 import * as React from 'react'
 
-import mockChapters from '../../../../mock/mockChapters.ts'
-
-export default function ChapterViewer({ chatId }: { chatId: string }) {
+export default function ChapterViewer({ chatId }: { chatId?: string }) {
   const [view, setView] = React.useState<'index' | 'content'>('index')
   const [expandedBooks, setExpandedBooks] = React.useState<
     Record<string, boolean>
@@ -33,37 +33,18 @@ export default function ChapterViewer({ chatId }: { chatId: string }) {
   >({})
 
   const consolesByChat = useConsoleStore((state) => state.consolesByChat)
-  const { getDocument } = useDocumentStore()
+  const currentConsole = useConsoleStore((state) => state.currentConsole)
 
-  const chapterQueue = consolesByChat[chatId]?.chapterQueue ?? null
-  const chapters = chapterQueue?.chapters || mockChapters
+  // Use provided chatId or fall back to currentConsole from store
+  const activeChatId = chatId || currentConsole
 
-  const bookMap = React.useMemo(() => {
-    const map = new Map()
-
-    chapters.forEach((chapter) => {
-      if (!chapter.documentId) return
-      const doc = getDocument(chapter.documentId)
-      if (!doc) return
-
-      if (!map.has(chapter.documentId)) {
-        map.set(chapter.documentId, {
-          id: chapter.documentId,
-          title: doc.title || 'Unknown Book',
-          coverUrl: doc.coverImage ?? '/mastering-go.jpg',
-          chapters: []
-        })
-      }
-
-      map.get(chapter.documentId).chapters.push(chapter)
-    })
-
-    console.log(map)
-
-    return map
-  }, [chapters])
-
-  const books = React.useMemo(() => Array.from(bookMap.values()), [bookMap])
+  // Get the sorted chapters from the store
+  const chaptersSorted = activeChatId
+    ? consolesByChat[activeChatId]?.chaptersSorted
+    : null
+  const books = chaptersSorted?.byBook
+    ? Object.values(chaptersSorted.byBook)
+    : []
 
   const toggleBook = (bookId: string) => {
     setExpandedBooks((prev) => ({
@@ -99,7 +80,7 @@ export default function ChapterViewer({ chatId }: { chatId: string }) {
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="py-4 space-y-4">
+        <div className="py-4 px-2 space-y-4">
           {books.length > 0 ? (
             books.map((book) => (
               <Collapsible
@@ -121,7 +102,7 @@ export default function ChapterViewer({ chatId }: { chatId: string }) {
                           alt={`Cover of ${book.title}`}
                           width={70}
                           height={90}
-                          className="mr-4 rounded-sm object-cover"
+                          className="mr-4 rounded-sm object-cover shadow-sm"
                         />
                       ) : (
                         <div className="flex items-center justify-center w-[60px] h-[80px] mr-4 bg-muted rounded-sm">
@@ -131,8 +112,20 @@ export default function ChapterViewer({ chatId }: { chatId: string }) {
                       <div className="text-left">
                         <h4 className={textStyles.h4}>{book.title}</h4>
                         <p className={textStyles.subtle}>
-                          {book.chapters.length}{' '}
-                          {book.chapters.length === 1 ? 'chapter' : 'chapters'}
+                          {book.parentGroups.reduce(
+                            (count: number, group: ParentGroup[]) =>
+                              count + 1 + group.length,
+                            0
+                          ) + book.orphanedChapters.length}{' '}
+                          {book.parentGroups.reduce(
+                            (count: number, group: ParentGroup[]) =>
+                              count + 1 + group.length,
+                            0
+                          ) +
+                            book.orphanedChapters.length ===
+                          1
+                            ? 'chapter'
+                            : 'chapters'}
                         </p>
                       </div>
                     </div>
@@ -140,46 +133,180 @@ export default function ChapterViewer({ chatId }: { chatId: string }) {
                   </CollapsibleTrigger>
 
                   <CollapsibleContent className="pt-4 pl-4">
-                    <div className="space-y-2">
-                      {book.chapters.map((chapter) => (
-                        <Collapsible
-                          key={chapter.id}
-                          open={expandedChapters[`${book.id}-${chapter.id}`]}
-                          onOpenChange={() =>
-                            toggleChapter(book.id, chapter.id)
-                          }
-                        >
+                    <div className="space-y-6">
+                      {/* Parent Groups with Children */}
+                      {book.parentGroups.map((group: ParentGroup) => (
+                        <div key={group.parent.id} className="space-y-2">
+                          {/* Parent Chapter Header */}
                           <div
                             className={cn(
-                              containerStyles.innerCard,
-                              'group hover:bg-accent/50'
+                              'px-3 py-2 rounded-md bg-muted/30 border border-muted'
                             )}
                           >
-                            <CollapsibleTrigger className="flex items-center w-full">
-                              <div className="flex items-center flex-1">
-                                <div>
-                                  <h5 className={textStyles.h4}>
-                                    {chapter.title ||
-                                      `Chapter ${chapter.chapterNumber || ''}`}
-                                  </h5>
-                                  {chapter.subtitle && (
-                                    <p className={textStyles.subtle}>
-                                      {chapter.subtitle}
-                                    </p>
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 mr-3">
+                                <BookOpen className="h-5 w-5 text-primary/70" />
+                              </div>
+                              <div>
+                                <h5
+                                  className={cn(
+                                    textStyles.h4,
+                                    'text-primary/90'
                                   )}
+                                >
+                                  {group.parent.label && (
+                                    <span className="font-medium text-muted-foreground mr-1">
+                                      {group.parent.label}
+                                    </span>
+                                  )}
+                                </h5>
+                                {group.children?.length > 0 && (
+                                  <p className={textStyles.subtle}>
+                                    {group.children.length}{' '}
+                                    {group.children.length === 1
+                                      ? 'subchapter'
+                                      : 'subchapters'}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Child Chapters */}
+                          {group.children?.length > 0 && (
+                            <div className="space-y-2 ml-4 border-l-2 border-primary/20 pl-4">
+                              {group.children.map((childChapter: Chapter) => (
+                                <Collapsible
+                                  key={childChapter.id}
+                                  open={
+                                    expandedChapters[
+                                      `${book.id}-${childChapter.id}`
+                                    ]
+                                  }
+                                  onOpenChange={() =>
+                                    toggleChapter(book.id, childChapter.id)
+                                  }
+                                >
+                                  <div
+                                    className={cn(
+                                      containerStyles.innerCard,
+                                      'group hover:bg-accent/50 transition-colors'
+                                    )}
+                                  >
+                                    <CollapsibleTrigger className="flex items-center w-full">
+                                      <div className="flex items-center flex-1">
+                                        <div className="flex-shrink-0 mr-3">
+                                          <FileText className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                          <h6 className={textStyles.h4}>
+                                            {childChapter.label && (
+                                              <span className="font-medium text-muted-foreground mr-1">
+                                                {childChapter.label}
+                                              </span>
+                                            )}
+                                          </h6>
+                                        </div>
+                                      </div>
+                                      <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                                    </CollapsibleTrigger>
+
+                                    <CollapsibleContent className="pt-4">
+                                      {expandedChapters[
+                                        `${book.id}-${childChapter.id}`
+                                      ] && (
+                                        <ChapterContent
+                                          chapter={childChapter}
+                                        />
+                                      )}
+                                    </CollapsibleContent>
+                                  </div>
+                                </Collapsible>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Orphaned/Standalone Chapters */}
+                      {book.orphanedChapters.length > 0 && (
+                        <div className="space-y-2 mt-4">
+                          {book.orphanedChapters.length > 0 && (
+                            <div
+                              className={cn(
+                                'px-3 py-2 rounded-md bg-muted/30 border border-muted'
+                              )}
+                            >
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 mr-3">
+                                  <FileText className="h-5 w-5 text-primary/70" />
+                                </div>
+                                <div>
+                                  <h5
+                                    className={cn(
+                                      textStyles.h4,
+                                      'text-primary/90'
+                                    )}
+                                  >
+                                    Other Chapters
+                                  </h5>
+                                  <p className={textStyles.subtle}>
+                                    {book.orphanedChapters.length}{' '}
+                                    {book.orphanedChapters.length === 1
+                                      ? 'chapter'
+                                      : 'chapters'}
+                                  </p>
                                 </div>
                               </div>
-                              <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                            </CollapsibleTrigger>
+                            </div>
+                          )}
 
-                            <CollapsibleContent className="pt-4">
-                              {expandedChapters[`${book.id}-${chapter.id}`] && (
-                                <ChapterContent chapter={chapter} />
-                              )}
-                            </CollapsibleContent>
+                          <div className="space-y-2 ml-4 border-l-2 border-primary/20 pl-4">
+                            {book.orphanedChapters.map((chapter: Chapter) => (
+                              <Collapsible
+                                key={chapter.id}
+                                open={
+                                  expandedChapters[`${book.id}-${chapter.id}`]
+                                }
+                                onOpenChange={() =>
+                                  toggleChapter(book.id, chapter.id)
+                                }
+                              >
+                                <div
+                                  className={cn(
+                                    containerStyles.innerCard,
+                                    'group hover:bg-accent/50 transition-colors'
+                                  )}
+                                >
+                                  <CollapsibleTrigger className="flex items-center w-full">
+                                    <div className="flex items-center flex-1">
+                                      <div className="flex-shrink-0 mr-3">
+                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                      </div>
+                                      <div>
+                                        <h6 className={textStyles.h4}>
+                                          {chapter.label && (
+                                            <span className="font-medium text-muted-foreground mr-1">
+                                              {chapter.label}
+                                            </span>
+                                          )}
+                                        </h6>
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                                  </CollapsibleTrigger>
+
+                                  <CollapsibleContent className="pt-4">
+                                    {expandedChapters[
+                                      `${book.id}-${chapter.id}`
+                                    ] && <ChapterContent chapter={chapter} />}
+                                  </CollapsibleContent>
+                                </div>
+                              </Collapsible>
+                            ))}
                           </div>
-                        </Collapsible>
-                      ))}
+                        </div>
+                      )}
                     </div>
                   </CollapsibleContent>
                 </div>
@@ -198,78 +325,4 @@ export default function ChapterViewer({ chatId }: { chatId: string }) {
       </ScrollArea>
     </div>
   )
-}
-
-// PLACEHOLDER -> Move to custom component
-function ChapterContent({ chapter }: { chapter: any }) {
-  const [content, setContent] = React.useState<string | null>(null)
-  const [loading, setLoading] = React.useState(true)
-
-  React.useEffect(() => {
-    let isCancelled = false
-
-    async function loadChapter() {
-      setLoading(true)
-
-      try {
-        // Use chapter.content if available, otherwise fetch it
-        if (chapter.content) {
-          if (!isCancelled) {
-            setContent(chapter.content)
-            setLoading(false)
-          }
-        } else {
-          const fetchedContent = await fetchChapterContent(
-            chapter.id,
-            chapter.bookId
-          )
-          if (!isCancelled) {
-            setContent(fetchedContent)
-            setLoading(false)
-          }
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setContent('Error loading chapter content.')
-          setLoading(false)
-        }
-      }
-    }
-
-    loadChapter()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [chapter])
-
-  if (loading) {
-    return <div className="text-center py-4">Loading chapter content...</div>
-  }
-
-  return (
-    <div className="prose prose-sm max-w-none">
-      <div
-        className="overflow-x-clip"
-        dangerouslySetInnerHTML={{
-          __html: content || 'No content available'
-        }}
-      />
-    </div>
-  )
-}
-
-async function fetchChapterContent(
-  chapterId: string,
-  bookId: string
-): Promise<string> {
-  // This would be replaced with an actual API call in production
-  console.log(`Fetching content for book ${bookId}, chapter ${chapterId}`)
-  return new Promise<string>((resolve) => {
-    setTimeout(() => {
-      resolve(
-        `This is the content for chapter ${chapterId} of book ${bookId}. In a real application, this would be fetched from an API or database.`
-      )
-    }, 1000)
-  })
 }

@@ -1,9 +1,10 @@
 import { getChapterQueue } from '@lib/fetchers/fetch-chapters.ts'
 import { getFlashcards } from '@lib/fetchers/fetch-flashcards.ts'
 import { logger } from '@lib/logger.ts'
-import { Chapter, Console, Flashcard } from '@mytypes/types'
+import { Chapter, ChapterQueueSorted, Console, Flashcard } from '@mytypes/types'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { buildSorted, updateSorted } from '@lib/organize-chapters.ts'
 
 interface ConsoleStoreState {
   consolesByChat: Record<string, Console>
@@ -35,7 +36,8 @@ export const useConsoleStore = create(
               ...state.consolesByChat,
               [chatId]: {
                 flashcardQueue: null,
-                chapterQueue: null
+                chapterQueue: null,
+                chaptersSorted: null
               }
             }
           }))
@@ -50,10 +52,12 @@ export const useConsoleStore = create(
             getChapterQueue(chatId),
             getFlashcards(chatId)
           ])
+          const sorted: ChapterQueueSorted = buildSorted(chapterQueue.chapters)
 
           const current = get().consolesByChat[chatId] || {
-            chapterQueue: null,
-            flashcardQueue: null
+            chapterQueue,
+            flashcardQueue,
+            chaptersSorted: sorted
           }
 
           set((state) => ({
@@ -62,7 +66,8 @@ export const useConsoleStore = create(
               [chatId]: {
                 ...current,
                 chapterQueue: chapterQueue ?? current.chapterQueue,
-                flashcardQueue: flashcardQueue ?? current.flashcardQueue
+                flashcardQueue: flashcardQueue ?? current.flashcardQueue,
+                chaptersSorted: sorted
               }
             }
           }))
@@ -116,20 +121,26 @@ export const useConsoleStore = create(
         })
       },
 
-      addChapter: (chatId, chunk) => {
+      // On add:
+      addChapter: (chatId, chapter) => {
         set((state) => {
-          const console = state.consolesByChat[chatId]
-          if (!console?.chapterQueue) return state
+          const cons = state.consolesByChat[chatId]
+          if (!cons) return state
+          // update flat queue
+          const flat = [...cons.chapterQueue!.chapters, chapter]
+          // update sorted map
+          const sorted = updateSorted(cons.chaptersSorted, chapter)
 
           return {
             consolesByChat: {
               ...state.consolesByChat,
               [chatId]: {
-                ...console,
+                ...cons,
                 chapterQueue: {
-                  ...console.chapterQueue,
-                  chapters: [...console.chapterQueue.chapters, chunk]
-                }
+                  ...cons.chapterQueue!,
+                  chapters: flat
+                },
+                chaptersSorted: sorted
               }
             }
           }
@@ -142,7 +153,8 @@ export const useConsoleStore = create(
             ...state.consolesByChat,
             [chatId]: {
               flashcardQueue: null,
-              chapterQueue: null
+              chapterQueue: null,
+              chaptersSorted: null
             }
           }
         }))

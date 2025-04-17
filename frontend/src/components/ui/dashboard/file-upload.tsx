@@ -26,8 +26,9 @@ import {
   UploadIcon
 } from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
-import { createDocument } from '@lib/services/epub-api.ts'
+
 import useDocumentStore from '@context/document-store.tsx'
+import { createDocument } from '@lib/fetchers/fetch-embedding.ts'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)
