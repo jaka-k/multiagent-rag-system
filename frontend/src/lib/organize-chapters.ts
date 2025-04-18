@@ -1,10 +1,11 @@
 /* eslint-disable no-underscore-dangle */
-import DocumentStore from '@context/document-store.tsx'
+import useDocumentStore from '@context/document-store.tsx'
 import { Chapter, ChapterQueueSorted } from '@mytypes/types'
 
+// A group of chapters under a common label
 export interface ParentGroup {
-  parent: Chapter
-  children: Chapter[]
+  label: string // the grouping label (parentLabel or own label)
+  children: Chapter[] // all chapters that belong to this label
 }
 
 export interface OrganizedBook {
@@ -13,66 +14,53 @@ export interface OrganizedBook {
   coverUrl?: string
   parentGroups: ParentGroup[]
   orphanedChapters: Chapter[]
-  // internal cache for fast lookups when inserting
   _map?: Map<string, ParentGroup>
 }
 
+const { getDocument } = useDocumentStore.getState()
+
 /**
- * Build the sorted structure in one pass, pulling getDocument from the store.
- * Sorts parent groups and their children by the `order` field (missing → 0).
+ * Build grouped structure: group by parentLabel if present, else by own label.
  */
 export function buildSorted(chapters: Chapter[]): ChapterQueueSorted {
-  const { getDocument } = DocumentStore()
   const byBook: Record<string, OrganizedBook> = {}
   const pgMaps: Record<string, Map<string, ParentGroup>> = {}
 
   chapters.forEach((ch) => {
-    if (!ch.documentId) return
+    const docId = ch.documentId
+    if (!docId) return
 
-    // initialize book container & map
-    if (!byBook[ch.documentId]) {
-      const doc = getDocument(ch.documentId)
-      byBook[ch.documentId] = {
-        id: ch.documentId,
+    // initialize book container & map if needed
+    if (!byBook[docId]) {
+      const doc = getDocument(docId)
+      byBook[docId] = {
+        id: docId,
         title: doc?.title ?? 'Unknown',
         coverUrl: doc?.coverImage,
         parentGroups: [],
         orphanedChapters: []
       }
-      pgMaps[ch.documentId] = new Map()
+      pgMaps[docId] = new Map()
     }
 
-    const book = byBook[ch.documentId]
-    const map = pgMaps[ch.documentId]!
+    const map = pgMaps[docId]!
+    // determine grouping key
+    const groupKey = ch.parentLabel?.trim() || ch.label
 
-    if (ch.parentLabel) {
-      // child: ensure its parent group exists
-      if (!map.has(ch.parentLabel)) {
-        // attempt to find the parent chapter in the flat list
-        const parent = chapters.find(
-          (c) => c.documentId === ch.documentId && c.label === ch.parentLabel
-        )
+    // fetch or create the group
+    let group = map.get(groupKey)
 
-        if (parent)
-          map.set(ch.parentLabel, {
-            parent,
-            children: []
-          })
-        else {
-          // no parent found → orphan
-          book.orphanedChapters.push(ch)
-          return
-        }
-      }
-
-      map.get(ch.parentLabel)!.children.push(ch)
-    } else if (!map.has(ch.label)) {
-      // top-level parent in one conditional
-      map.set(ch.label, {
-        parent: ch,
+    if (!group) {
+      group = {
+        label: groupKey,
         children: []
-      })
+      }
+      map.set(groupKey, group)
     }
+
+    // if this chapter has no parentLabel but its own label equals groupKey,
+    // it’s a parent-level content: put into children as well
+    group.children.push(ch)
   })
 
   // finalize grouping & sorting
@@ -80,15 +68,17 @@ export function buildSorted(chapters: Chapter[]): ChapterQueueSorted {
     const map = pgMaps[docId]
     const groups = Array.from(map.values())
 
-    // sort children within each parent-group
+    // sort each group's children by order
     groups.forEach((pg) => {
       pg.children.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     })
-
-    // sort parent-groups by parent.order
-    groups.sort((a, b) => (a.parent.order ?? 0) - (b.parent.order ?? 0))
+    // sort groups by first child's order or 0
+    groups.sort(
+      (a, b) => (a.children[0]?.order ?? 0) - (b.children[0]?.order ?? 0)
+    )
 
     byBook[docId].parentGroups = groups
+    // cache map for incremental updates
     byBook[docId]._map = map
   })
 
@@ -96,70 +86,63 @@ export function buildSorted(chapters: Chapter[]): ChapterQueueSorted {
 }
 
 /**
- * Incrementally insert one chapter into existing sorted structure.
- * Uses the cached `_map` on each book for O(1) parent-group lookup,
- * then re-sorts only the affected arrays.
+ * Incrementally insert a chapter into the grouped structure.
  */
 export function updateSorted(
   sorted: ChapterQueueSorted | null,
   chapter: Chapter
 ): ChapterQueueSorted {
-  const { getDocument } = DocumentStore()
-  // shallow clone or initialize
   const result: ChapterQueueSorted = sorted
     ? { byBook: { ...sorted.byBook } }
     : { byBook: {} }
 
-  // ensure book exists
-  let book = result.byBook[chapter.documentId!]
+  const docId = chapter.documentId
+  if (!docId) return result
+
+  let book = result.byBook[docId]
 
   if (!book) {
-    const doc = getDocument(chapter.documentId!)
+    const doc = getDocument(docId)
     book = {
-      id: chapter.documentId!,
+      id: docId,
       title: doc?.title ?? 'Unknown',
       coverUrl: doc?.coverImage,
       parentGroups: [],
       orphanedChapters: []
     }
-    result.byBook[chapter.documentId!] = book
+    result.byBook[docId] = book
   }
 
-  // ensure internal map cache
+  // ensure map cache
   if (!book._map) {
-    const m = new Map<string, ParentGroup>()
-    book.parentGroups.forEach((pg: ParentGroup) => m.set(pg.parent.label, pg))
-    book._map = m
+    book._map = new Map(
+      book.parentGroups.map((pg: ParentGroup) => [pg.label, pg])
+    )
   }
 
-  const m = book._map!
+  const map = book._map!
 
-  if (chapter.parentLabel) {
-    const pg = m.get(chapter.parentLabel)
+  const groupKey = chapter.parentLabel?.trim() || chapter.label
+  let group = map.get(groupKey)
 
-    if (pg) {
-      pg.children.push(chapter)
-      // re-sort children
-      pg.children.sort(
-        (a: Chapter, b: Chapter) => (a.order ?? 0) - (b.order ?? 0)
-      )
-    } else {
-      book.orphanedChapters.push(chapter)
-    }
-  } else {
-    // new top-level parent
-    const newPg: ParentGroup = {
-      parent: chapter,
+  if (!group) {
+    group = {
+      label: groupKey,
       children: []
     }
-    m.set(chapter.label, newPg)
-    book.parentGroups.push(newPg)
+    map.set(groupKey, group)
+    book.parentGroups.push(group)
   }
 
-  // re-sort parent-groups
+  group.children.push(chapter)
+
+  // re-sort children & groups
+  book.parentGroups.forEach((pg: ParentGroup) => {
+    pg.children.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  })
   book.parentGroups.sort(
     (a: ParentGroup, b: ParentGroup) =>
-      (a.parent.order ?? 0) - (b.parent.order ?? 0)
+      (a.children[0]?.order ?? 0) - (b.children[0]?.order ?? 0)
   )
 
   return result

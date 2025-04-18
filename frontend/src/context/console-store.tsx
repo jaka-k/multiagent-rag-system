@@ -1,10 +1,10 @@
 import { getChapterQueue } from '@lib/fetchers/fetch-chapters.ts'
 import { getFlashcards } from '@lib/fetchers/fetch-flashcards.ts'
 import { logger } from '@lib/logger.ts'
+import { buildSorted, updateSorted } from '@lib/organize-chapters.ts'
 import { Chapter, ChapterQueueSorted, Console, Flashcard } from '@mytypes/types'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { buildSorted, updateSorted } from '@lib/organize-chapters.ts'
 
 interface ConsoleStoreState {
   consolesByChat: Record<string, Console>

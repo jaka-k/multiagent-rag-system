@@ -68,6 +68,7 @@ export interface Chapter {
   label: string
   order: number
   parentLabel: string
+  chapterTag: string
   content?: string
 }
 
