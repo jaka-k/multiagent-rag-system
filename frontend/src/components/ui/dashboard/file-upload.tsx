@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import EpubElement from '@ui/dashboard/epub-element.tsx'
 import { Input } from '@ui/input'
 import { Progress } from '@ui/progress'
-import { Skeleton } from '@ui/skeleton.tsx'
 import {
   Table,
   TableBody,
@@ -29,12 +28,14 @@ import React, { FormEvent, useRef, useState } from 'react'
 
 import useDocumentStore from '@context/document-store.tsx'
 import { createDocument } from '@lib/fetchers/fetch-embedding.ts'
+import { useToast } from '@hooks/use-toast.ts'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { activeArea } = useAreaStore()
   const { documentsByArea, fetchDocumentsForArea } = useDocumentStore()
+  const { toast } = useToast()
 
   const {
     metadata: metadataFromWorker,
@@ -53,8 +54,23 @@ export function FileUpload() {
 
   const totalSize = (file ? file.size : 0) / 1024 / 1024
 
-  if (!activeArea) return <Skeleton />
-  const documents = Object.entries(documentsByArea[activeArea.id])
+  if (!activeArea) {
+    return (
+      <TabsContent
+        value="File Upload"
+        className="flex-1 bg-gray-50 rounded-lg space-y-6 p-6"
+      >
+        <div className="py-12">
+          <p className="text-center">No active area found.</p>
+        </div>
+      </TabsContent>
+    )
+  }
+
+  const documents =
+    Object.keys(documentsByArea)?.length > 0
+      ? Object.entries(documentsByArea[activeArea.id])
+      : []
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const formFile = e.target.files?.[0]
@@ -79,6 +95,10 @@ export function FileUpload() {
 
     if (!metadataFromWorker?.coverImage) {
       logger.error('Cover image metadata is not available.')
+      toast({
+        title: 'Cover image metadata missing! 🫣',
+        description: 'This is an invalid app state and should not happen!'
+      })
       return
     }
 
@@ -107,6 +127,10 @@ export function FileUpload() {
 
       if (!response.id) {
         logger.error('Document creation failed', response)
+        toast({
+          title: 'Document creation failed! 🫣',
+          description: 'This is an invalid app state and should not happen!'
+        })
       }
 
       await fetchDocumentsForArea(activeArea.id)
@@ -116,6 +140,11 @@ export function FileUpload() {
       metadataFromWorker.coverImage = undefined
     } catch (err) {
       logger.error('Epub upload failed in handler:', err)
+      toast({
+        title: 'Epub upload failed in handler! 🫣',
+        description:
+          'This is an fatal error, sorry we can not proceed with the operation'
+      })
     }
   }
 
@@ -125,7 +154,6 @@ export function FileUpload() {
       className="flex-1 bg-gray-50 rounded-lg space-y-6 p-6"
     >
       <div className="grid gap-6 md:grid-cols-2">
-        {/* 1) Card: EPUB Upload */}
         <Card>
           <CardHeader>
             <CardTitle>Upload EPUB File</CardTitle>

@@ -22,14 +22,16 @@ function AreaSelector() {
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select area" />
       </SelectTrigger>
-      <SelectContent>
-        {!error &&
-          areas?.map((area: Area) => (
-            <SelectItem key={area.id} value={area.id}>
-              {area.name}
-            </SelectItem>
-          ))}
-      </SelectContent>
+      {areas?.length > 0 && (
+        <SelectContent>
+          {!error &&
+            areas?.map((area: Area) => (
+              <SelectItem key={area.id} value={area.id}>
+                {area.name}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      )}
     </Select>
   )
 }

@@ -15,7 +15,7 @@ export interface Document {
   fileSize: number
   description: string
   coverImage: string
-  embedding_status: 'idle' | 'processing' | 'embedding' | 'completed'
+  embedding_status: 'idle' | 'processing' | 'embedding' | 'completed' | 'failed'
 }
 
 export interface Message {

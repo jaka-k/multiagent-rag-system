@@ -3,7 +3,7 @@ import { logger } from '@lib/logger'
 import { Document } from '@mytypes/types'
 import { Button } from '@ui/button'
 import { TableCell, TableRow } from '@ui/table/table'
-import { Check, DrumIcon, Loader2Icon } from 'lucide-react'
+import { Check, DrumIcon, Loader2Icon, TriangleAlert } from 'lucide-react'
 import React, { useState } from 'react'
 import { estimateTokensAndCost } from '@lib/utils.ts'
 
@@ -34,6 +34,7 @@ function EpubElement({ doc }: { doc: Document }) {
           const { data } = statusResponse
 
           if (!statusResponse.ok) {
+            setCurrentStep('failed')
             throw new Error(
               'Embedding failed with status 400: ' +
                 `/api/embedding-status/${doc.id}`
@@ -42,7 +43,7 @@ function EpubElement({ doc }: { doc: Document }) {
 
           setCurrentStep(statusResponse?.data.status)
 
-          if (data.status === 'completed') {
+          if (data.status === 'completed' || data.status === 'failed') {
             clearInterval(interval)
           }
         } catch (error) {
@@ -74,7 +75,7 @@ function EpubElement({ doc }: { doc: Document }) {
         ) : currentStep === 'embedding' ? (
           <div
             className={
-              'bg-indigo-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
+              'bg-indigo-500 text-primary-foreground h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
             }
           >
             <DrumIcon className="mr-2 h-4 w-4 animate-pulse" />
@@ -83,11 +84,20 @@ function EpubElement({ doc }: { doc: Document }) {
         ) : currentStep === 'completed' ? (
           <div
             className={
-              'bg-green-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
+              'bg-green-500 text-primary-foreground h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
             }
           >
             <Check className="mr-2 h-4 w-4" />
             Done
+          </div>
+        ) : currentStep === 'failed' ? (
+          <div
+            className={
+              'bg-red-600 text-primary-foreground h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium'
+            }
+          >
+            <TriangleAlert className="mr-2 h-4 w-4" />
+            Failed
           </div>
         ) : (
           <Button
