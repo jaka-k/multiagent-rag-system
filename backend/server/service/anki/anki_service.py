@@ -1,13 +1,15 @@
+import logging
 from typing import Dict, Any, Optional
+
+from pydantic import BaseModel
+
+from .config import invoke
 from .errors import (
     AnkiDeckCreationError,
     AnkiNoteAdditionError,
     AnkiServiceError,
     AnkiSyncError,
 )
-from pydantic import BaseModel
-from .config import invoke
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,9 @@ class AnkiService:
                 error=response.error,
             )
         return str(response.result)
+
+    def get_deck_id(self) -> str:
+        return self.deck_id
 
     def sync(self) -> bool:
         response_data = invoke("sync")

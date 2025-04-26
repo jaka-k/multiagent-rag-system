@@ -11,7 +11,9 @@ from server.core.security import get_current_active_user
 from server.db.database import get_session
 from server.models.area import Area
 from server.models.document import Document
+from server.models.flashcard import Deck
 from server.models.user import User
+from server.service.anki.anki_service import AnkiService
 
 router = APIRouter()
 
@@ -36,14 +38,26 @@ async def create_area(
         session: AsyncSession = Depends(get_session),
 ):
     body = request.model_dump()
-    area = Area(name=body["name"], label=body["label"], user_id=current_user.id)
+    label = body["label"]
+    area = Area(name=body["name"], label=label, user_id=current_user.id)
     try:
         session.add(area)
         await session.commit()
         await session.refresh(area)
+
+        anki_service = AnkiService(label)
+        deck_id = anki_service.get_deck_id()
+        print("DECK_ID:", deck_id)
+
+        deck = Deck(name=area.label, area_id=area.id, anki_id=deck_id)
+        print("deck:", deck)
+        session.add(deck)
+        await session.commit()
+
         return area
 
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=f'Could not create area {e}')
 
 

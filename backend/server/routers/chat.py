@@ -36,9 +36,6 @@ async def get_all_chats(
     result = await db.execute(stmt)
     chats = result.scalars().all()
 
-    if not chats:
-        raise HTTPException(status_code=404, detail="No chats were found for user")
-
     return chats
 
 

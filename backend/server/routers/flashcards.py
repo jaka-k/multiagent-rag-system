@@ -17,8 +17,6 @@ router = APIRouter()
 class FlashcardPatchRequest(BaseModel):
     area_id: str
 
-
-## BULK METHOD
 @router.get("/flashcard-queue/{session_id}", response_model=FQueueDTO)
 async def get_flashcard_queue(
         session_id: str, session: AsyncSession = Depends(get_session)
@@ -35,7 +33,6 @@ async def get_flashcard_queue(
     return fqueue
 
 
-## SINGLE METHOD
 @router.get("/flashcard/{flashcard_id}")
 async def get_flashcard(
         flashcard_id: str, session: AsyncSession = Depends(get_session)

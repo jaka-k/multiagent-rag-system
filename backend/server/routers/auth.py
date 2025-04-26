@@ -141,18 +141,6 @@ async def read_own_areas(
     return result.scalars().all()
 
 
-@router.get("/users/me/sessions/", response_model=None)
-async def read_own_sessions(
-        current_user: User = Depends(get_current_active_user),
-        session: AsyncSession = Depends(get_session),
-):
-    # TODO: Pagination
-    stmt = select(Session).where(Session.user_id == current_user.id)
-    result = await session.execute(stmt)
-
-    return result.scalars().all()
-
-
 @router.get("/status/")
 async def read_system_status(current_user: User = Depends(get_current_user)):
     return {"status": "ok"}
@@ -172,30 +160,3 @@ async def create_test_user(session: AsyncSession = Depends(get_session)):
         f"Test user created with username: {test_user.username} and password: 'admin'"
     )
 
-
-@router.get("/test-session/", tags=["dev-test"])
-async def create_session(
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_current_active_user),
-):
-    chat_session = Session(
-        title="test session",
-        user_id=current_user.id,
-        area_id=uuid.UUID("24057f5e-f5a9-4c89-abce-d7468fba66aa"),
-    )
-    session.add(chat_session)
-    await session.commit()
-    print(f"Test session created.")
-    return {"status": "ok"}
-
-
-@router.get("/test-area/", tags=["dev-test"])
-async def create_area(
-        session: AsyncSession = Depends(get_session),
-        current_user: User = Depends(get_current_active_user),
-):
-    area = Area(name="Go", label="golang", user_id=current_user.id, tokens_used=1)
-    session.add(area)
-    await session.commit()
-    print(f"Test area created.")
-    return {"status": "ok"}
