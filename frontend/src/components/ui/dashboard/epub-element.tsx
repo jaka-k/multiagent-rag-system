@@ -1,14 +1,17 @@
+import useDocumentStore from '@context/document-store.tsx'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth'
 import { logger } from '@lib/logger'
-import { Document } from '@mytypes/types'
+import { estimateTokensAndCost } from '@lib/utils.ts'
+import { Document, EmbeddingStatus } from '@mytypes/types'
 import { Button } from '@ui/button'
 import { TableCell, TableRow } from '@ui/table/table'
 import { Check, DrumIcon, Loader2Icon, TriangleAlert } from 'lucide-react'
 import React, { useState } from 'react'
-import { estimateTokensAndCost } from '@lib/utils.ts'
 
 function EpubElement({ doc }: { doc: Document }) {
-  const [currentStep, setCurrentStep] = useState<string>(doc?.embedding_status)
+  console.log(doc)
+  const { updateDocument } = useDocumentStore()
+  const [currentStep, setCurrentStep] = useState<string>(doc?.embeddingStatus)
   const { tokens, cost } = estimateTokensAndCost(doc.fileSize)
 
   const createVectorEmbedding = async () => {
@@ -41,7 +44,13 @@ function EpubElement({ doc }: { doc: Document }) {
             )
           }
 
-          setCurrentStep(statusResponse?.data.status)
+          const status = statusResponse?.data
+            .status as unknown as EmbeddingStatus
+
+          updateDocument(doc.areaId, doc.id, {
+            embeddingStatus: status
+          })
+          setCurrentStep(status)
 
           if (data.status === 'completed' || data.status === 'failed') {
             clearInterval(interval)

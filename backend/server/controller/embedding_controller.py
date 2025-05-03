@@ -28,6 +28,7 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
     document = result.scalar_one_or_none()
 
     if not document:
+        await session.close()
         raise HTTPException(status_code=404, detail="Document not found")
 
     await update_document_status(session, document_id, EmbeddingStatus.PROCESSING)
@@ -36,8 +37,9 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
     try:
         file_path = downloader.download_epub(document.file_path)
     except Exception as e:
-        await update_document_status(session, document_id, EmbeddingStatus.IDLE)
+        await update_document_status(session, document_id, EmbeddingStatus.FAILED)
         app_logger.error(f"Error during downloading of epub {document_id}: {e}")
+        await session.close()
         raise e
 
     epub_service = EpubProcessingService(document, session)
@@ -45,8 +47,9 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
     try:
         await epub_service.process_and_commit(file_path)
     except Exception as e:
-        await update_document_status(session, document_id, EmbeddingStatus.IDLE)
+        await update_document_status(session, document_id, EmbeddingStatus.FAILED)
         app_logger.error(f"Error during parsing of document {document_id}: {e}")
+        await session.close()
         raise e
 
     await update_document_status(session, document_id, EmbeddingStatus.EMBEDDING)
@@ -55,8 +58,9 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
     try:
         await embedding_service.parse_chapters()
     except Exception as e:
-        await update_document_status(session, document_id, EmbeddingStatus.IDLE)
+        await update_document_status(session, document_id, EmbeddingStatus.FAILED)
         app_logger.error(f"Error during embedding process for document {document_id}: {e}")
+        await session.close()
         raise e
 
     await update_document_status(session, document_id, EmbeddingStatus.COMPLETED)

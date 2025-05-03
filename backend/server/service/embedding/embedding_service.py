@@ -34,39 +34,35 @@ class EmbeddingService:
             collection_name=document.area.label
         )
 
-        chapters = filter(filter_embedded_chapters, document.chapters)
-        parsed_chapters = [
-            ChromaDoc(
-                page_content=chapter.content,
-                metadata={
-                    "title": document.title,
-                    "chapter": chapter.parent_label,
-                    "subchapter": chapter.label
-                },
-                id=chapter.chapter_tag
-            )
-            for chapter in chapters
-        ]
 
-        if parsed_chapters:
-            try:
-                await db.add_documents(parsed_chapters)
+        parsed_chapters = []
+        for chapter in document.chapters:
+            if not chapter.is_embedded:
 
-                for chapter in document.chapters:
-                    if filter_embedded_chapters(chapter):
-                        chapter.is_embedded = True
+                parsed_chapters.append(
+                    ChromaDoc(
+                        page_content=chapter.content,
+                        metadata={
+                            "title": document.title,
+                            "chapter": chapter.parent_label,
+                            "subchapter": chapter.label,
+                        },
+                        id=chapter.chapter_tag,
+                    )
+                )
 
-                await self.db_session.commit()
-                app_logger.info(f"Embedded {len(parsed_chapters)} chapters successfully.")
+                chapter.is_embedded = True
+            else:
+                app_logger.info(f"Skipping {chapter.label} (already embedded)")
 
-            except Exception as e:
-                app_logger.error(f"Failed to embed documents: {e}")
-        else:
-            app_logger.warning("No chapters to embed.")
+        if not parsed_chapters:
+            app_logger.warning("No new chapters to embed.")
+            return
 
-def filter_embedded_chapters(chapter: Chapter):
-    if chapter.is_embedded:
-        app_logger(f"Skipping {chapter.label} (already embedded)")
-        return False
+        try:
+            db.add_documents(documents=parsed_chapters)
 
-    return True
+            await self.db_session.commit()
+            app_logger.info(f"Embedded {len(parsed_chapters)} chapters successfully.")
+        except Exception as e:
+            app_logger.error(f"Failed to embed documents: {e}")

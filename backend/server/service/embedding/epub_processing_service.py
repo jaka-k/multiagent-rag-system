@@ -1,7 +1,6 @@
 import logging
 
-from psycopg import IntegrityError
-from psycopg.errors import UniqueViolation
+from sqlalchemy.dialects.postgresql import insert
 
 from server.db.dtos.epub_dto import ChapterDTO
 from server.models.document import Document, Chapter
@@ -16,42 +15,32 @@ class EpubProcessingService:
 
     async def process_and_commit(self, epub_file_path: str):
         epub_dto = self.epub_parser.parse(epub_file_path)
-
         chapters_added = 0
 
-        for idx, chapter in enumerate(epub_dto.chapters):
-            new_chapter = Chapter(
-                label=chapter.label,
-                parent_label=chapter.parent_label,
-                chapter_tag=self.format_chapter_tag(chapter),
-                content=chapter.content,
-                order=chapter.play_order,
-                document_id=self.doc.id
-            )
+        async with self.db_session.begin():
+            for chapter in epub_dto.chapters:
+                tag = self.format_chapter_tag(chapter)
+                stmt = insert(Chapter).values(
+                    label=chapter.label,
+                    parent_label=chapter.parent_label,
+                    chapter_tag=tag,
+                    content=chapter.content,
+                    order=chapter.play_order,
+                    document_id=self.doc.id
+                ).on_conflict_do_nothing(index_elements=["chapter_tag"])
 
-            try:
-                self.db_session.add(new_chapter)
-                await self.db_session.commit()  # Commit after each chapter
-                chapters_added += 1
-            except IntegrityError as e:
-                await self.db_session.rollback()
-
-                if isinstance(e.orig, UniqueViolation):
-                    logging.warning(f"Skipping duplicate chapter: {new_chapter.chapter_tag}")
+                result = await self.db_session.execute(stmt)
+                if result.rowcount:
+                    chapters_added += 1
                 else:
-                    logging.error(f"Unexpected DB error: {e}")
-                    raise
+                    logging.warning(f"Skipping duplicate chapter: {tag}")
 
-        logging.info(f"Committed {chapters_added} new chapters for Document ID: {self.doc.id}")
-
-        return {
-            "db_chapters_added": chapters_added
-        }
-
+        logging.info(f"Committed {chapters_added} new chapters…")
+        return {"db_chapters_added": chapters_added}
 
     def format_chapter_tag(self, chapter: ChapterDTO):
         label = chapter.label
         parent_label = chapter.parent_label
         chunk_id = f"{self.doc.title}//{parent_label.lower()}:{label.lower()}"
 
-        return chunk_id.replace(" ", "-")
+        return chunk_id.replace(" ", "-").replace("\t", "-")
