@@ -20,7 +20,7 @@ export default function ChapterContent({ chapter }: { chapter: any }) {
         } else {
           const fetchedContent = await fetchChapterContent(
             chapter.id,
-            chapter.bookId
+            chapter.chapterTag
           )
           if (!isCancelled) {
             setContent(fetchedContent)

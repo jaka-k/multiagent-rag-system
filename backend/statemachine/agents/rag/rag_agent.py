@@ -1,4 +1,3 @@
-# https://python.langchain.com/v0.2/docs/tutorials/qa_chat_history/#agent-constructor
 import uuid
 
 from langchain.prompts import ChatPromptTemplate
@@ -16,8 +15,7 @@ from statemachine.agents.rag.templates import (
 )
 
 
-
-class LangChainChat:
+class RagAgent:
     def __init__(self, chat_id: uuid.UUID, area: str):
         self.chat_id = chat_id
         self.llm = ChatOpenAI(
@@ -41,8 +39,6 @@ class LangChainChat:
                 ("user", "{modified_input}"),
             ]
         )
-        ## https://github.com/langchain-ai/langchain/discussions/22146#discussioncomment-9551077
-        ## https://python.langchain.com/api_reference/core/beta/langchain_core.beta.runnables.context.Context.html#langchain_core.beta.runnables.context.Context
 
         self.history_aware_retriever = (self.history_aware_prompt | self.llm_mini | StrOutputParser()
                                         )

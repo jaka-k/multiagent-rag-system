@@ -3,8 +3,6 @@
 // TODO: handle locally
 // eslint-disable-next-line import/no-unresolved
 import 'highlight.js/styles/nnfx-light.css'
-
-import { Avatar, AvatarFallback } from '@components/ui/avatar'
 import { Button } from '@components/ui/button'
 import { cn, connectionStatusMapping } from '@lib/utils'
 import { ChatData, Message } from '@mytypes/types'
@@ -17,6 +15,7 @@ import Markdown from 'react-markdown'
 import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
 import CreateChat from '@ui/create-chat/create-chat.tsx'
+import { logger } from '@lib/logger.ts'
 
 export function Chat({ chatData }: { chatData: ChatData }) {
   const socketUrl = `ws://localhost:8080/api/ws/${chatData.id}`
@@ -87,8 +86,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
           appendMetadataMessage(messageData.metadata)
         }
       } catch (error) {
-        // TODO: Logging
-        console.error('Error parsing WebSocket message:', error)
+        logger.error('Error parsing WebSocket message:', error)
       }
     },
     onClose: () => {},
@@ -114,6 +112,8 @@ export function Chat({ chatData }: { chatData: ChatData }) {
     setInput('')
   }
 
+  console.log(chatData.title)
+
   return (
     <div className="w-full h-full p-4 overflow-hidden">
       {/* Outer Card */}
@@ -126,12 +126,8 @@ export function Chat({ chatData }: { chatData: ChatData }) {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>
-                {chatData.id.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="text-sm font-semibold">Live Chat</div>
+
+            <div className="text-sm font-semibold">{chatData.title}</div>
             <span
               className={cn(
                 'text-xs font-medium px-2 py-0.5 rounded-md',

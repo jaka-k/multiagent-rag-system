@@ -78,6 +78,7 @@ export default function ChapterViewer({ chatId }: { chatId?: string }) {
                         <Image
                           src={book.coverUrl}
                           alt={book.title}
+                          priority={true}
                           width={60}
                           height={80}
                           className="mr-3 rounded-sm object-cover shadow-sm"
