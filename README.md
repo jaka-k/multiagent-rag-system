@@ -1,3 +1,6 @@
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
+
 This tool was originally created to explore AI-driven learning workflows.  
 Read the full story and motivations in my [blog post](https://…).
 
