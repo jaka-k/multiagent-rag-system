@@ -51,6 +51,33 @@ pnpm dev
 
 ---
 
+## Server
+
+### Authorization
+
+OAuth2-based authentication follows FastAPI’s official guide.  
+Routes and security logic are defined in [`security.py`](backend/server/core/security.py).
+
+### Controllers & Services
+
+- [`ChatController`](backend/server/controller/chat_controller.py): Handles WebSocket connections and invokes
+  `ChatService`.
+- [`EmbeddingController`](backend/server/controller/embedding_controller.py): Provides REST endpoints to initiate EPUB
+  parsing and embedding workflows.
+- [`FlashcardsController`](backend/server/controller/flashcards_controller.py): Manages flashcard operations and Anki
+  export via `AnkiService`.
+
+### Chat & Streaming
+
+The `statemachine` package also powers real-time chat via WebSockets.
+
+- **`ChatService`**: Wraps LangGraph calls with `get_openai_callback()` to capture usage metadata (token counts,
+  timing). Outputs are packaged into `ChatOutputStreamDTO`.
+- **WebSocket Endpoint** (`/ws/{chat_id}`): Streams each LLM response chunk together with metadata, allowing the Next.js
+  frontend to render text progressively and display live telemetry.
+
+---
+
 ## Epub Parser
 
 The parser is tested with books from the 3 main publishers in the tech publishing space. O'Reilly media,
@@ -58,7 +85,7 @@ Manning shelter Island and Packt Publishing (Conditionally also tested with No S
 
 A dedicated [`EpubProcessingService`](backend/server/service/embedding/epub_processing_service.py) decouples parsing
 from API logic. Located in the [tools Poetry package](backend/tools), the parser traverses the epub file and extracts
-the raw html data, then it parses  the html to plain text in order to prepare them for the vector embedding.
+the raw html data, then it parses the html to plain text in order to prepare them for the vector embedding.
 
 1. Finds the EPUB’s TOC file
 2. Breaks content into sub-chapters
@@ -70,25 +97,19 @@ the raw html data, then it parses  the html to plain text in order to prepare th
 - `beautifulsoup4` for HTML traversal
 - Python’s built-in `zipfile` to extract EPUB contents
 
-a
-a
-a
-a
-a
-a
-a
-
 ## Embedding Pipeline (RAG Preprocessing)
 
-1. **Why EPUB?** PDFs proved too inconsistent; EPUB is HTML under the hood.
-2. **EmbeddingService**:
-    - Sanitizes chapter text
-    - Generates vectors in Chroma DB
-    - Experiments with metadata weighting (e.g. title tokens boosted for better retrieval)
-3. **Scope**: Initially for Go resources, now supports any tech-book publisher (No Starch, O’Reilly, etc.)
+A dedicated EmbeddingService handles the transformation of parsed chapters into vectors. It:
 
----
-Step-by-step: EmbeddingService, vector DB details, metadata weighting experiment.
+- Retrieves sanitized plain text of each chapter from Postgres
+
+- Generates vector embeddings in Chroma DB, organizing collections by learning area
+
+- Applies metadata weighting experiments (e.g. boosting title tokens for more relevant retrieval)
+
+**Libraries used**:
+
+- `chromadb` client for vector storage
 
 ## Server
 
@@ -98,41 +119,59 @@ The auth routes [security.py](backend/server/core/security.py)
 
 ## Statemachine Package
 
-A self-contained Poetry package `statemachine` that implements multi-agent workflows as a state machine using LangGraph.
+A self-contained Poetry package [`statemachine`](backend/statemachine) that implements multi-agent workflows as a state
+machine using LangGraph. The main chat functionality and vector DB retrieval are orchestrated by the [
+`RagAgent`](backend/statemachine/agents/rag/rag_agent.py), which leverages LangChain Expression Language (LCEL) for
+precise control over execution parameters—most notably the selection and weighting of retrieved documents.
 
 ### Design Principles
 
+- **Main Agent: `RagAgent`**
+    - Streams chat responses and handles vector DB retrieval with metadata-aware prompts.
 - **Graph as State Machine**  
-  Each agent node = a state; connections = transitions.
+  Each agent node represents a state; edges define transitions. The top‑level orchestrator, the [
+  `SupervisorAgent`](backend/statemachine/agents/supervisor/supervisor.py), receives the initial output from `RagAgent`
+  and drives the workflow based on its [`SupervisorState`](backend/statemachine/agents/supervisor/supervisor_state.py).
 - **Separation of Concerns**  
-  Keeps decision logic (agent orchestration, flashcard creation, knowledge gap analysis) isolated from external
-  services (DB, HTTP, SSE).
+  Decision logic—such as agent orchestration, gap analysis, and flashcard creation—remains isolated from external
+  services (DB access, HTTP routes, SSE), ensuring the core graph is clean, testable, and maintainable.
 
 ### Key Modules
 
-- **GraphBuilder**  
-  Constructs the directed graph from a config of agents and transitions.
-- **StateExecutor**  
-  Traverses the graph, invoking agent logic and handling transition conditions.
+- **`StateGraph`**  
+  Builds the directed graph from a configuration of agents and transitions, used by `SupervisorAgent`.
+- **`StateExecutor`**  
+  Traverses the graph, invoking each agent’s `run()` method and evaluating transition conditions defined in
+  `supervisor_state.py`.
 - **Agent Interfaces**  
-  Abstract base classes for custom agents (e.g. `GapAnalyzerAgent`, `FlashcardAgent`).
+  Abstract base classes (`BaseAgent`, `StreamableAgent`) defining the contract for custom agents like
+  `KnowledgeIdentificationAgent` and `FlashcardAgent`.
+
+### Agents
+
+#### Knowledge Identification Agent
+
+Implemented in [`knowledge_identification_agent.py`](backend/statemachine/agents/knowledge_identification_agent.py),
+this agent inspects a user’s question, identifies knowledge gaps, and outputs a list of missing concepts for follow-up.
+
+#### Flashcard Creating Agent
+
+Defined in [`flashcard_agent.py`](backend/statemachine/agents/rag/flashcard_agent.py), the `FlashcardAgent` transforms
+identified gaps into study cards in a two-step process:
+
+1. **Content Generation**: Builds front and back text for each card, using LCEL prompts.
+2. **Formatting**: Applies categories and chromatic coding, yielding JSON-ready flashcard objects for downstream
+   services.
 
 ---
 
-## Chat & Streaming
+## Anki Service
 
-Handles real-time interaction between LangGraph and the Next.js frontend via WebSockets.
+We use the popular `genanki` library to generate and push flashcards into Anki decks. Implemented in [
+`anki_service.py`](backend/server/services/anki_service.py), it:
 
-1. **ChatService**
-    - Wraps LLM calls with `get_openai_callback()` for telemetry and usage monitoring.
-    - Converts agent outputs into `ChatOutputStreamDTO`, including token usage and timing.
-
-2. **WebSocket Endpoint** (`/ws/{chat_id}`)
-    - Streams LLM response chunks as they arrive.
-    - Emits JSON messages containing `{ text: string, metadata: { tokens: number, time_ms: number } }`.
-
-3. **Frontend Integration**
-    - Next.js listens on the WebSocket, appends chunks to the chat window, and displays a live token counter.
+- Converts JSON flashcard objects into `genanki` note and deck models.
+- Exports `.apkg` packages ready for import into Anki.```
 
 ---
 
