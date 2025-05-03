@@ -7,7 +7,9 @@ This
 decoupling is one of the core architectural goals—and challenges. The setup also serves as a sandbox for experimenting
 with systems design and working with a modern, service-oriented stack.
 
-## Architecture & Tech Stack
+![Shallow Backup GIF Demo](frontend/public/mrag-demo.gif)
+
+## 🏗 Architecture & Tech Stack
 
 - **LangGraph** – Multi-agent state machine orchestrator for LLM workflows
 - **Server** – Python 3.10+, FastAPI, Pydantic, structured as multiple Poetry-managed packages
@@ -17,7 +19,7 @@ with systems design and working with a modern, service-oriented stack.
 
 ---
 
-## Installation
+## 💻 Installation
 
 As of now, the app is intended for local development. VPS deployment is on the roadmap.
 
@@ -51,7 +53,7 @@ pnpm dev
 
 ---
 
-## Server
+## 🛡 Server
 
 ### Authorization
 
@@ -78,7 +80,7 @@ The `statemachine` package also powers real-time chat via WebSockets.
 
 ---
 
-## Epub Parser
+## 📚 Epub Parser
 
 The parser is tested with books from the 3 main publishers in the tech publishing space. O'Reilly media,
 Manning shelter Island and Packt Publishing (Conditionally also tested with No Starch Press)
@@ -97,7 +99,7 @@ the raw html data, then it parses the html to plain text in order to prepare the
 - `beautifulsoup4` for HTML traversal
 - Python’s built-in `zipfile` to extract EPUB contents
 
-## Embedding Pipeline (RAG Preprocessing)
+## 🧠 Embedding Pipeline (RAG Preprocessing)
 
 A dedicated EmbeddingService handles the transformation of parsed chapters into vectors. It:
 
@@ -111,13 +113,8 @@ A dedicated EmbeddingService handles the transformation of parsed chapters into 
 
 - `chromadb` client for vector storage
 
-## Server
 
-Authorization
-Using the OAuth 2 setup from the official fastapi docs.
-The auth routes [security.py](backend/server/core/security.py)
-
-## Statemachine Package
+## 🔄 Statemachine Package
 
 A self-contained Poetry package [`statemachine`](backend/statemachine) that implements multi-agent workflows as a state
 machine using LangGraph. The main chat functionality and vector DB retrieval are orchestrated by the [
@@ -129,29 +126,26 @@ precise control over execution parameters—most notably the selection and weigh
 - **Main Agent: `RagAgent`**
     - Streams chat responses and handles vector DB retrieval with metadata-aware prompts.
 - **Graph as State Machine**  
-  Each agent node represents a state; edges define transitions. The top‑level orchestrator, the [
+  - Each agent node represents a state; edges define transitions. The top‑level orchestrator, the [
   `SupervisorAgent`](backend/statemachine/agents/supervisor/supervisor.py), receives the initial output from `RagAgent`
   and drives the workflow based on its [`SupervisorState`](backend/statemachine/agents/supervisor/supervisor_state.py).
 - **Separation of Concerns**  
-  Decision logic—such as agent orchestration, gap analysis, and flashcard creation—remains isolated from external
+  - Decision logic—such as agent orchestration, gap analysis, and flashcard creation—remains isolated from external
   services (DB access, HTTP routes, SSE), ensuring the core graph is clean, testable, and maintainable.
 
 ### Key Modules
 
-- **`StateGraph`**  
-  Builds the directed graph from a configuration of agents and transitions, used by `SupervisorAgent`.
-- **`StateExecutor`**  
-  Traverses the graph, invoking each agent’s `run()` method and evaluating transition conditions defined in
+- **`StateGraph`**: Builds the directed graph from a configuration of agents and transitions, used by `SupervisorAgent`.
+- **`StateExecutor`**: Traverses the graph, invoking each agent’s `run()` method and evaluating transition conditions defined in
   `supervisor_state.py`.
-- **Agent Interfaces**  
-  Abstract base classes (`BaseAgent`, `StreamableAgent`) defining the contract for custom agents like
+- **Agent Interfaces**: Abstract base classes (`BaseAgent`, `StreamableAgent`) defining the contract for custom agents like
   `KnowledgeIdentificationAgent` and `FlashcardAgent`.
 
 ### Agents
 
 #### Knowledge Identification Agent
 
-Implemented in [`knowledge_identification_agent.py`](backend/statemachine/agents/knowledge_identification_agent.py),
+Implemented in [`knowledge_identification_agent.py`](backend/statemachine/agents/analysis/knowledge_identification_agent.py),
 this agent inspects a user’s question, identifies knowledge gaps, and outputs a list of missing concepts for follow-up.
 
 #### Flashcard Creating Agent
@@ -165,15 +159,18 @@ identified gaps into study cards in a two-step process:
 
 ---
 
-## Anki Service
+## 🗂 Anki Service
 
 We use the popular `genanki` library to generate and push flashcards into Anki decks. Implemented in [
-`anki_service.py`](backend/server/services/anki_service.py), it:
+`anki_service.py`](backend/server/service/anki/anki_service.py), it:
 
 - Converts JSON flashcard objects into `genanki` note and deck models.
-- Exports `.apkg` packages ready for import into Anki.```
+
 
 ---
 
-### Observability
+## 🌐 Frontend
 
+---
+
+## 📈 Observability
