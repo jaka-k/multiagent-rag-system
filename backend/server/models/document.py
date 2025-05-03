@@ -13,6 +13,7 @@ class EmbeddingStatus(str, Enum):
     PROCESSING = "processing"
     EMBEDDING = "embedding"
     COMPLETED = "completed"
+    FAILED = "failed"
 
 
 class Document(SQLModel, table=True):
@@ -37,7 +38,7 @@ class Document(SQLModel, table=True):
             "onupdate": lambda: datetime.now(timezone.utc)})
 
     chapters: List["Chapter"] = Relationship(back_populates="document",
-                                             sa_relationship_kwargs={"uselist": False, "lazy": "selectin"}, )
+                                             sa_relationship_kwargs={"lazy": "selectin"}, )
 
 
 class Chapter(SQLModel, table=True):
@@ -50,7 +51,7 @@ class Chapter(SQLModel, table=True):
     is_embedded: bool = Field(default=False)
 
     document_id: uuid.UUID = Field(foreign_key="document.id")
-    document: "Document" = Relationship(back_populates="chapters")
+    document: "Document" = Relationship(back_populates="chapters", sa_relationship_kwargs={"lazy": "selectin"})
 
     queues: List["ChapterQueue"] = Relationship(
         back_populates="chapters",

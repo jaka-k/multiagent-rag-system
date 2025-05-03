@@ -107,11 +107,13 @@ const TopMenu = () => {
               <Input
                 placeholder="Label of area"
                 value={newAreaLabel}
+                minLength={3}
                 onChange={(e) => setNewAreaLabel(e.target.value)}
               />
 
               <p className={'px-1 text-sm text-muted-foreground'}>
-                Will be used as Anki deck name and pill tag
+                Needs to be <u>at least 3 characters</u>. Will be used as
+                ChromaDB collection, Anki deck name and pill tag.
               </p>
             </div>
             <DialogFooter>

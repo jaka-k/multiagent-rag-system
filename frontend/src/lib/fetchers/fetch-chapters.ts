@@ -23,7 +23,7 @@ export const getChapterQueue = async (chatId: string) => {
 
 export const getSingleChapter = async (chapterTag: string) => {
   const response = await fetchWithAuth<{ chapter: Chapter }>(`/api/chapter`, {
-    method: 'POST',
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json'
     },

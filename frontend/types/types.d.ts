@@ -8,15 +8,22 @@ export interface Area {
 
 export interface Document {
   id: string
-  user_id: string
-  area_id: string
-  created_at: Date
+  userId: string
+  areaId: string
+  createdAt: Date
   title: string
   fileSize: number
   description: string
   coverImage: string
-  embedding_status: 'idle' | 'processing' | 'embedding' | 'completed' | 'failed'
+  embeddingStatus: EmbeddingStatus
 }
+
+export type EmbeddingStatus =
+  | 'idle'
+  | 'processing'
+  | 'embedding'
+  | 'completed'
+  | 'failed'
 
 export interface Message {
   id?: string

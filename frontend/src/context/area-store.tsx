@@ -66,10 +66,14 @@ const useAreaStore = create(
         const documentStore = useDocumentStore.getState()
         documentStore.setCurrentAreaId(areaId)
       },
-      addArea: (area) =>
+      addArea: (area) => {
+        const documentStore = useDocumentStore.getState()
+
         set((state) => ({
           areas: [...state.areas, area]
         }))
+        documentStore.setCurrentAreaId(area?.id || null)
+      }
     }),
     {
       name: 'area-storage'

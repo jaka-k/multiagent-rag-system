@@ -68,7 +68,7 @@ export function FileUpload() {
   }
 
   const documents =
-    Object.keys(documentsByArea)?.length > 0
+    Object.keys(documentsByArea[activeArea.id] ?? {})?.length > 0
       ? Object.entries(documentsByArea[activeArea.id])
       : []
 
