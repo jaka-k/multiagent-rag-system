@@ -67,8 +67,9 @@ class SupervisorServerService:
             retrieved_chapter = ch_result.scalar_one_or_none()
             if not retrieved_chapter:
                 app_logger.warning("Cannot retrieve Chapter for session %s", self.session_id)
-
-            queue.chapters.append(retrieved_chapter)
+                continue
+            if not any(chapter.id == retrieved_chapter.id for chapter in queue.chapters):
+                queue.chapters.append(retrieved_chapter)
 
         self.db_session.add(queue)
         await self.db_session.commit()

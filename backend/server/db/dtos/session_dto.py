@@ -25,6 +25,7 @@ class MessageDTO(BaseModel):
 class SessionDTO(BaseModel):
     id: uuid.UUID
     total_tokens: int
+    title: str
     prompt_tokens: int
     completion_tokens: int
     total_cost: float

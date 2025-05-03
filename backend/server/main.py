@@ -7,13 +7,9 @@ from server.core.otel import init_telemetry
 from server.core.setup import lifespan_factory
 from server.routers import auth, flashcards, chat, sse_router, documents, areas
 
-## app = FastAPI(dependencies=[Depends(get_query_token)])
-## figure out how to protect all data based on the user access
-
 app = FastAPI(lifespan=lifespan_factory(create_tables_on_start=True))
 
 init_telemetry(app)
-
 
 # CORS settings
 origins = [
