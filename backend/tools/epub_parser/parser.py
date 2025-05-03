@@ -1,3 +1,4 @@
+import logging
 import os
 from abc import ABC
 
@@ -24,10 +25,10 @@ class EpubParser(ABC):
         return EpubDTO(title, chapters)
 
     def _parse_epub(self, file_path: str):
-        print(f"Processing EPUB: {file_path}")
+        logging.log(f"Processing EPUB: {file_path}")
         if not os.path.exists(file_path):
             # TODO: 📟 handle error with FileNotFoundError
-            print(f"Error: File not found: {file_path}")
+            logging.error(f"Error: File not found: {file_path}")
         inspect_epub(file_path)
         title, chapters = extract_chapters(file_path)
 

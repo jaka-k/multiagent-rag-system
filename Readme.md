@@ -1,67 +1,82 @@
 This tool was originally created to explore AI-driven learning workflows.  
 Read the full story and motivations in my [blog post](https://…).
 
-Architecture:
-Detailed architecture section with package/module breakdown and dependency graph.
-
-The wish to make it modular... etc
-Using Poetry with packages in order to decouple the llm code from the api endpoints as much as possible. So it would be
-potentially easier to replace the framework or even language. The decoupling is one of the main arch guidelines and
-challenges of this project.
-Working with multiple packages in the backend is also a great sand box for my tinkering when learning about systems
-design in general. The modern stack is often laveraged with so many standalone pieces it’s a marvel of enginnering and i
-want to delve into that as well so this was kind of the entry point.
-The tech stack choice:
+The project has a modular structure with a Next.js frontend and a Python backend split across multiple packages using
+Poetry. LLM logic is decoupled from the API layer to potentially make it easier to swap out frameworks or languages.
+This
+decoupling is one of the core architectural goals—and challenges. The setup also serves as a sandbox for experimenting
+with systems design and working with a modern, service-oriented stack.
 
 ## Architecture & Tech Stack
 
-- **LangGraph**: Multi-agent state machine orchestrator
-- **Server**: Python 3.10+, FastAPI, Pydantic for validation
-- **Frontend**: Next.js with Server Actions & SSE
-- **Database**: PostgreSQL + Chroma vector DB + Firebase Bucket
-- **Deployment**: Docker Compose, Poetry
+- **LangGraph** – Multi-agent state machine orchestrator for LLM workflows
+- **Server** – Python 3.10+, FastAPI, Pydantic, structured as multiple Poetry-managed packages
+- **Frontend** – Next.js App Router with Server Actions and Server-Sent Events
+- **Databases** – PostgreSQL for structured data, Chroma for embeddings, Firebase for blob storage
+- **Deployment** – Docker Compose for local orchestration
 
-## Installation guide
+---
 
-As of now the app is only available in local development mode. Deployment to a VPS is one of the next items on the
-roadmap.
-The easiest way to get it running is to use the compose file at the root.
+## Installation
 
-### Local development
+As of now, the app is intended for local development. VPS deployment is on the roadmap.
 
-While the services from the compose file are running (postgres, chroma, observability tools)
+### Local Setup with Docker
 
-navigate to backend folder and run
+To get everything running, make sure your `.env` files are correctly configured (see `.env.example`), then simply run:
 
 ```bash
+docker-compose up
+```
+
+### Local Development
+
+To run the frontend and backend manually (e.g., with hot reload during development), use the following:
+
+**Backend:**
+
+```bash
+cd backend
 poetry run fastapi dev server/main.py --port 8080
 ```
 
-navigate to frontend folder and run
+**Frontend:**
 
 ```bash
+cd frontend
 pnpm dev
 ```
 
-.env.example
+*Make sure the Docker services (Postgres, Chroma, etc.) are still running in the background via Compose.*
+
+---
 
 ## Epub Parser
 
-In-depth: EpubProcessingService, BeautifulSoup usage, TOC parsing, DB model creation.
+The parser is tested with books from the 3 main publishers in the tech publishing space. O'Reilly media,
+Manning shelter Island and Packt Publishing (Conditionally also tested with No Starch Press)
 
-### Overview
-
-A dedicated `EpubProcessingService` decouples parsing from API logic. It:
+A dedicated [`EpubProcessingService`](backend/server/service/embedding/epub_processing_service.py) decouples parsing
+from API logic. Located in the [tools Poetry package](backend/tools), the parser traverses the epub file and extracts
+the raw html data, then it parses  the html to plain text in order to prepare them for the vector embedding.
 
 1. Finds the EPUB’s TOC file
 2. Breaks content into sub-chapters
-3. Persists chapters in Postgres (`Chapter` model)
+3. Persists chapters in Postgres ([`Chapter`](backend/server/models/document.py) model)
 4. Queues each chapter for embedding
 
 **Libraries used**:
 
 - `beautifulsoup4` for HTML traversal
 - Python’s built-in `zipfile` to extract EPUB contents
+
+a
+a
+a
+a
+a
+a
+a
 
 ## Embedding Pipeline (RAG Preprocessing)
 
@@ -76,6 +91,7 @@ A dedicated `EpubProcessingService` decouples parsing from API logic. It:
 Step-by-step: EmbeddingService, vector DB details, metadata weighting experiment.
 
 ## Server
+
 Authorization
 Using the OAuth 2 setup from the official fastapi docs.
 The auth routes [security.py](backend/server/core/security.py)
