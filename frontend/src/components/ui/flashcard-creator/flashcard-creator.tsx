@@ -14,14 +14,12 @@ import { containerStyles, textStyles } from '@lib/styles'
 
 export default function FlashcardCreator() {
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="relative min-h-full">
       <div className={containerStyles.header}>
         <h2 className={textStyles.h2}>Create Flashcards</h2>
-        <Button size="sm">Save</Button>
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Card: Chapter Selection & AI Mode */}
         <Card className={containerStyles.card}>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
@@ -55,7 +53,6 @@ export default function FlashcardCreator() {
           </CardContent>
         </Card>
 
-        {/* Card: Front & Back Fields */}
         <Card className={containerStyles.card}>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">

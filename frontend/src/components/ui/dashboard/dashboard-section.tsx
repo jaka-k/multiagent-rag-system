@@ -7,6 +7,7 @@ import { Input } from '@ui/input'
 import { TabsContent } from '@ui/tabs'
 import React from 'react'
 import useAreaStore from '@context/area-store.tsx'
+import FeatureOverlay from '@ui/feature-overlay.tsx'
 
 export function DashboardSection() {
   const [flashcardInstructions, setFlashcardInstructions] = React.useState(
@@ -40,38 +41,40 @@ export function DashboardSection() {
           value="Flashcards"
           className="flex-1 bg-gray-50 rounded-lg p-6 space-y-6 overflow-auto"
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>Flashcard Creation Instructions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Current Instructions
-                  </label>
-                  <textarea
-                    className="w-full h-32 border rounded-md p-2"
-                    value={flashcardInstructions}
-                    onChange={(e) => setFlashcardInstructions(e.target.value)}
-                  />
+          <FeatureOverlay>
+            <Card>
+              <CardHeader>
+                <CardTitle>Flashcard Creation Instructions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Current Instructions
+                    </label>
+                    <textarea
+                      className="w-full h-32 border rounded-md p-2"
+                      value={flashcardInstructions}
+                      onChange={(e) => setFlashcardInstructions(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Anki Deck Name
+                    </label>
+                    <Input
+                      placeholder="Enter Anki deck name"
+                      value={ankiDeckName}
+                      onChange={(e) => setAnkiDeckName(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleSubmitFlashcards}>Submit</Button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Anki Deck Name
-                  </label>
-                  <Input
-                    placeholder="Enter Anki deck name"
-                    value={ankiDeckName}
-                    onChange={(e) => setAnkiDeckName(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={handleSubmitFlashcards}>Submit</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </FeatureOverlay>
         </TabsContent>
       ) : (
         <NoActiveArea tab="Flashcards" />
@@ -81,40 +84,42 @@ export function DashboardSection() {
           value="Agent Instructions"
           className="flex-1 bg-gray-50 rounded-lg p-6 space-y-6 overflow-auto"
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>Web Research Agent Instructions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Instructions
-                  </label>
-                  <textarea
-                    className="w-full h-32 border rounded-md p-2"
-                    value={agentInstructions}
-                    onChange={(e) => setAgentInstructions(e.target.value)}
-                  />
+          <FeatureOverlay>
+            <Card>
+              <CardHeader>
+                <CardTitle>Web Research Agent Instructions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Instructions
+                    </label>
+                    <textarea
+                      className="w-full h-32 border rounded-md p-2"
+                      value={agentInstructions}
+                      onChange={(e) => setAgentInstructions(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Additional Blogs/Websites
+                    </label>
+                    <Input
+                      placeholder="Comma-separated list of websites"
+                      value={additionalWebsites}
+                      onChange={(e) => setAdditionalWebsites(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleSubmitAgentInstructions}>
+                      Submit
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Additional Blogs/Websites
-                  </label>
-                  <Input
-                    placeholder="Comma-separated list of websites"
-                    value={additionalWebsites}
-                    onChange={(e) => setAdditionalWebsites(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={handleSubmitAgentInstructions}>
-                    Submit
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </FeatureOverlay>
         </TabsContent>
       ) : (
         <NoActiveArea tab="Agent Instructions" />

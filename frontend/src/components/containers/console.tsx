@@ -9,6 +9,7 @@ import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import FlashcardList from '@ui/flashcards/flashcard-list'
 import { Bot, Club, FileText } from 'lucide-react'
 import { useEffect } from 'react'
+import FeatureOverlay from '@ui/feature-overlay.tsx'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const { setActiveArea } = useAreaStore.getState()
@@ -103,7 +104,9 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
             <FlashcardList chatId={chatId} areaId={areaId} />
           </TabsContent>
           <TabsContent value="creator">
-            <FlashcardCreator />
+            <FeatureOverlay>
+              <FlashcardCreator />
+            </FeatureOverlay>
           </TabsContent>
         </Tabs>
       </div>
