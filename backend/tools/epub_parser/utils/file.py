@@ -1,12 +1,14 @@
 import os
 import difflib
 
+from tools.epub_parser.utils.logging import logger
+
 
 def read_file_with_error_handling(zip_file, file_path):
     try:
         return zip_file.read(file_path)
     except KeyError:
-        print(f"File not found: {file_path}")
+        logger.info(f"File not found: {file_path}")
         return None
 
 

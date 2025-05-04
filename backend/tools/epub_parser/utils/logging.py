@@ -1,5 +1,6 @@
 import logging
 
+logger = logging.getLogger("epub_parser")
 
 def log_empty_chapters(chapters):
     empty_chapter_info = []
@@ -16,11 +17,11 @@ def log_empty_chapters(chapters):
             )
 
     if empty_chapter_info:
-        logging.info("⛔️ Chapters with empty or very short content:")
+        logger.info("⛔️ Chapters with empty or very short content:")
         for info in empty_chapter_info:
-            logging.info(
+            logger.info(
                 f"File: {info['file']}, Chapter: {info['chapter']}, PlayOrder: {info['playOrder']}"
             )
 
     else:
-        logging.info("✅ No chapters with empty or very short content found.")
+        logger.info("✅ No chapters with empty or very short content found.")

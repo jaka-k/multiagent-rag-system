@@ -3,6 +3,7 @@ from tools.epub_parser.utils.file import (
     resolve_relative_path,
     match_toc_reference,
 )
+from tools.epub_parser.utils.logging import logger
 from tools.epub_parser.utils.toc import parse_toc_ncx
 from tools.epub_parser.utils.inspector import find_toc_file
 
@@ -18,7 +19,7 @@ def extract_chapters(file_path):
         file_list = zip_ref.namelist()
 
         toc_files = find_toc_file(zip_ref)
-        print(f"Found potential TOC files: {toc_files}")
+        logger.info(f"Found potential TOC files: {toc_files}")
 
         toc_file_used = None
         toc_content = None
