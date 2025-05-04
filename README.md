@@ -1,6 +1,5 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
-
 This tool was originally created to explore AI-driven learning workflows.  
 Read the full story and motivations in my [blog post](https://…).
 
@@ -31,7 +30,7 @@ As of now, the app is intended for local development. VPS deployment is on the r
 To get everything running, make sure your `.env` files are correctly configured (see `.env.example`), then simply run:
 
 ```bash
-docker-compose up
+docker compose -f docker-compose.dev.yml up
 ```
 
 ### Local Development
@@ -116,7 +115,6 @@ A dedicated EmbeddingService handles the transformation of parsed chapters into 
 
 - `chromadb` client for vector storage
 
-
 ## 🔄 Statemachine Package
 
 A self-contained Poetry package [`statemachine`](backend/statemachine) that implements multi-agent workflows as a state
@@ -128,27 +126,32 @@ precise control over execution parameters—most notably the selection and weigh
 
 - **Main Agent: `RagAgent`**
     - Streams chat responses and handles vector DB retrieval with metadata-aware prompts.
-- **Graph as State Machine**  
-  - Each agent node represents a state; edges define transitions. The top‑level orchestrator, the [
-  `SupervisorAgent`](backend/statemachine/agents/supervisor/supervisor.py), receives the initial output from `RagAgent`
-  and drives the workflow based on its [`SupervisorState`](backend/statemachine/agents/supervisor/supervisor_state.py).
-- **Separation of Concerns**  
-  - Decision logic—such as agent orchestration, gap analysis, and flashcard creation—remains isolated from external
-  services (DB access, HTTP routes, SSE), ensuring the core graph is clean, testable, and maintainable.
+- **Graph as State Machine**
+    - Each agent node represents a state; edges define transitions. The top‑level orchestrator, the [
+      `SupervisorAgent`](backend/statemachine/agents/supervisor/supervisor.py), receives the initial output from
+      `RagAgent`
+      and drives the workflow based on its [
+      `SupervisorState`](backend/statemachine/agents/supervisor/supervisor_state.py).
+- **Separation of Concerns**
+    - Decision logic—such as agent orchestration, gap analysis, and flashcard creation—remains isolated from external
+      services (DB access, HTTP routes, SSE), ensuring the core graph is clean, testable, and maintainable.
 
 ### Key Modules
 
 - **`StateGraph`**: Builds the directed graph from a configuration of agents and transitions, used by `SupervisorAgent`.
-- **`StateExecutor`**: Traverses the graph, invoking each agent’s `run()` method and evaluating transition conditions defined in
+- **`StateExecutor`**: Traverses the graph, invoking each agent’s `run()` method and evaluating transition conditions
+  defined in
   `supervisor_state.py`.
-- **Agent Interfaces**: Abstract base classes (`BaseAgent`, `StreamableAgent`) defining the contract for custom agents like
+- **Agent Interfaces**: Abstract base classes (`BaseAgent`, `StreamableAgent`) defining the contract for custom agents
+  like
   `KnowledgeIdentificationAgent` and `FlashcardAgent`.
 
 ### Agents
 
 #### Knowledge Identification Agent
 
-Implemented in [`knowledge_identification_agent.py`](backend/statemachine/agents/analysis/knowledge_identification_agent.py),
+Implemented in [
+`knowledge_identification_agent.py`](backend/statemachine/agents/analysis/knowledge_identification_agent.py),
 this agent inspects a user’s question, identifies knowledge gaps, and outputs a list of missing concepts for follow-up.
 
 #### Flashcard Creating Agent
@@ -169,11 +172,80 @@ We use the popular `genanki` library to generate and push flashcards into Anki d
 
 - Converts JSON flashcard objects into `genanki` note and deck models.
 
-
 ---
 
 ## 🌐 Frontend
 
+### Local Storage & Caching
+
+- **Zustand Cache**: All data loaded at startup and kept in-memory (no multi-user concerns)
+- **Separation**: Frontend cache (Zustand) vs backend storage (FastAPI + SQLModel)
+- **UI‑First**: Instant filtering, mutation, and coordination for modern SPA interactivity
+
+### Chat Table
+
+[`ChatTable.tsx`](frontend/workers/epub-processor.worker.ts)
+
+- Reused from shadcn/UI examples—fully accessible & responsive
+- Built with `@tanstack/react-table` using `useReactTable` for state management
+
+### Main Components
+
+- [**Chat**](frontend/workers/epub-processor.worker.ts): Session interaction UI with live WebSocket streaming and
+  Markdown rendering
+- [**Console**](frontend/src/components/containers/console.tsx): “Bento” view exposing document viewer, flashcards, and
+  creator tabs for RAG embedding & area control
+- [**Dashboard**](frontend/src/components/containers/console.tsx): Central control panel for file uploads, flashcard
+  management, and agent instructions }
+
+### EPUB Processor Worker
+
+- **Client‑side JS Worker**: Parses EPUB to extract metadata and cover image before upload [
+  `epub-processor.worker.ts`](frontend/workers/epub-processor.worker.ts) :
+
+### Logging & Instrumentation
+
+- **Logger**: Centralized logging via custom [`logger.ts`](frontend/src/lib/logger.ts) in UI to capture errors and
+  events
+
 ---
 
 ## 📈 Observability
+
+🚧 *Currently under active development* – basic integrations are in place. The OpenTelemetry collector is streaming
+traces and metrics to the respective services.
+
+- **Metrics & Monitoring**: Prometheus
+- **Log Aggregation**: Loki
+- **Dashboards**: Grafana
+- **Tracing**: OpenTelemetry & Tempo  
+
+
+---
+## Whats next?
+
+### 🛺 Road Map
+
+- Deploy to VPS, with Kubernetes and an API Gateway
+- Create research agent that finds best articles addressing knowledge gaps
+- Use message broker for queue updates instead SSE
+- Optimize WebSocket & rendering performance
+- Add logging and other metrics
+- Pagination for long chapter lists or chat history
+
+
+### 📅 Backlog
+
+- Delete `/area` route
+- Create agent instruction routes
+- Create CI/CD setup with code formatting
+- Implement text‑marking for flashcard creation
+- Testing endpoints & services
+- Token cleanup
+- Persist chat input in local storage
+- Chat persistence with filter support
+- Testing & refining agents (flashcards, knowledge-gap)
+
+- Consolidate `session.exec()` logic
+
+- Pydantic model validation improvements  
