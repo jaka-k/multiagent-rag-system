@@ -196,7 +196,7 @@ We use the popular `genanki` library to generate and push flashcards into Anki d
 - [**Console**](frontend/src/components/containers/console.tsx): “Bento” view exposing document viewer, flashcards, and
   creator tabs for RAG embedding & area control
 - [**Dashboard**](frontend/src/components/containers/console.tsx): Central control panel for file uploads, flashcard
-  management, and agent instructions }
+  management, and agent instructions
 
 ### EPUB Processor Worker
 
