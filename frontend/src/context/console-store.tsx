@@ -43,7 +43,9 @@ export const useConsoleStore = create(
           }))
         }
 
-        set({ currentConsole: chatId })
+        set({
+          currentConsole: chatId
+        })
       },
 
       fetchConsoleQueues: async (chatId) => {
@@ -73,7 +75,9 @@ export const useConsoleStore = create(
           }))
 
           if (!get().currentConsole) {
-            set({ currentConsole: chatId })
+            set({
+              currentConsole: chatId
+            })
           }
         } catch (error) {
           logger.error('Failed to fetch console queues:', error)

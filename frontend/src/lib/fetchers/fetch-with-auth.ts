@@ -2,9 +2,8 @@
 
 import { logger } from '@lib/logger.ts'
 import { refreshAccessToken } from '@lib/session/auth.ts'
-import { cookies } from 'next/headers'
-
 import camelcaseKeys from 'camelcase-keys'
+import { cookies } from 'next/headers'
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080'
 
@@ -49,7 +48,9 @@ export async function fetchWithAuth<T>(
           const retryData = await retryResponse.json()
           return {
             ok: retryResponse.ok,
-            data: camelcaseKeys(retryData, { deep: true }),
+            data: camelcaseKeys(retryData, {
+              deep: true
+            }),
             refreshedToken: newToken
           }
         } catch (e) {
@@ -72,7 +73,9 @@ export async function fetchWithAuth<T>(
     const data = await response.json()
     return {
       ok: response.ok,
-      data: camelcaseKeys(data, { deep: true }),
+      data: camelcaseKeys(data, {
+        deep: true
+      }),
       refreshedToken: null
     }
   } catch (e) {

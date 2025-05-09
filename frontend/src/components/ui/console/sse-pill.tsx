@@ -1,11 +1,11 @@
 'use client'
 
+import useConsoleStore from '@context/console-store.tsx'
 import { useSSE } from '@hooks/use-sse.tsx'
+import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
 import { StatusIndicator } from '@ui/status-indicator.tsx'
 import { useMemo } from 'react'
-import useConsoleStore from '@context/console-store.tsx'
-import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 
 const SSEPill = ({ chatId }: { chatId: string }) => {
   const { addChapter } = useConsoleStore()
@@ -26,6 +26,7 @@ const SSEPill = ({ chatId }: { chatId: string }) => {
     onDocumentUpdate: useMemo(
       () => async (documentIds) => {
         console.log('Document Update:', documentIds)
+
         for (const tag of documentIds) {
           const { chapter } = await getSingleChapter(tag)
           addChapter(chatId, chapter)

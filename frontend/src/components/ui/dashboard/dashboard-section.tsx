@@ -1,13 +1,13 @@
 'use client'
 
+import useAreaStore from '@context/area-store.tsx'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@ui/card'
 import { FileUpload } from '@ui/dashboard/file-upload'
+import FeatureOverlay from '@ui/feature-overlay.tsx'
 import { Input } from '@ui/input'
 import { TabsContent } from '@ui/tabs'
 import React from 'react'
-import useAreaStore from '@context/area-store.tsx'
-import FeatureOverlay from '@ui/feature-overlay.tsx'
 
 export function DashboardSection() {
   const [flashcardInstructions, setFlashcardInstructions] = React.useState(

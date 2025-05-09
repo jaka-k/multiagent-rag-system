@@ -1,7 +1,7 @@
+import { Chat } from '@mytypes/types'
 import { ColumnDef, FilterFn } from '@tanstack/react-table'
 import { CheckCircleIcon, LucideIcon, XCircleIcon } from 'lucide-react'
 import { z } from 'zod'
-import { Chat } from '@mytypes/types'
 
 type StatusType = 'active' | 'non-active'
 

@@ -27,7 +27,9 @@ export const getSingleChapter = async (chapterTag: string) => {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ chapter_tag: chapterTag })
+    body: JSON.stringify({
+      chapter_tag: chapterTag
+    })
   })
 
   if (!response.ok) {

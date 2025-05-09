@@ -117,22 +117,8 @@
   "settings": {
     "import/resolver": {
       "typescript": {
-        "project": "./"
-      },
-      "alias": {
-        "map": [
-          ["@", "./src"],
-          ["@components", "./src/components"],
-          ["@containers", "./src/components/containers"],
-          ["@ui", "./src/components/ui"],
-          ["@hooks", "./src/hooks"],
-          ["@context", "./src/context"],
-          ["@images", "./images"],
-          ["@workers", "./workers"],
-          ["@mytypes", "./types"],
-          ["@lib", "./src/lib"]
-        ],
-        "extensions": [".js", ".jsx", ".ts", ".tsx", ".d.ts", ".json"]
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
       }
     }
   },

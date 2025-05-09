@@ -6,11 +6,7 @@ module.exports = {
   bracketSpacing: true,
   overrides: [
     {
-      files: ['*.js', '*.jsx', '*.ts', '*.tsx'],
-      options: {
-        // Matching the object-curly-newline option to align with ESLint
-        objectCurlyNewline: 'always'
-      }
+      files: ['*.js', '*.jsx', '*.ts', '*.tsx']
     }
   ]
 }

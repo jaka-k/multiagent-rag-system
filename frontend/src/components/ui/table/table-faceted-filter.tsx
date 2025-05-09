@@ -12,10 +12,10 @@ import {
 } from '@ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover'
 import { Separator } from '@ui/separator'
-import { CheckIcon, PlusCircleIcon } from 'lucide-react'
-import React from 'react'
 import { DateRangeFilter } from '@ui/table/table-date-filter.tsx'
 import { NumberFilter } from '@ui/table/table-number-filter.tsx'
+import { CheckIcon, PlusCircleIcon } from 'lucide-react'
+import React from 'react'
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>

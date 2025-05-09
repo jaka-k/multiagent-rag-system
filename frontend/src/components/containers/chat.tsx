@@ -3,9 +3,12 @@
 // TODO: handle locally
 // eslint-disable-next-line import/no-unresolved
 import 'highlight.js/styles/nnfx-light.css'
+
 import { Button } from '@components/ui/button'
+import { logger } from '@lib/logger.ts'
 import { cn, connectionStatusMapping } from '@lib/utils'
 import { ChatData, Message } from '@mytypes/types'
+import CreateChat from '@ui/create-chat/create-chat.tsx'
 import { Textarea } from '@ui/textarea'
 import { ArrowLeft, Plus, Send } from 'lucide-react'
 import Link from 'next/link'
@@ -14,8 +17,6 @@ import { useEffect, useRef } from 'react'
 import Markdown from 'react-markdown'
 import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
-import CreateChat from '@ui/create-chat/create-chat.tsx'
-import { logger } from '@lib/logger.ts'
 
 export function Chat({ chatData }: { chatData: ChatData }) {
   const socketUrl = `ws://localhost:8080/api/ws/${chatData.id}`

@@ -1,8 +1,8 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { Chat } from '@mytypes/types'
 import { getAllChats } from '@lib/fetchers/fetch-chat.ts'
 import { logger } from '@lib/logger.ts' // your simplified type
+import { Chat } from '@mytypes/types'
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface ChatStoreState {
   chats: Chat[]
@@ -22,7 +22,10 @@ const useChatStore = create<ChatStoreState>()(
       error: null,
 
       fetchChatsForUser: async () => {
-        set({ isLoading: true, error: null })
+        set({
+          isLoading: true,
+          error: null
+        })
 
         try {
           const chats = await getAllChats()
@@ -42,15 +45,25 @@ const useChatStore = create<ChatStoreState>()(
         }
       },
 
-      addChat: (chat) => set((state) => ({ chats: [chat, ...state.chats] })),
+      addChat: (chat) =>
+        set((state) => ({
+          chats: [chat, ...state.chats]
+        })),
       updateChat: (id, updatedFields) =>
         set((state) => ({
           chats: state.chats.map((c) =>
-            c.id === id ? { ...c, ...updatedFields } : c
+            c.id === id
+              ? {
+                  ...c,
+                  ...updatedFields
+                }
+              : c
           )
         }))
     }),
-    { name: 'chats-storage' }
+    {
+      name: 'chats-storage'
+    }
   )
 )
 

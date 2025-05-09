@@ -9,11 +9,8 @@ interface FlashcardListProps {
 }
 
 function FlashcardList({ chatId, areaId }: FlashcardListProps) {
-  const {
-    optimisticFlashcards,
-    handleAddFlashcard,
-    handleDeleteFlashcard
-  } = useFlashcards(chatId, areaId)
+  const { optimisticFlashcards, handleAddFlashcard, handleDeleteFlashcard } =
+    useFlashcards(chatId, areaId)
 
   return (
     <div className="flex flex-col gap-4">

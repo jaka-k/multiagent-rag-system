@@ -22,6 +22,7 @@ export default function ChapterContent({ chapter }: { chapter: any }) {
             chapter.id,
             chapter.chapterTag
           )
+
           if (!isCancelled) {
             setContent(fetchedContent)
             setLoading(false)

@@ -44,8 +44,9 @@ export function extractMetadata(contentDoc: Document): Metadata {
     return undefined
   }
 
-  const title = getText('dc:title') || getText("docTitle")
-  const creator = getText('dc:creator') || getText("docCreator") || getText("docAuthor")
+  const title = getText('dc:title') || getText('docTitle')
+  const creator =
+    getText('dc:creator') || getText('docCreator') || getText('docAuthor')
   const publisher = getText('dc:publisher')
   const description = getText('dc:description')
 

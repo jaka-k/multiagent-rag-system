@@ -1,16 +1,15 @@
 import {
+  EpubMetadata,
+  WorkerIncomingMessage,
+  WorkerOutgoingMessage
+} from '@mytypes/epub-processor'
+import {
   extractMetadata,
   resolveRelativePath,
   uint8ArrayToBase64
 } from '@workers/worker-utils.ts'
 import { unzipSync } from 'fflate'
 import { DOMParser } from 'xmldom'
-
-import {
-  EpubMetadata,
-  WorkerIncomingMessage,
-  WorkerOutgoingMessage
-} from '@mytypes/epub-processor'
 
 function extractEpubMetadata(epubBuffer: ArrayBuffer): EpubMetadata {
   const buffer = new Uint8Array(epubBuffer)

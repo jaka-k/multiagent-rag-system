@@ -1,6 +1,9 @@
 import useAreaStore from '@context/area-store.tsx'
+import useDocumentStore from '@context/document-store.tsx'
 import useEpubProcessor from '@hooks/use-epub-processor'
 import { useFirebaseUpload } from '@hooks/use-firebase-upload.tsx'
+import { useToast } from '@hooks/use-toast.ts'
+import { createDocument } from '@lib/fetchers/fetch-embedding.ts'
 import { logger } from '@lib/logger.ts'
 import { cn, createPersistentDownloadUrl, noSpaceFilename } from '@lib/utils'
 import { CreateDocumentRequest } from '@mytypes/types'
@@ -25,10 +28,6 @@ import {
   UploadIcon
 } from 'lucide-react'
 import React, { FormEvent, useRef, useState } from 'react'
-
-import useDocumentStore from '@context/document-store.tsx'
-import { createDocument } from '@lib/fetchers/fetch-embedding.ts'
-import { useToast } from '@hooks/use-toast.ts'
 
 export function FileUpload() {
   const [file, setFile] = useState<File | undefined>(undefined)

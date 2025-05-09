@@ -115,7 +115,12 @@ const useDocumentStore = create(
               ...state.documentsByArea,
               [areaId]: {
                 ...areaDocs,
-                [docId]: existing ? { ...existing, ...updatedFields } : existing
+                [docId]: existing
+                  ? {
+                      ...existing,
+                      ...updatedFields
+                    }
+                  : existing
               }
             }
           }

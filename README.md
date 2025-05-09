@@ -245,7 +245,5 @@ traces and metrics to the respective services.
 - Persist chat input in local storage
 - Chat persistence with filter support
 - Testing & refining agents (flashcards, knowledge-gap)
-
 - Consolidate `session.exec()` logic
-
 - Pydantic model validation improvements  

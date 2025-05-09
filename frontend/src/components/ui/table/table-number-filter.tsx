@@ -32,7 +32,7 @@ export function NumberFilter({ column, title }: NumberFilterProps) {
   ) => {
     column?.setFilterValue({
       operator: op,
-      value: value
+      value
     })
   }
 

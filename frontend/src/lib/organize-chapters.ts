@@ -82,7 +82,9 @@ export function buildSorted(chapters: Chapter[]): ChapterQueueSorted {
     byBook[docId]._map = map
   })
 
-  return { byBook }
+  return {
+    byBook
+  }
 }
 
 /**
@@ -93,8 +95,14 @@ export function updateSorted(
   chapter: Chapter
 ): ChapterQueueSorted {
   const result: ChapterQueueSorted = sorted
-    ? { byBook: { ...sorted.byBook } }
-    : { byBook: {} }
+    ? {
+        byBook: {
+          ...sorted.byBook
+        }
+      }
+    : {
+        byBook: {}
+      }
 
   const docId = chapter.documentId
   if (!docId) return result

@@ -1,5 +1,9 @@
 'use client'
 
+import useAreaStore from '@context/area-store.tsx'
+import { useToast } from '@hooks/use-toast.ts'
+import { createChat } from '@lib/fetchers/fetch-chat.ts'
+import { logger } from '@lib/logger.ts'
 import { Button } from '@ui/button'
 import {
   Dialog,
@@ -10,7 +14,6 @@ import {
 } from '@ui/dialog'
 import { Input } from '@ui/input'
 import { Label } from '@ui/label'
-import * as React from 'react'
 import {
   Select,
   SelectContent,
@@ -18,11 +21,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@ui/select.tsx'
-import useAreaStore from '@context/area-store.tsx'
-import { createChat } from '@lib/fetchers/fetch-chat.ts'
-import { useToast } from '@hooks/use-toast.ts'
-import { logger } from '@lib/logger.ts'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
 
 export default function CreateChat({
   open,
