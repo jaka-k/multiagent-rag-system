@@ -62,8 +62,8 @@ export default function ChapterViewer({ chatId }: { chatId?: string }) {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="py-4 px-2 space-y-4">
+      <ScrollArea className="flex-1 ">
+        <div className="py-4 px-2 space-y-4 ">
           {books.length ? (
             books.map((book) => (
               <Collapsible
@@ -172,7 +172,7 @@ export default function ChapterViewer({ chatId }: { chatId?: string }) {
               </Collapsible>
             ))
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground ">
               <Book className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-sm">No chapters available</p>
               <p className="text-xs mt-1">

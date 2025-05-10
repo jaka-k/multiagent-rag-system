@@ -8,7 +8,7 @@ import SSEPill from '@ui/console/sse-pill'
 import FeatureOverlay from '@ui/feature-overlay.tsx'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import FlashcardList from '@ui/flashcards/flashcard-list'
-import { Bot, Club, FileText } from 'lucide-react'
+import { Bot, Club, FileText, GraduationCap } from 'lucide-react'
 import { useEffect } from 'react'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
@@ -22,7 +22,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   }, [chatId])
 
   return (
-    <section className="h-screen w-full flex flex-col overflow-y-auto px-2 py-4">
+    <section className="h-screen w-full flex flex-col overflow-y-scroll scrollbar-gutter-stable px-2 py-4">
       {/* ------------- "Bento" Card Container ------------- */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-4">
         <header className="flex items-center justify-between px-6 py-4">
@@ -30,7 +30,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
           <SSEPill chatId={chatId} areaId={areaId} />
         </header>
       </div>
-      <div className="bg-white rounded-lg shadow-lg p-4 ">
+      <div className="bg-white rounded-lg shadow-lg p-4">
         <Tabs defaultValue="flashcards">
           <TabsList
             className="
@@ -74,7 +74,7 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
         hover:bg-gray-50
       "
             >
-              <Club className="h-4 w-4" />
+              <GraduationCap className="h-4 w-4" />
               Flashcards
             </TabsTrigger>
 
@@ -97,22 +97,19 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
           </TabsList>
 
           <TabsContent
-            className="flex flex-col flex-1 min-h-full"
+            className="flex flex-col flex-1 h-full"
             value="documents"
           >
             <ChapterViewer chatId={chatId} />
           </TabsContent>
 
           <TabsContent
-            className="flex flex-col flex-1 min-h-full"
+            className="flex flex-col flex-1 h-full"
             value="flashcards"
           >
             <FlashcardList chatId={chatId} areaId={areaId} />
           </TabsContent>
-          <TabsContent
-            className="flex flex-col flex-1 min-h-full"
-            value="creator"
-          >
+          <TabsContent className="flex flex-col flex-1 h-full" value="creator">
             <FeatureOverlay>
               <FlashcardCreator />
             </FeatureOverlay>
