@@ -22,12 +22,12 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   }, [chatId])
 
   return (
-    <section className="h-full w-full overflow-y-auto px-2 py-4">
+    <section className="h-screen w-full flex flex-col overflow-y-auto px-2 py-4">
       {/* ------------- "Bento" Card Container ------------- */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-4">
         <header className="flex items-center justify-between px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-800">Console</h2>
-          <SSEPill chatId={chatId} />
+          <SSEPill chatId={chatId} areaId={areaId} />
         </header>
       </div>
       <div className="bg-white rounded-lg shadow-lg p-4 ">
@@ -96,14 +96,23 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="documents">
+          <TabsContent
+            className="flex flex-col flex-1 min-h-full"
+            value="documents"
+          >
             <ChapterViewer chatId={chatId} />
           </TabsContent>
 
-          <TabsContent value="flashcards">
+          <TabsContent
+            className="flex flex-col flex-1 min-h-full"
+            value="flashcards"
+          >
             <FlashcardList chatId={chatId} areaId={areaId} />
           </TabsContent>
-          <TabsContent value="creator">
+          <TabsContent
+            className="flex flex-col flex-1 min-h-full"
+            value="creator"
+          >
             <FeatureOverlay>
               <FlashcardCreator />
             </FeatureOverlay>

@@ -37,7 +37,10 @@
     "no-underscore-dangle": [
       "error",
       {
-        "allow": ["_uid"]
+        "allow": [
+          "_uid",
+          "_state"
+        ]
       }
     ],
     "no-shadow": "off",
@@ -59,8 +62,14 @@
         }
       }
     ],
-    "array-bracket-spacing": ["error", "always"],
-    "block-spacing": ["error", "always"],
+    "array-bracket-spacing": [
+      "error",
+      "always"
+    ],
+    "block-spacing": [
+      "error",
+      "always"
+    ],
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
     "import/no-unresolved": "error",
@@ -124,27 +133,20 @@
   },
   "overrides": [
     {
-      "files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
-      "extends": ["plugin:prettier/recommended"],
-      "rules": {
-        "object-curly-newline": [
-          "warn",
-          {
-            "ObjectExpression": "always",
-            "ObjectPattern": {
-              "multiline": true
-            },
-            "ImportDeclaration": "never",
-            "ExportDeclaration": {
-              "multiline": true,
-              "minProperties": 3
-            }
-          }
-        ]
-      }
+      "files": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx"
+      ],
+      "extends": [
+        "plugin:prettier/recommended"
+      ]
     },
     {
-      "files": ["**/*.stories.jsx"],
+      "files": [
+        "**/*.stories.jsx"
+      ],
       "rules": {
         "import/no-anonymous-default-export": "off"
       }

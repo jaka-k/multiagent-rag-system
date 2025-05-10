@@ -31,6 +31,7 @@ export async function signIn(formData: { username: string; password: string }) {
 
   if (response.ok) {
     const data = await response.json()
+    // eslint-disable-next-line camelcase
     const { access_token, refresh_token } = data
 
     await createSession(access_token, refresh_token)
@@ -41,6 +42,7 @@ export async function signIn(formData: { username: string; password: string }) {
   }
 }
 
+// eslint-disable-next-line consistent-return
 export async function refreshAccessToken() {
   const cookieStore = await cookies()
   const refreshToken = cookieStore.get('refreshToken')?.value

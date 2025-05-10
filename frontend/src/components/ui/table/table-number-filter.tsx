@@ -1,5 +1,6 @@
 'use client'
 
+import { Column } from '@tanstack/react-table'
 import { Button } from '@ui/button'
 import { Input } from '@ui/input'
 import { Label } from '@ui/label'
@@ -15,7 +16,7 @@ import { PlusCircleIcon } from 'lucide-react'
 import * as React from 'react'
 
 interface NumberFilterProps {
-  column: any
+  column: Column<number | undefined>
   title: string | undefined
 }
 

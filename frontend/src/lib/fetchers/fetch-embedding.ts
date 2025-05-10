@@ -4,7 +4,6 @@ import { CreateDocumentRequest, CreateDocumentResponse } from '@mytypes/types'
 export async function createDocument(
   request: CreateDocumentRequest
 ): Promise<CreateDocumentResponse> {
-  console.log(request)
   const response = await fetchWithAuth<CreateDocumentResponse>(
     '/api/epub-upload',
     {
@@ -26,7 +25,7 @@ export async function createDocument(
 export async function createVectorEmbedding(
   docId: string
 ): Promise<{ ok: boolean; data: { message: string; id: string } }> {
-  return await fetchWithAuth<{ message: string; id: string }>(
+  return fetchWithAuth<{ message: string; id: string }>(
     `/api/embedding/${docId}`,
     {
       method: 'POST',

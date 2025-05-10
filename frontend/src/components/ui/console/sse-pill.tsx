@@ -5,35 +5,47 @@ import { useSSE } from '@hooks/use-sse.tsx'
 import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
 import { StatusIndicator } from '@ui/status-indicator.tsx'
-import { useMemo } from 'react'
+import { useCallback } from 'react'
+import { useFlashcards } from '@hooks/use-flashcards.tsx'
+import { Flashcard } from '@mytypes/types'
 
-const SSEPill = ({ chatId }: { chatId: string }) => {
+const SSEPill = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const { addChapter } = useConsoleStore()
+  const { setFlashcards } = useFlashcards(chatId, areaId)
+
+  function pushFlashcard(flashcard: Flashcard) {
+    useConsoleStore.getState().addFlashcard(chatId, flashcard)
+    setFlashcards((prev) => [...prev, flashcard])
+  }
+
+  const onFlashcardUpdate = useCallback(
+    async (flashcardIds: string[]) => {
+      await Promise.all(
+        flashcardIds.map(async (id) => {
+          const flashcard = await getSingleFlashcard(id)
+          pushFlashcard(flashcard)
+        })
+      )
+    },
+    [pushFlashcard]
+  )
+
+  const onDocumentUpdate = useCallback(
+    async (documentIds: string[]) => {
+      await Promise.all(
+        documentIds.map(async (tag) => {
+          const { chapter } = await getSingleChapter(tag)
+          addChapter(chatId, chapter)
+        })
+      )
+    },
+    [chatId, addChapter]
+  )
 
   const { isConnected } = useSSE({
     chatId,
-    onFlashcardUpdate: useMemo(
-      () => async (flashcardIds) => {
-        for (const id of flashcardIds) {
-          console.log(id)
-          const flashcard = await getSingleFlashcard(id)
-          // TODO Here optimistic update
-          // setFlashcards((prev) => [...prev, flashcard])
-        }
-      },
-      []
-    ),
-    onDocumentUpdate: useMemo(
-      () => async (documentIds) => {
-        console.log('Document Update:', documentIds)
-
-        for (const tag of documentIds) {
-          const { chapter } = await getSingleChapter(tag)
-          addChapter(chatId, chapter)
-        }
-      },
-      []
-    )
+    onFlashcardUpdate,
+    onDocumentUpdate
   })
 
   return (

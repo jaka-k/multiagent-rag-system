@@ -1,4 +1,4 @@
-import { Metadata } from '@types/epub-processor'
+import { Metadata } from '@mytypes/epub-processor'
 
 export function resolveRelativePath(
   basePath: string,

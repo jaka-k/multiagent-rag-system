@@ -26,7 +26,7 @@ export function UserAuthForm() {
   const [_state, dispatch, isPending] = React.useActionState<
     void,
     typeof formValues
-  >(async (_, formData) => {
+  >(async (_state, formData) => {
     try {
       await signIn(formData)
     } catch (error: unknown) {
@@ -124,10 +124,10 @@ export function UserAuthForm() {
         Currently, the product is in alpha testing. If you would like access,
         please apply by emailing us at{' '}
         <a
-          href="mailto:info@krajnc.cc"
+          href="mailto:jaka.krajnc@outlook.com"
           className="underline underline-offset-4 hover:text-primary"
         >
-          info@krajnc.cc
+          jaka.krajnc@againtsallbots.com
         </a>
       </div>
     </div>

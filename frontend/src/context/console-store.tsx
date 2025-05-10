@@ -125,14 +125,11 @@ export const useConsoleStore = create(
         })
       },
 
-      // On add:
       addChapter: (chatId, chapter) => {
         set((state) => {
           const cons = state.consolesByChat[chatId]
           if (!cons) return state
-          // update flat queue
           const flat = [...cons.chapterQueue!.chapters, chapter]
-          // update sorted map
           const sorted = updateSorted(cons.chaptersSorted, chapter)
 
           return {

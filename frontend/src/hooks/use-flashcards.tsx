@@ -8,10 +8,17 @@ import {
 } from '@lib/fetchers/fetch-flashcards.ts'
 import { logger } from '@lib/logger.ts'
 import { Flashcard } from '@mytypes/types'
-import { startTransition, useEffect, useOptimistic, useState } from 'react'
+import React, {
+  SetStateAction,
+  startTransition,
+  useEffect,
+  useOptimistic,
+  useState
+} from 'react'
 
 interface UseFlashcardsReturn {
   optimisticFlashcards: Flashcard[]
+  setFlashcards: React.Dispatch<SetStateAction<Flashcard[]>>
   handleAddFlashcard: (id: string) => Promise<void>
   handleDeleteFlashcard: (id: string) => Promise<void>
 }
@@ -100,6 +107,7 @@ export function useFlashcards(
 
   return {
     optimisticFlashcards,
+    setFlashcards,
     handleAddFlashcard,
     handleDeleteFlashcard
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@lib/utils'
+import { Column } from '@tanstack/react-table'
 import { Button } from '@ui/button'
 import { Calendar } from '@ui/calendar'
 import { Label } from '@ui/label'
@@ -10,7 +11,7 @@ import { CalendarIcon, PlusCircleIcon } from 'lucide-react'
 import * as React from 'react'
 
 interface DateRangeFilterProps {
-  column: any
+  column?: Column<string | undefined>
   title: string | undefined
 }
 

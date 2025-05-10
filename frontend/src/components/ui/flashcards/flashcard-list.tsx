@@ -13,7 +13,7 @@ function FlashcardList({ chatId, areaId }: FlashcardListProps) {
     useFlashcards(chatId, areaId)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 min-h-full w-full">
       {optimisticFlashcards?.map((flashcard) => (
         <FlashcardItem
           key={flashcard.id}

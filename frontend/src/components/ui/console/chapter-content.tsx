@@ -1,6 +1,8 @@
+import { logger } from '@lib/logger.ts'
+import { Chapter } from '@mytypes/types'
 import * as React from 'react'
 
-export default function ChapterContent({ chapter }: { chapter: any }) {
+export default function ChapterContent({ chapter }: { chapter: Chapter }) {
   const [content, setContent] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
 
@@ -30,6 +32,7 @@ export default function ChapterContent({ chapter }: { chapter: any }) {
         }
       } catch (error) {
         if (!isCancelled) {
+          logger.error(error)
           setContent('Error loading chapter content.')
           setLoading(false)
         }
