@@ -14,13 +14,10 @@ function FlashcardItem({
   onDeleteFlashcard
 }: FlashcardItemProps) {
   const handleDelete = async () => {
-    // You could also do an optimistic removal in the parent if you prefer
     await onDeleteFlashcard(flashcard.id)
   }
 
   const handleAdd = async () => {
-    // You could also do an optimistic removal in the parent if you prefer
-    console.log('await onAddFlashcard(flashcard.id)')
     await onAddFlashcard(flashcard.id)
   }
 

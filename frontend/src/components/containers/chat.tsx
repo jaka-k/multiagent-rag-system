@@ -113,8 +113,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
     setInput('')
   }
 
-  console.log(chatData.title)
-
   return (
     <div className="w-full h-full p-4 overflow-hidden">
       {/* Outer Card */}

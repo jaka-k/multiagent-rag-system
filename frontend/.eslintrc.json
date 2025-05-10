@@ -34,13 +34,16 @@
       }
     ],
     "@typescript-eslint/no-use-before-define": "off",
-    "no-underscore-dangle": [
+    "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        "allow": [
-          "_uid",
-          "_state"
-        ]
+        "args": "all",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
       }
     ],
     "no-shadow": "off",
@@ -75,19 +78,7 @@
     "import/no-unresolved": "error",
     "import/prefer-default-export": "off",
     "import/order": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "error",
-      {
-        "argsIgnorePattern": "^_"
-      }
-    ],
     "unused-imports/no-unused-imports": "error",
-    "unused-imports/no-unused-vars": [
-      "error",
-      {
-        "argsIgnorePattern": "^_"
-      }
-    ],
     "jsx-a11y/role-supports-aria-props": "off",
     // TODO: Turn on once refactoring is finished
     "padding-line-between-statements": [

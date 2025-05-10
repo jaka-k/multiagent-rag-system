@@ -23,10 +23,11 @@ export function UserAuthForm() {
 
   const { toast } = useToast()
 
-  const [_state, dispatch, isPending] = React.useActionState<
+  const [_, dispatch, isPending] = React.useActionState<
     void,
     typeof formValues
-  >(async (_state, formData) => {
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+  >(async (_, formData) => {
     try {
       await signIn(formData)
     } catch (error: unknown) {

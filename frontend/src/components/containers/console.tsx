@@ -8,18 +8,17 @@ import SSEPill from '@ui/console/sse-pill'
 import FeatureOverlay from '@ui/feature-overlay.tsx'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import FlashcardList from '@ui/flashcards/flashcard-list'
-import { Bot, Club, FileText, GraduationCap } from 'lucide-react'
+import { Bot, FileText, GraduationCap } from 'lucide-react'
 import { useEffect } from 'react'
 
 const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const { setActiveArea } = useAreaStore.getState()
   const { fetchConsoleQueues, setCurrentConsole } = useConsoleStore.getState()
   useEffect(() => {
-    console.log(areaId)
     setActiveArea(areaId)
     setCurrentConsole(chatId)
     fetchConsoleQueues(chatId)
-  }, [chatId])
+  }, [chatId, areaId, setCurrentConsole, fetchConsoleQueues, setActiveArea])
 
   return (
     <section className="h-screen w-full flex flex-col overflow-y-scroll scrollbar-gutter-stable px-2 py-4">

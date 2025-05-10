@@ -66,12 +66,10 @@ async function fetchChapterContent(
   chapterId: string,
   bookId: string
 ): Promise<string> {
-  // This would be replaced with an actual API call in production
-  console.log(`Fetching content for book ${bookId}, chapter ${chapterId}`)
   return new Promise<string>((resolve) => {
     setTimeout(() => {
       resolve(
-        `This is the content for chapter ${chapterId} of book ${bookId}. In a real application, this would be fetched from an API or database.`
+        `This is will be the content for chapter ${chapterId} of book ${bookId}. Not yet implemented.`
       )
     }, 1000)
   })

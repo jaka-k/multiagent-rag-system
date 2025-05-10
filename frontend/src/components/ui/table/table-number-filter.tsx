@@ -16,7 +16,7 @@ import { PlusCircleIcon } from 'lucide-react'
 import * as React from 'react'
 
 interface NumberFilterProps {
-  column: Column<number | undefined>
+  column: Column<number, unknown> | undefined
   title: string | undefined
 }
 

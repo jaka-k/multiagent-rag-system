@@ -91,13 +91,11 @@ export async function signOut() {
     method: 'POST',
     headers
   })
-  console.log('response', response)
 
   if (response.ok) {
     await deleteSession()
     redirect('/login')
   } else {
-    // TODO: handle properly, maybe even toast
-    console.log(response)
+    logger.error('Unauthorized')
   }
 }

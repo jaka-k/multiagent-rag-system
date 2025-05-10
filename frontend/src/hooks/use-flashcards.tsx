@@ -29,7 +29,6 @@ export function useFlashcards(
 ): UseFlashcardsReturn {
   const { toast } = useToast()
   const [flashcards, setFlashcards] = useState<Flashcard[]>([])
-  console.log(flashcards)
 
   const removeFlashcardFromStore = useConsoleStore((s) => s.removeFlashcard)
 
@@ -37,8 +36,6 @@ export function useFlashcards(
     flashcards,
     (prev: Flashcard[], fid: string) => prev.filter((fc) => fc.id !== fid)
   )
-
-  console.log(optimisticFlashcards)
 
   useEffect(() => {
     const console = useConsoleStore.getState().consolesByChat[chatId]
@@ -48,7 +45,6 @@ export function useFlashcards(
   }, [chatId])
 
   async function handleAddFlashcard(id: string) {
-    console.log('handleAddFlashcard', id)
     startTransition(() => applyOptimistic(id))
 
     try {
@@ -77,7 +73,6 @@ export function useFlashcards(
   }
 
   async function handleDeleteFlashcard(id: string) {
-    console.log('handleDeleteFlashcard', id)
     startTransition(() => applyOptimistic(id))
 
     try {

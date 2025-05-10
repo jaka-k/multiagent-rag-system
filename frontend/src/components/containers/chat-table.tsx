@@ -46,7 +46,7 @@ const ChatTable = () => {
 
   useEffect(() => {
     fetchChatsForUser()
-  }, [])
+  }, [fetchChatsForUser])
 
   const areaColorMap: Record<string, { label: string; color: string }> =
     useMemo(() => {

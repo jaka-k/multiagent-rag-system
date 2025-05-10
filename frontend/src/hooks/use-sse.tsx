@@ -1,5 +1,6 @@
 'use client'
 
+import { logger } from '@lib/logger.ts'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useEffect, useState } from 'react'
 
@@ -27,8 +28,6 @@ export const useSSE = ({
             response.ok &&
             response.headers.get('content-type') === 'text/event-stream'
           ) {
-            // TODO: Logging?
-            console.log('EventSource connected')
             setIsConnected(true)
           } else if (
             response.status >= 400 &&
@@ -46,12 +45,11 @@ export const useSSE = ({
           if (event.event === 'documents') onDocumentUpdate(data)
         },
         onclose() {
-          console.log('SSE closed, retrying...')
           setIsConnected(false)
           throw new Error('Connection closed')
         },
         onerror(err) {
-          console.error('SSE error:', err)
+          logger.error('SSE error:', err)
 
           if (err.message === 'Fatal error') {
             throw err
@@ -61,13 +59,11 @@ export const useSSE = ({
     }
 
     connectSSE().catch((err) => {
-      // TODO: log
-      console.log(err)
+      logger.error('SSE connection error caught:', err)
     })
 
     return () => {
       controller.abort()
-      console.log('SSE cleanup')
       setIsConnected(false)
     }
   }, [chatId])

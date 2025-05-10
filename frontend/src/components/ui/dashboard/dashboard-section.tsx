@@ -16,22 +16,14 @@ export function DashboardSection() {
   const [ankiDeckName, setAnkiDeckName] = React.useState('')
   const { activeArea } = useAreaStore()
 
-  function handleSubmitFlashcards() {
-    alert(
-      `Flashcard Instructions: ${flashcardInstructions}\nAnki Deck: ${ankiDeckName}`
-    )
-  }
+  function handleSubmitFlashcards() {}
 
   const [agentInstructions, setAgentInstructions] = React.useState(
     'Default instructions for web_research agent...'
   )
   const [additionalWebsites, setAdditionalWebsites] = React.useState('')
 
-  function handleSubmitAgentInstructions() {
-    alert(
-      `Agent Instructions: ${agentInstructions}\nWebsites: ${additionalWebsites}`
-    )
-  }
+  function handleSubmitAgentInstructions() {}
 
   return (
     <div className="p-2 h-full w-full flex flex-col space-y-4">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useConsoleStore } from '@context/console-store'
+import useConsoleStore from '@context/console-store'
 import type { ParentGroup } from '@lib/organize-chapters'
 import { containerStyles, textStyles } from '@lib/styles'
 import { cn } from '@lib/utils'

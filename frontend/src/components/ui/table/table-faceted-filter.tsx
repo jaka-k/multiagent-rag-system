@@ -34,9 +34,21 @@ export function DataTableFacetedFilter<TData, TValue>({
   options = [],
   type = 'string'
 }: DataTableFacetedFilterProps<TData, TValue>) {
-  if (type === 'number') return <NumberFilter column={column} title={title} />
+  if (type === 'number')
+    return (
+      <NumberFilter
+        column={column as Column<number, unknown> | undefined}
+        title={title}
+      />
+    )
 
-  if (type === 'date') return <DateRangeFilter column={column} title={title} />
+  if (type === 'date')
+    return (
+      <DateRangeFilter
+        column={column as Column<string | undefined> | undefined}
+        title={title}
+      />
+    )
 
   // Existing string and array filter code
   const facets = column?.getFacetedUniqueValues()

@@ -78,6 +78,7 @@ export function FileUpload() {
       setFile(formFile)
       await processEpub(formFile)
     } else {
+      // eslint-disable-next-line no-alert
       alert('Please upload a valid .epub file')
     }
   }

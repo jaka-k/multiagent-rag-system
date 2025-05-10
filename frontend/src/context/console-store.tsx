@@ -21,7 +21,7 @@ interface ConsoleStoreState {
   clearConsole: (chatId: string) => void
 }
 
-export const useConsoleStore = create(
+const useConsoleStore = create(
   persist<ConsoleStoreState>(
     (set, get) => ({
       consolesByChat: {},

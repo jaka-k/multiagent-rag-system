@@ -1,13 +1,13 @@
 'use client'
 
 import useConsoleStore from '@context/console-store.tsx'
+import { useFlashcards } from '@hooks/use-flashcards.tsx'
 import { useSSE } from '@hooks/use-sse.tsx'
 import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
+import { Flashcard } from '@mytypes/types'
 import { StatusIndicator } from '@ui/status-indicator.tsx'
 import { useCallback } from 'react'
-import { useFlashcards } from '@hooks/use-flashcards.tsx'
-import { Flashcard } from '@mytypes/types'
 
 const SSEPill = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
   const { addChapter } = useConsoleStore()

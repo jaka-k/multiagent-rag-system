@@ -9,7 +9,6 @@ import { Check, DrumIcon, Loader2Icon, TriangleAlert } from 'lucide-react'
 import React, { useState } from 'react'
 
 function EpubElement({ doc }: { doc: Document }) {
-  console.log(doc)
   const { updateDocument } = useDocumentStore()
   const [currentStep, setCurrentStep] = useState<string>(doc?.embeddingStatus)
   const { tokens, cost } = estimateTokensAndCost(doc.fileSize)
