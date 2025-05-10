@@ -8,7 +8,7 @@ COPY frontend/pnpm-lock.yaml frontend/package.json ./
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 COPY frontend ./
 
