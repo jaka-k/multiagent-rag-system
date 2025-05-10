@@ -68,7 +68,7 @@ services:
   anki-desktop:
     build:
       context: ./anki
-      dockerfile: ankiProd.Dockerfile
+      dockerfile: anki.Dockerfile
     container_name: anki
     environment:
       - VNC_PASSWORD=1990
