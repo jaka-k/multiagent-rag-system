@@ -14,13 +14,13 @@ packages = [
 python = "^3.12"
 black = "^24.8.0"
 pydantic-settings = "^2.6.0"
+fastapi = { version = "^0.115.0", extras = ["standard"] }
 
 [tool.isort]
 profile = "black"
 
 [tool.poetry.group.server.dependencies]
 pytest = "^8.3.2"
-fastapi = "^0.115.12"
 websockets = "^13.0"
 sqlmodel = "^0.0.22"
 psycopg = "^3.2.1"

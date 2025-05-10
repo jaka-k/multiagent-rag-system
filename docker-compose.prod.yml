@@ -1,0 +1,210 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: prod.Dockerfile
+    container_name: backend
+    environment:
+      - ENVIRONMENT=prod
+    env_file:
+      - .env
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres-server
+      - chroma-server
+    networks:
+      - app_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/ready" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: prod.Dockerfile
+    container_name: frontend
+    environment:
+      - NODE_ENV=production
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+  postgres-server:
+    image: postgres:16.4-alpine
+    container_name: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: [ 'CMD', 'pg_isready', '-U', 'multirag_dev', '-d', 'multirag_db' ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  chroma-server:
+    image: chromadb/chroma:latest
+    container_name: chroma
+    environment:
+      - IS_PERSISTENT=1
+    ports:
+      - '8000:8000'
+    volumes:
+      - chroma:/chroma/chroma
+    networks:
+      - app_network
+
+  anki-desktop:
+    build:
+      context: ./anki
+      dockerfile: ankiProd.Dockerfile
+    container_name: anki
+    environment:
+      - VNC_PASSWORD=1990
+      - TZ=Europe/Berlin
+    networks:
+      - app_network
+    ports:
+      - '3100:3100' # noVNC
+      - '8765:8765' # Anki-Connect
+    volumes:
+      - ./anki/config:/home/ankiuser/.local/share/Anki2
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks:
+      - monitoring_network
+    ports:
+      - "3400:3400"
+    expose:
+      - 3400
+    environment:
+      - GF_SECURITY_ADMIN_USER=jaka
+      - GF_SECURITY_ADMIN_PASSWORD=1990
+      - GF_SERVER_HTTP_PORT=3400
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - TZ=Europe/Berlin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+      - prometheus
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/loki-config.yaml -config.expand-env=true
+    networks:
+      - monitoring_network
+    ports:
+      - "3410:3410"
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:3410/ready' ]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki_data:/loki
+    depends_on:
+      - backend
+      - frontend
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: [ "-config.file=/etc/tempo-config.yaml" ]
+    user: root
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        chown -R 10001:10001 /var/tempo && \
+        exec /tempo -config.file=/etc/tempo-config.yaml
+    networks:
+      - monitoring_network
+    ports:
+      - "3420:3420"
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:3420/ready' ]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo-config.yaml
+      - tempo_data:/var/tempo
+    depends_on:
+      - loki
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - monitoring_network
+    ports:
+      - "3430:3430"
+    volumes:
+      - ./prometheus-config.yaml:/workspace/prometheus-config.yaml
+      - prometheus_data:/workspace
+    command:
+      - --config.file=/workspace/prometheus-config.yaml
+      - --web.listen-address=:3430
+    depends_on:
+      - loki
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otelcol
+    networks:
+      - app_network
+      - monitoring_network
+    ports:
+      - "4317:4317"
+      - "13133:13133" # health_check extension
+      - "55679:55679" # zpages extension
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    command:
+      - --config=/etc/otel-collector-config.yaml
+    depends_on:
+      - loki
+      - tempo
+      - prometheus
+      - backend
+      - frontend
+
+
+
+
+volumes:
+  postgres_data:
+  chroma:
+  grafana_data:
+  loki_data:
+  tempo_data:
+  prometheus_data:
+
+networks:
+  app_network:
+    driver: bridge
+  monitoring_network:
+    driver: bridge
