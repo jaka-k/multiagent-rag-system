@@ -81,6 +81,23 @@ services:
     volumes:
       - ./anki/config:/home/ankiuser/.local/share/Anki2
 
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app_network
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
 
   grafana:
     image: grafana/grafana:latest
@@ -202,6 +219,8 @@ volumes:
   loki_data:
   tempo_data:
   prometheus_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   app_network:

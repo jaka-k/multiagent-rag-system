@@ -1,0 +1,3 @@
+mrag.krajnc.cc {
+  reverse_proxy localhost:3000
+}
