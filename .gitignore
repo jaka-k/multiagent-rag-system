@@ -138,7 +138,7 @@ venv.bak/
 
 *.crt
 *.key
-firebaseServiceAccount*
+backend/firebaseServiceAccount*
 
 # Spyder project settings
 .spyderproject
