@@ -31,7 +31,6 @@ class FirebaseFileDownloader:
             logging.info(f"Downloaded EPUB to temporary file: {self.temp_file_destination}")
 
         except Exception as e:
-            print(e)
             logging.error(f"Failed to download EPUB: {e}")
             raise
 

@@ -41,10 +41,10 @@ async def get_single_session():
 
 async def drop_all_tables():
     """Drop all the tables defined in SQLModel models."""
-    print("Starting DB deletion...")
+    app_logger.info("Starting DB deletion...")
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
-    print("DB deleted.")
+    app_logger.info("DB deleted.")
 
 
 # TODO: If needed https://github.com/jod35/lib-api/blob/main/src/db/main.py

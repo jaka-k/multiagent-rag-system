@@ -1,5 +1,7 @@
 .idea
+.vscode
 anki/config/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -136,6 +138,7 @@ venv.bak/
 
 *.crt
 *.key
+firebaseServiceAccount*
 
 # Spyder project settings
 .spyderproject
