@@ -1,4 +1,3 @@
-import uuid
 from datetime import timedelta, datetime, timezone
 from typing import List
 
@@ -9,6 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.config import settings
+from server.core.logger import app_logger
 from server.core.security import (
     RefreshTokenSchema,
     authenticate_user,
@@ -21,7 +21,6 @@ from server.core.security import (
 )
 from server.db.database import get_session
 from server.models.area import Area
-from server.models.session import Session
 from server.models.user import User, Token
 
 
@@ -33,6 +32,11 @@ class TokenSchema(BaseModel):
 
 class LogoutResponse(BaseModel):
     ok: bool
+
+
+class UserCreationRequest(BaseModel):
+    user: str
+    password: str
 
 
 router = APIRouter()
@@ -147,16 +151,24 @@ async def read_system_status(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/test-user/", tags=["dev-test"])
-async def create_test_user(session: AsyncSession = Depends(get_session)):
+async def create_test_user(
+        request: UserCreationRequest,
+        session: AsyncSession = Depends(get_session),
+):
+    body = request.model_dump()
+
     test_user = User(
-        email="admin@krajnc.cc",
-        username="jaka",
-        hashed_password=get_password_hash("1990"),
+        email="info@ptice.ee",
+        username=body["user"],
+        hashed_password=get_password_hash(body["password"]),
         disabled=False,
     )
+
     session.add(test_user)
+
     await session.commit()
-    print(
+    app_logger.info(
         f"Test user created with username: {test_user.username} and password: 'admin'"
     )
 
+    return {"status": "ok"}
