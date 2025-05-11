@@ -1,7 +1,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 This tool was originally created to explore AI-driven learning workflows.  
-Read the full story and motivations in my [blog post](https://…).
+Read the full story and motivations in my blog post: [Building a Multi-Agent RAG System for Technical Learning](https://www.krajnc.cc/multi-agent-rag).
 
 The project has a modular structure with a Next.js frontend and a Python backend split across multiple packages using
 Poetry. LLM logic is decoupled from the API layer to potentially make it easier to swap out frameworks or languages.
@@ -14,7 +14,7 @@ with systems design and working with a modern, service-oriented stack.
 ## 🏗 Architecture & Tech Stack
 
 - **LangGraph** – Multi-agent state machine orchestrator for LLM workflows
-- **Server** – Python 3.10+, FastAPI, Pydantic, structured as multiple Poetry-managed packages
+- **Server** – Python 3.12, FastAPI, Pydantic, structured as multiple Poetry-managed packages
 - **Frontend** – Next.js App Router with Server Actions and Server-Sent Events
 - **Databases** – PostgreSQL for structured data, Chroma for embeddings, Firebase for blob storage
 - **Deployment** – Docker Compose for local orchestration
