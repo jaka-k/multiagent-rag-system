@@ -35,6 +35,7 @@ class LogoutResponse(BaseModel):
 
 
 class UserCreationRequest(BaseModel):
+    mail: str
     user: str
     password: str
 
@@ -158,7 +159,7 @@ async def create_test_user(
     body = request.model_dump()
 
     test_user = User(
-        email="info@ptice.ee",
+        email=body["mail"],
         username=body["user"],
         hashed_password=get_password_hash(body["password"]),
         disabled=False,
