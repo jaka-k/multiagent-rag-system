@@ -13,7 +13,12 @@ const nextConfig = {
         hostname: 'firebasestorage.googleapis.com'
       }
     ]
-  }
+  },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['*.krajnc.cc'],
+    },
+  },
 }
 
 export default nextConfig
