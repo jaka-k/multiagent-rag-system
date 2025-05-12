@@ -2,20 +2,20 @@
 
 import { cookies } from 'next/headers'
 
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process.env.ENVIRONMENT === 'prod'
 
 export async function createSession(token: string, refreshToken: string) {
   const cookieStore = await cookies()
   cookieStore.set('token', token, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: 'none',
     path: '/'
   })
   cookieStore.set('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: 'none',
     path: '/'
   })
 }
@@ -25,7 +25,7 @@ export async function updateSession(newToken: string) {
   cookieStore.set('token', newToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: 'none',
     path: '/'
   })
 }
