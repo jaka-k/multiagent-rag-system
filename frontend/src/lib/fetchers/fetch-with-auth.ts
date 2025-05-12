@@ -5,7 +5,8 @@ import { refreshAccessToken } from '@lib/session/auth.ts'
 import camelcaseKeys from 'camelcase-keys'
 import { cookies } from 'next/headers'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080'
+export const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 export type WithRefreshedToken<T> = T & {
   refreshedToken?: string | null

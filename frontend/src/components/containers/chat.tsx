@@ -18,8 +18,11 @@ import Markdown from 'react-markdown'
 import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
 
+export const BACKEND_DOMAIN =
+  process.env.NEXT_PUBLIC_BACKEND_DOMAIN || 'localhost:8080'
+
 export function Chat({ chatData }: { chatData: ChatData }) {
-  const socketUrl = `ws://localhost:8080/api/ws/${chatData.id}`
+  const socketUrl = `ws://${BACKEND_DOMAIN}/api/ws/${chatData.id}`
   const [open, setOpen] = React.useState(false)
 
   const [messages, setMessages] = React.useState<Message[]>(
