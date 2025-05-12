@@ -9,7 +9,8 @@ import {
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080'
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 export async function signIn(formData: { username: string; password: string }) {
   const { username, password } = formData
