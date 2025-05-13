@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value
   const { pathname } = req.nextUrl
-  const publicRoutes = ['/login']
+  const publicRoutes = ['/login', '/docs', '/api', '/auth']
 
   if (publicRoutes.includes(pathname)) {
     if (refreshToken && pathname === '/login') {
@@ -25,7 +25,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/',
-    '/((?!api|auth|docs|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)'
+    '/((?!api/|auth/|docs/|_next/|favicon.ico|sitemap.xml|robots.txt).*)'
   ]
 }
