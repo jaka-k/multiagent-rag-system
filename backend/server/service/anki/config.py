@@ -2,6 +2,9 @@ import json
 import urllib.request
 from typing import Any, Dict
 
+from tools.env import get_environment_variable
+
+ANKI_URL = get_environment_variable("ANKI_URL")
 
 def request(action: str, **params) -> Dict[str, Any]:
     return {"action": action, "params": params, "version": 6}
@@ -11,8 +14,7 @@ def invoke(action: str, **params) -> Dict[str, Any]:
     request_json = json.dumps(request(action, **params)).encode("utf-8")
     try:
         with urllib.request.urlopen(
-            # TODO: Set backend url with port
-            urllib.request.Request("http://localhost:8765", request_json)
+            urllib.request.Request(ANKI_URL, request_json)
         ) as response:
             response_data = json.load(response)
     except Exception as e:
