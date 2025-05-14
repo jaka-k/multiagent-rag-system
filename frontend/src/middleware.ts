@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value
   const { pathname } = req.nextUrl
-  const publicRoutes = ['/login', '/docs', '/api', '/auth']
+  const publicRoutes = ['/login']
 
   if (publicRoutes.includes(pathname)) {
     if (refreshToken && pathname === '/login') {

@@ -16,8 +16,8 @@ origins = [
     "http://localhost",
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://localhost:8080",
-    "https://mrag.krajnc.cc",  # production frontend
+    "https://mrag.krajnc.cc",
+    "https://api.mrag.krajnc.cc",
 ]
 
 app.add_middleware(
