@@ -47,6 +47,9 @@ chromadb = "0.6.3"
 psycopg = { version = "^3.2.4", extras = ["binary"] }
 psycopg-pool = "^3.2.2"
 
+[tool.poetry.scripts]
+reset-vector-db = "scripts.reset_vector_db:main"
+
 [tool.poetry.group.tools.dependencies]
 beautifulsoup4 = "^4.12.3"
 
