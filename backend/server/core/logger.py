@@ -13,7 +13,7 @@ resource = Resource.create({"service.name": "mrag-server"})
 logger_provider = LoggerProvider(resource=resource)
 set_logger_provider(logger_provider)
 
-exporter = OTLPLogExporter(endpoint="localhost:4317", insecure=True)
+exporter = OTLPLogExporter(endpoint="otelcol:4317", insecure=True)
 processor = BatchLogRecordProcessor(exporter)
 logger_provider.add_log_record_processor(processor)
 

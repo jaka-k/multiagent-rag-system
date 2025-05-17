@@ -14,7 +14,7 @@ import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
 
 export function register() {
   const traceExporter = new OTLPTraceExporter({
-    url: 'localhost:4317',
+    url: 'otelcol:4317',
     credentials: credentials.createInsecure()
   })
 
