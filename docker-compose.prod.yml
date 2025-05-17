@@ -77,7 +77,6 @@ services:
       - '3100:3100' # noVNC
       - '8765:8765' # Anki-Connect
     volumes:
-      - ./anki/config:/seed-profile:ro
       - anki_data:/home/ankiuser
 
   caddy:
