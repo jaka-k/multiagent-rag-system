@@ -101,7 +101,6 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /config/app
 
-VOLUME /config/app
 
 EXPOSE 3100 8765
 

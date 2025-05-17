@@ -203,7 +203,8 @@ services:
       - '3100:3100' # noVNC
       - '8765:8765' # Anki-Connect
     volumes:
-      - ./anki/config:/home/ankiuser/.local/share/Anki2
+      - ./anki/config:/seed-profile:ro
+      - anki_data:/home/ankiuser
 
 volumes:
   postgres_data:
