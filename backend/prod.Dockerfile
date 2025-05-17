@@ -14,7 +14,7 @@ COPY . .
 
 RUN touch README.md
 
-RUN poetry install --no-interaction
+RUN poetry install
 
 COPY . .
 
