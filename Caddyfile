@@ -9,3 +9,13 @@ api.mrag.krajnc.cc {
         reverse_proxy backend:8080
     }
 }
+
+grafana.mrag.krajnc.cc {
+  handle {
+    reverse_proxy grafana:3400
+  }
+  encode gzip
+  log {
+    output file /var/log/caddy/grafana_access.log
+  }
+}

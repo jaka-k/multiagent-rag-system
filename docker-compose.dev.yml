@@ -91,8 +91,8 @@ services:
     expose:
       - 3400
     environment:
-      - GF_SECURITY_ADMIN_USER=jaka
-      - GF_SECURITY_ADMIN_PASSWORD=1990
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_SERVER_HTTP_PORT=3400
       - GF_ANALYTICS_REPORTING_ENABLED=false
       - TZ=Europe/Berlin
