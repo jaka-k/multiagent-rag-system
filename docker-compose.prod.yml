@@ -63,7 +63,7 @@ services:
     networks:
       - app_network
 
-  anki-desktop:
+  anki:
     build:
       context: ./anki
       dockerfile: anki.Dockerfile
@@ -187,7 +187,7 @@ services:
     depends_on:
       - loki
 
-  otel-collector:
+  otelcol:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otelcol
     networks:
