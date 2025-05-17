@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:jammy-20250415.1 AS build_amd64
+FROM --platform=linux/amd64 ubuntu:jammy AS build_amd64
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:1
