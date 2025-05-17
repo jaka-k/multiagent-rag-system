@@ -73,12 +73,12 @@ ENV LC_ALL=en_US.UTF-8
 
 RUN useradd -m ankiuser
 
-RUN wget https://github.com/ankitects/anki/releases/download/24.06.3/anki-24.06.3-linux-qt6.tar.zst && \
-    tar --use-compress-program=unzstd -xvf anki-24.06.3-linux-qt6.tar.zst && \
-    cd anki-24.06.3-linux-qt6 && \
+RUN wget https://github.com/ankitects/anki/releases/download/25.02.5/anki-25.02.5-linux-qt6.tar.zst && \
+    tar --use-compress-program=unzstd -xvf anki-25.02.5-linux-qt6.tar.zst && \
+    cd anki-25.02.5-linux-qt6 && \
     ./install.sh && \
     cd .. && \
-    rm -rf anki-24.06.3-linux-qt6 anki-24.06.3-linux-qt6.tar.zst
+    rm -rf anki-25.02.5-linux-qt6 anki-25.02.5-linux-qt6.tar.zst
 
 RUN mkdir -p /usr/share/anki/addons21 && \
     cd /usr/share/anki/addons21 && \
