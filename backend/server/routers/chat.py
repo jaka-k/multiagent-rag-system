@@ -92,8 +92,6 @@ async def websocket_endpoint(
     result = await db.execute(stmt)
     chat = result.scalars().first()
 
-    print("CHAT AREA LABEL", chat.area.label)
-
     # TODO: Error handling is non-existent, The service should be integrated inside the controller
     chat_service = ChatService(chat_id, chat.area.label, db)
     chat_controller = ChatController(chat_id, db)
@@ -127,8 +125,6 @@ async def websocket_endpoint(
                         await websocket.send_text(json.dumps({"content": message_text}))
                     elif isinstance(content, dict) and "context" in content:
                         context = content["context"]
-                        print(context)
-                        ## TODO: SEND Context to document console
 
             await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.update_session_metadata(metadata_collector)

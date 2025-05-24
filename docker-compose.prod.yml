@@ -21,8 +21,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: prod.Dockerfile
+      context: .
+      dockerfile: frontend/prod.Dockerfile
     container_name: frontend
     env_file:
       - .env
