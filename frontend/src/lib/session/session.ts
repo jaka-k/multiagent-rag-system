@@ -9,13 +9,13 @@ export async function createSession(token: string, refreshToken: string) {
   cookieStore.set('token', token, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'none',
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/'
   })
   cookieStore.set('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'none',
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/'
   })
 }
@@ -25,7 +25,7 @@ export async function updateSession(newToken: string) {
   cookieStore.set('token', newToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'none',
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/'
   })
 }

@@ -16,7 +16,7 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['*.krajnc.cc'],
+      allowedOrigins: ['localhost:3000', '*.krajnc.cc'],
     },
   },
 }
