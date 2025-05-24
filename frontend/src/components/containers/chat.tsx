@@ -24,7 +24,6 @@ export const BACKEND_DOMAIN =
 export const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
-
 const isProd = process.env.NODE_ENV === 'production'
 const wsProtocol = isProd ? 'wss' : 'ws'
 
