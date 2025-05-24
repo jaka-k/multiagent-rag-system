@@ -1,7 +1,7 @@
 import os
 from tools.env import get_environment_variable
 
-ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "prod")
 
 POSTGRES_USER = get_environment_variable("POSTGRES_USER")
 POSTGRES_PASSWORD = get_environment_variable("POSTGRES_PASSWORD")

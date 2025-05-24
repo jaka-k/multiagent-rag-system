@@ -26,9 +26,18 @@ class Settings(BaseSettings):
     langchain_endpoint: Optional[str] = None
     langchain_tracing_v2: Optional[str] = None
 
+    anki_url: Optional[str] = None
+    chroma_host: Optional[str] = None
+
     next_public_firebase_api_key: Optional[str] = None
     next_public_firebase_project_id: Optional[str] = None
     next_public_firebase_bucket: Optional[str] = None
+    next_public_backend_domain: Optional[str] = None
+    next_public_backend_url: Optional[str] = None
+
+    grafana_domain: Optional[str] = None
+    grafana_admin_password: Optional[str] = None
+    grafana_admin_user: Optional[str] = None
 
     grafana_api_key: Optional[str] = None
 

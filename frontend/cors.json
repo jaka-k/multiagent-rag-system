@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["http://localhost:3000", "http://localhost:8080"],
+    "origin": ["http://localhost:3000", "http://localhost:8080", "https://krajnc.cc"],
     "method": ["GET", "POST", "PUT", "HEAD", "DELETE"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type", "x-goog-meta-*"]

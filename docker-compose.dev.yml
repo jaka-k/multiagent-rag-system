@@ -52,8 +52,6 @@ services:
     image: postgres:16.4-alpine
     container_name: postgres
     restart: always
-    environment:
-      - POSTGRES_HOST=postgres-server
     env_file:
       - .env
     healthcheck:
@@ -212,6 +210,7 @@ volumes:
   loki_data:
   tempo_data:
   prometheus_data:
+  anki_data:
 
 networks:
   app_network:
