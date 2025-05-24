@@ -21,8 +21,11 @@ import rehypeHighlight from 'rehype-highlight'
 export const BACKEND_DOMAIN =
   process.env.NEXT_PUBLIC_BACKEND_DOMAIN || 'localhost:8080'
 
+const isProd = process.env.ENVIRONMENT === 'prod'
+const wsProtocol = isProd ? 'wss' : 'ws'
+
 export function Chat({ chatData }: { chatData: ChatData }) {
-  const socketUrl = `ws://${BACKEND_DOMAIN}/api/ws/${chatData.id}`
+  const socketUrl = `${wsProtocol}://${BACKEND_DOMAIN}/api/ws/${chatData.id}`
   const [open, setOpen] = React.useState(false)
 
   const [messages, setMessages] = React.useState<Message[]>(
