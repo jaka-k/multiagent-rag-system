@@ -89,7 +89,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         if (messageData.content) {
           appendToLastAgentMessage(messageData.content)
         } else if (messageData.metadata) {
-          // Handle metadata
           appendMetadataMessage(messageData.metadata)
         }
       } catch (error) {
@@ -121,9 +120,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
 
   return (
     <div className="w-full h-full p-4 overflow-hidden">
-      {/* Outer Card */}
       <div className="relative flex flex-col w-full h-full bg-white rounded-lg shadow-lg">
-        {/* Header */}
         <header className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <Link href="/">
@@ -149,7 +146,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
           </Button>
         </header>
 
-        {/* Messages (scrollable) */}
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
@@ -178,7 +174,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
           )}
         </div>
 
-        {/* Input pinned to bottom */}
         <div className="p-4 border-t border-gray-200">
           <form
             onSubmit={handleSendMessage}
