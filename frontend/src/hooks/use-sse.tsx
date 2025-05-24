@@ -1,6 +1,6 @@
 'use client'
 
-import { BACKEND_DOMAIN } from '@containers/chat.tsx'
+import { BACKEND_URL } from '@containers/chat.tsx'
 import { logger } from '@lib/logger.ts'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useEffect, useState } from 'react'
@@ -22,7 +22,7 @@ export const useSSE = ({
     const controller = new AbortController()
 
     const connectSSE = async () => {
-      await fetchEventSource(`http://${BACKEND_DOMAIN}/api/events/${chatId}`, {
+      await fetchEventSource(`${BACKEND_URL}/api/events/${chatId}`, {
         signal: controller.signal,
         async onopen(response) {
           if (
