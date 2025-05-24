@@ -18,14 +18,9 @@ class EmbeddingStatus(str, Enum):
 
 class Document(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str
     user_id: uuid.UUID = Field(foreign_key="user.id")
     area_id: uuid.UUID = Field(foreign_key="area.id")
-    area: "Area" = Relationship(
-        back_populates="documents",
-        sa_relationship_kwargs={"uselist": False, "lazy": "selectin"},
-    )  # type: ignore
-
-    title: str
     description: str = Field(default=None, nullable=True)
     file_path: str
     file_size: int = Field(default=None, nullable=True)
@@ -37,6 +32,10 @@ class Document(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc), sa_column_kwargs={
             "onupdate": lambda: datetime.now(timezone.utc)})
 
+    area: "Area" = Relationship(
+        back_populates="documents",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )  # type: ignore
     chapters: List["Chapter"] = Relationship(back_populates="document",
                                              sa_relationship_kwargs={"lazy": "selectin"}, )
 

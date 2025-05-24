@@ -6,7 +6,7 @@ from sqlmodel import select
 from server.core.logger import app_logger
 from server.db.vectordb.embdeddings import get_embedding_function
 from server.db.vectordb.vectordb import get_vector_db_client
-from server.models.document import Document, Chapter
+from server.models.document import Document
 
 
 class EmbeddingService:
@@ -33,7 +33,6 @@ class EmbeddingService:
             embedding_function=get_embedding_function(),
             collection_name=document.area.label
         )
-
 
         parsed_chapters = []
         for chapter in document.chapters:
