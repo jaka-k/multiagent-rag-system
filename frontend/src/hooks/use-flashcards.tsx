@@ -8,17 +8,10 @@ import {
 } from '@lib/fetchers/fetch-flashcards.ts'
 import { logger } from '@lib/logger.ts'
 import { Flashcard } from '@mytypes/types'
-import React, {
-  SetStateAction,
-  startTransition,
-  useEffect,
-  useOptimistic,
-  useState
-} from 'react'
+import { startTransition, useOptimistic } from 'react'
 
 interface UseFlashcardsReturn {
   optimisticFlashcards: Flashcard[]
-  setFlashcards: React.Dispatch<SetStateAction<Flashcard[]>>
   handleAddFlashcard: (id: string) => Promise<void>
   handleDeleteFlashcard: (id: string) => Promise<void>
 }
@@ -28,21 +21,16 @@ export function useFlashcards(
   areaId: string
 ): UseFlashcardsReturn {
   const { toast } = useToast()
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([])
 
+  const flashcards = useConsoleStore(
+    (s) => s.consolesByChat[chatId]?.flashcardQueue?.flashcards ?? []
+  )
   const removeFlashcardFromStore = useConsoleStore((s) => s.removeFlashcard)
 
   const [optimisticFlashcards, applyOptimistic] = useOptimistic(
     flashcards,
     (prev: Flashcard[], fid: string) => prev.filter((fc) => fc.id !== fid)
   )
-
-  useEffect(() => {
-    const console = useConsoleStore.getState().consolesByChat[chatId]
-    const storeFlashcards = console?.flashcardQueue?.flashcards ?? []
-
-    setFlashcards(storeFlashcards)
-  }, [chatId])
 
   async function handleAddFlashcard(id: string) {
     startTransition(() => applyOptimistic(id))
@@ -57,7 +45,6 @@ export function useFlashcards(
           description: `Flashcard ${id} was not confirmed in backend`
         })
       } else {
-        setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
         removeFlashcardFromStore(chatId, id)
       }
     } catch (err) {
@@ -85,7 +72,6 @@ export function useFlashcards(
           description: `Flashcard ${id} was not confirmed in backend`
         })
       } else {
-        setFlashcards((prev) => prev.filter((fc) => fc.id !== id))
         removeFlashcardFromStore(chatId, id)
       }
     } catch (err) {
@@ -102,7 +88,6 @@ export function useFlashcards(
 
   return {
     optimisticFlashcards,
-    setFlashcards,
     handleAddFlashcard,
     handleDeleteFlashcard
   }

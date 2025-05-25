@@ -1,7 +1,6 @@
 'use client'
 
 import useConsoleStore from '@context/console-store.tsx'
-import { useFlashcards } from '@hooks/use-flashcards.tsx'
 import { useSSE } from '@hooks/use-sse.tsx'
 import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
@@ -9,13 +8,12 @@ import { Flashcard } from '@mytypes/types'
 import { StatusIndicator } from '@ui/status-indicator.tsx'
 import { useCallback } from 'react'
 
-const SSEPill = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
+const SSEPill = ({ chatId }: { chatId: string }) => {
   const { addChapter } = useConsoleStore()
-  const { setFlashcards } = useFlashcards(chatId, areaId)
+  const { addFlashcard } = useConsoleStore()
 
   function pushFlashcard(flashcard: Flashcard) {
-    useConsoleStore.getState().addFlashcard(chatId, flashcard)
-    setFlashcards((prev) => [...prev, flashcard])
+    addFlashcard(chatId, flashcard)
   }
 
   const onFlashcardUpdate = useCallback(

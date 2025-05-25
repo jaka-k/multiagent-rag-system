@@ -22,13 +22,11 @@ class SessionManager:
             del self.sessions[session_id]
 
     def ensure_session(self, session_id: str) -> Session:
-        print("ensure_session(self, session_id: str)", session_id)
         session = self.get_session(session_id)
         if not session:
             session = self.create_session(session_id)
         return session
 
     def dispatch_event(self, session_id: str, event: dict):
-        print("dispatch_event(self, session_id: str, event: dict):", session_id)
         session = self.ensure_session(session_id)
         session.queue.put_nowait(event)

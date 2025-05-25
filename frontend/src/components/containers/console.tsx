@@ -22,11 +22,10 @@ const Console = ({ chatId, areaId }: { chatId: string; areaId: string }) => {
 
   return (
     <section className="h-screen w-full flex flex-col overflow-y-scroll scrollbar-gutter-stable px-2 py-4">
-      {/* ------------- "Bento" Card Container ------------- */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-4">
         <header className="flex items-center justify-between px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-800">Console</h2>
-          <SSEPill chatId={chatId} areaId={areaId} />
+          <SSEPill chatId={chatId} />
         </header>
       </div>
       <div className="bg-white rounded-lg shadow-lg p-4">

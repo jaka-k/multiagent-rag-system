@@ -10,9 +10,13 @@ router = APIRouter()
 
 async def sse_event_generator(session_id: str):
     session = session_manager.ensure_session(session_id)
-    while True:
-        event = await session.queue.get()
-        yield f"event: {event['event_type']}\ndata: {json.dumps(event['data'])}\n\n"
+    try:
+        while True:
+            event = await session.queue.get()
+            yield f"event: {event['event_type']}\ndata: {json.dumps(event['data'])}\n\n"
+
+    finally:
+        session_manager.remove_session(session_id)
 
 
 @router.get("/events/{session_id}")
@@ -21,9 +25,3 @@ async def sse_endpoint(session_id: str):
         "Content-Type": "text/event-stream",
         "Connection": "keep-alive",
     })
-
-
-@router.delete("/events/{session_id}")
-async def close_session(session_id: str):
-    session_manager.remove_session(session_id)
-    return {"detail": "Session closed"}

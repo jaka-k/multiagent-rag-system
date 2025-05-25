@@ -7,8 +7,8 @@ import { useEffect, useState } from 'react'
 
 interface SSEOptions {
   chatId: string
-  onFlashcardUpdate: (flashcardIds: string[]) => void
-  onDocumentUpdate: (documentIds: string[]) => void
+  onFlashcardUpdate: (flashcardIds: string[]) => Promise<void>
+  onDocumentUpdate: (documentIds: string[]) => Promise<void>
 }
 
 export const useSSE = ({
@@ -40,10 +40,11 @@ export const useSSE = ({
             throw new Error('Retriable error')
           }
         },
-        onmessage(event) {
+        async onmessage(event) {
+          console.log('Received message', event)
           const data = JSON.parse(event.data)
-          if (event.event === 'flashcard') onFlashcardUpdate(data)
-          if (event.event === 'documents') onDocumentUpdate(data)
+          if (event.event === 'flashcard') await onFlashcardUpdate(data)
+          if (event.event === 'documents') await onDocumentUpdate(data)
         },
         onclose() {
           setIsConnected(false)
