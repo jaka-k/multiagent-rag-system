@@ -21,7 +21,7 @@ class AnkiResponse(BaseModel):
 
 class AnkiService:
     def __init__(self, deck_name: str):
-        self.deck_name = f"Testing::{deck_name}"
+        self.deck_name = f"RAG::{deck_name}"
         self.deck_id = self.create_deck()
 
     def create_deck(self) -> str:
@@ -60,7 +60,7 @@ class AnkiService:
     def add_flashcard(self, front: str, back: str) -> str:
         note = {
             "deckName": self.deck_name,
-            ## can it be done with "deck_id"
+            ## Todo: can it be done with "deck_id"
             "modelName": "prettify-nord-basic",
             "fields": {"Front": front, "Back": back},
             "options": {"allowDuplicate": False},
