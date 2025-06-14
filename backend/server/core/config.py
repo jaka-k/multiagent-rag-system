@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     anki_url: Optional[str] = None
     chroma_host: Optional[str] = None
+    chroma_port: Optional[int] = None
 
     next_public_firebase_api_key: Optional[str] = None
     next_public_firebase_project_id: Optional[str] = None
@@ -58,5 +59,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
         model_config = SettingsConfigDict(env_file=str(Path(__file__).resolve().parent.parent.parent.parent / ".env"))
+
 
 settings = Settings()

@@ -1,24 +1,31 @@
 import logging
 
 import chromadb
-from chromadb.config import Settings
+from chromadb.config import Settings as ChromaSettings
 
-from tools.env import get_environment_variable
+from server.core.config import settings
+from server.core.logger import app_logger
 
-CHROMA_HOST = get_environment_variable("CHROMA_HOST")
+
+# TODO: SETUP ChromDB otel https://cookbook.chromadb.dev/running/health-checks/#docker-compose
 
 def get_vector_db_client():
     client = chromadb.HttpClient(
-        host=CHROMA_HOST,
-        port=8000,
+        host=settings.chroma_host,
+        port=settings.chroma_port,
         ssl=False,
-        settings=Settings(allow_reset=True),
+        settings=ChromaSettings(allow_reset=False)
     )
 
     return client
 
+
 def delete_all_collections():
     client = get_vector_db_client()
     for name in  client.list_collections():
-        client.delete_collection(name)
-        logging.info(f"ChromaDB collection deleted {name} 👾")
+        try:
+            client.delete_collection(name)
+            logging.info(f"ChromaDB collection deleted {name} 👾")
+        except Exception as e:
+            logging.info(f"ChromaDB error while deleting collection {name} ❌\nError: {e}")
+            pass
