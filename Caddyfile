@@ -10,6 +10,12 @@ api.mrag.krajnc.cc {
     }
 }
 
+chroma.mrag.krajnc.cc {
+    handle {
+        reverse_proxy backend:8000
+    }
+}
+
 grafana.mrag.krajnc.cc {
   handle {
     reverse_proxy grafana:3400

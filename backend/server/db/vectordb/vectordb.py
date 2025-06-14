@@ -4,8 +4,6 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 
 from server.core.config import settings
-from server.core.logger import app_logger
-
 
 # TODO: SETUP ChromDB otel https://cookbook.chromadb.dev/running/health-checks/#docker-compose
 
