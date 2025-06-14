@@ -17,12 +17,14 @@ class EmbeddingService:
     async def parse_chapters(self):
         stmt = (
             select(Document)
-            .options(selectinload(Document.chapters))
-            .options(selectinload(Document.area))
+            .options(selectinload(Document.chapters),
+                     selectinload(Document.area))
             .where(Document.id == self.doc_id)
         )
         result = await self.db_session.execute(stmt)
         document = result.scalar_one_or_none()
+
+        await self.db_session.refresh(document, attribute_names=["chapters"])
 
         if not document:
             app_logger.error(f"Document {self.doc_id} not found in background task.")
@@ -33,6 +35,7 @@ class EmbeddingService:
             embedding_function=get_embedding_function(),
             collection_name=document.area.label
         )
+
 
         parsed_chapters = []
         for chapter in document.chapters:
@@ -54,7 +57,7 @@ class EmbeddingService:
             else:
                 app_logger.info(f"Skipping {chapter.label} (already embedded)")
 
-        if not parsed_chapters:
+        if not len(parsed_chapters) > 0:
             app_logger.warning("No new chapters to embed.")
             return
 

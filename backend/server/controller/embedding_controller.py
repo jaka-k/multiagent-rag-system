@@ -45,9 +45,7 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
     epub_service = EpubProcessingService(document, session)
 
     try:
-        chapters = await epub_service.process_and_commit(file_path)
-        if chapters["db_chapters_added"] == 0:
-            raise Exception("No new chapters to embedd")
+        await epub_service.process_and_commit(file_path)
 
     except Exception as e:
         await update_document_status(session, document_id, EmbeddingStatus.FAILED)
