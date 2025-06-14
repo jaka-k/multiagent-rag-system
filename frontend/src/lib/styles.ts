@@ -10,6 +10,6 @@ export const textStyles = {
   h1: 'text-2xl font-semibold tracking-tight',
   h2: 'text-xl font-semibold tracking-tight',
   h3: 'text-lg font-semibold tracking-tight',
-  h4: 'text-md font-semibold tracking-tight',
+  h4: 'text-md font-semibold tracking-tight text-left',
   subtle: 'text-sm text-muted-foreground'
 }

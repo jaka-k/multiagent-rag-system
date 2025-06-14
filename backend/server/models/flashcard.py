@@ -1,6 +1,7 @@
-from typing import Optional
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
+
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -20,6 +21,7 @@ class Flashcard(SQLModel, table=True):
     front: str
     back: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    tag: str
 
     deck_id: Optional[uuid.UUID] = Field(foreign_key="deck.id", nullable=True)
     deck: Optional["Deck"] = Relationship(back_populates="flashcards")

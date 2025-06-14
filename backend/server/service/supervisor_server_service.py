@@ -78,7 +78,7 @@ class SupervisorServerService:
     async def process_flashcards(self, flashcards: list[FlashcardDTO]) -> list[str]:
         flashcard_ids = []
         for flashcard in flashcards:
-            new_flashcard = Flashcard(anki_id=None, deck_id=None, front=flashcard.front, back=flashcard.back,
+            new_flashcard = Flashcard(anki_id=None, deck_id=None, front=flashcard.front, back=flashcard.back, tag=flashcard.category,
                                       queue_id=self.fqueue)
             self.db_session.add(new_flashcard)
             flashcard_ids.append(str(new_flashcard.id))

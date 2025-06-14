@@ -61,7 +61,7 @@ class AnkiService:
         note = {
             "deckName": self.deck_name,
             ## Todo: can it be done with "deck_id"
-            "modelName": "prettify-nord-basic",
+            "modelName": "mrag-minimal",
             "fields": {"Front": front, "Back": back},
             "options": {"allowDuplicate": False},
             "tags": [],

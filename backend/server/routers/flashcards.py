@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from server.core.logger import app_logger
 from server.db.database import get_session
 from server.db.dtos.session_dto import FQueueDTO
 from server.models.flashcard import Flashcard, Deck
@@ -70,6 +71,7 @@ async def add_flashcard(
         flashcard.queue_id = None
         flashcard.queue = None
     except Exception as e :
+        app_logger.error(e)
         raise HTTPException(status_code=505, detail=f'Internal server error, {e}')
 
 

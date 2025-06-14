@@ -21,11 +21,11 @@ web_research_function = {
     "parameters": {
         "type": "object",
         "properties": {
-            "knowledge_gaps": {
+            "knowledge_nuggets": {
                 "type": "string",
                 "description": "The knowledge gaps identified.",
             }
         },
-        "required": ["knowledge_gaps"],
+        "required": ["knowledge_nuggets"],
     },
 }

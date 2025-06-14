@@ -113,7 +113,7 @@ export default function ChapterViewer({ chatId }: { chatId?: string }) {
                                   <CollapsibleTrigger className="flex items-center justify-between w-full px-1">
                                     <div className="flex items-center">
                                       <FileText className="h-4 w-4 text-muted-foreground mr-2" />
-                                      <span className={textStyles.h4}>
+                                      <span className={cn(textStyles.h4)}>
                                         {ch.label}
                                       </span>
                                     </div>
@@ -149,7 +149,7 @@ export default function ChapterViewer({ chatId }: { chatId?: string }) {
                                   <CollapsibleTrigger className="flex items-center justify-between w-full px-1">
                                     <div className="flex items-center">
                                       <FileText className="h-4 w-4 text-muted-foreground mr-2" />
-                                      <span className={textStyles.h4}>
+                                      <span className={cn(textStyles.h4)}>
                                         {ch.label}
                                       </span>
                                     </div>

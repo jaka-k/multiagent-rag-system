@@ -8,7 +8,7 @@ import {
 } from '@lib/fetchers/fetch-flashcards.ts'
 import { logger } from '@lib/logger.ts'
 import { Flashcard } from '@mytypes/types'
-import { startTransition, useMemo, useOptimistic } from 'react'
+import { startTransition, useOptimistic } from 'react'
 
 interface UseFlashcardsReturn {
   optimisticFlashcards: Flashcard[]
@@ -22,13 +22,10 @@ export function useFlashcards(
 ): UseFlashcardsReturn {
   const { toast } = useToast()
 
-  const flashcardSelector = useMemo(() => {
-    return (s: ReturnType<typeof useConsoleStore.getState>) =>
-      s.consolesByChat[chatId]?.flashcardQueue?.flashcards ?? []
-  }, [chatId])
-
-  const flashcards = useConsoleStore(flashcardSelector)
-  const removeFlashcardFromStore = useConsoleStore((s) => s.removeFlashcard)
+  const flashcards =
+    useConsoleStore.getState().consolesByChat[chatId]?.flashcardQueue
+      ?.flashcards ?? []
+  const removeFlashcardFromStore = useConsoleStore.getState().removeFlashcard
 
   const [optimisticFlashcards, applyOptimistic] = useOptimistic(
     flashcards,
