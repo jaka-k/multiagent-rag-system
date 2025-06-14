@@ -2,6 +2,7 @@ import logging
 
 from sqlalchemy.dialects.postgresql import insert
 
+from server.core.logger import app_logger
 from server.db.dtos.epub_dto import ChapterDTO
 from server.models.document import Document, Chapter
 from tools.epub_parser.parser import EpubParser
@@ -33,9 +34,11 @@ class EpubProcessingService:
                 if result.rowcount:
                     chapters_added += 1
                 else:
-                    logging.warning(f"Skipping duplicate chapter: {tag}")
+                    app_logger.warning(f"Skipping duplicate chapter: {tag}")
 
-        logging.info(f"Committed {chapters_added} new chapters…")
+        await self.db_session.commit()
+
+        app_logger.info(f"Committed {chapters_added} new chapters…")
         return {"db_chapters_added": chapters_added}
 
     def format_chapter_tag(self, chapter: ChapterDTO):

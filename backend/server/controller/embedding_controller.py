@@ -1,7 +1,6 @@
-import asyncio
 from fastapi import HTTPException
-from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from server.core.logger import app_logger
 from server.models.document import Document, EmbeddingStatus
@@ -36,6 +35,7 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
 
     try:
         file_path = downloader.download_epub(document.file_path)
+
     except Exception as e:
         await update_document_status(session, document_id, EmbeddingStatus.FAILED)
         app_logger.error(f"Error during downloading of epub {document_id}: {e}")
@@ -45,7 +45,10 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
     epub_service = EpubProcessingService(document, session)
 
     try:
-        await epub_service.process_and_commit(file_path)
+        chapters = await epub_service.process_and_commit(file_path)
+        if chapters["db_chapters_added"] == 0:
+            raise Exception("No new chapters to embedd")
+
     except Exception as e:
         await update_document_status(session, document_id, EmbeddingStatus.FAILED)
         app_logger.error(f"Error during parsing of document {document_id}: {e}")

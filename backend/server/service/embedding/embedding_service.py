@@ -65,3 +65,4 @@ class EmbeddingService:
             app_logger.info(f"Embedded {len(parsed_chapters)} chapters successfully.")
         except Exception as e:
             app_logger.error(f"Failed to embed documents: {e}")
+            raise
