@@ -77,4 +77,38 @@
   .chat-code code {
     border-radius: 5px;
   }
+
+  .source {
+    color: oklch(27.9% 0.041 260.031);
+    background-color: oklch(92.2% 0 0);
+    padding: 0.5em;
+    border-radius: 0.25em;
+    margin-top: 1em;
+  }
+
+  /* Contrast: light pink background, rounded corners, soft text */
+  .contrast {
+    background-color: oklch(92.8% 0.006 264.531);
+    color: oklch(25.7% 0.09 281.288);
+    padding: 0.75em;
+    border-radius: 0.5em;
+    margin-top: 1em;
+  }
+
+  /* Anti-pattern: red-tinged box with stronger color emphasis */
+  .anti {
+    background-color: oklch(97.7% 0.017 320.058);
+    color: oklch(28.4% 0.109 3.907);
+    padding: 0.75em;
+    border-radius: 0.5em;
+    margin-top: 1em;
+  }
+
+  .performance {
+    background-color: oklch(97% 0.014 254.604);
+    color: oklch(30.2% 0.056 229.695);
+    padding: 0.75em;
+    border-radius: 0.5em;
+    margin-top: 1em;
+  }
 }

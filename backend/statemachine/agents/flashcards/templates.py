@@ -19,7 +19,7 @@ RULES
 1. **Front**: `<h3>{{concept}}</h3>`
 2. **Back** layout (all HTML, no Markdown):
    • definition  → `<div class="definition">…</div>`
-   • example     → if exists wrap in `<pre><code>…</code></pre>`
+   • example     → if exists wrap in `<pre><code class="hljs">…</code></pre>`
    • anti-pattern→ if exists wrap in `<div class="anti">️…</div>`
    • contrast    → if exists wrap in `<div class="contrast">…</div>`
    • source    → if exists wrap in `<div class="source">…</div>`
