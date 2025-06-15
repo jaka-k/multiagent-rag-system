@@ -36,7 +36,6 @@ class EmbeddingService:
             collection_name=document.area.label
         )
 
-
         parsed_chapters = []
         for chapter in document.chapters:
             if not chapter.is_embedded:
@@ -62,10 +61,16 @@ class EmbeddingService:
             return
 
         try:
-            db.add_documents(documents=parsed_chapters)
+            for batch in batchify(parsed_chapters, batch_size=20):
+                db.add_documents(documents=batch)
 
             await self.db_session.commit()
             app_logger.info(f"Embedded {len(parsed_chapters)} chapters successfully.")
         except Exception as e:
             app_logger.error(f"Failed to embed documents: {e}")
             raise
+
+
+def batchify(items, batch_size=50):
+    for i in range(0, len(items), batch_size):
+        yield items[i: i + batch_size]
