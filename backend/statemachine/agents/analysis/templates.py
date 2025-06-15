@@ -14,12 +14,13 @@ KNOWLEDGE_TO_CARDS_PROMPT_V2 = """
                                 
                                 WRITING RULES
                                 1. **Front term** = `concept` value → must be specific (e.g. "Mutex Contention", never "Performance").
-                                2. **Definition**: ≤40 words, <u>underline</u> the 2-3 most critical terms.
+                                2. **Definition**: ≤60 words, <u>underline</u> the 2-3 most critical terms.
                                 3. **Example**: provide runnable snippet *if the concept involves code or CLI*.
                                 4. If the concept has a known pitfall, fill `anti_pattern` with a one-line error scenario **and** a corrective note; otherwise omit.
                                 5. Add `performance` only when a quantitative fact exists; otherwise omit.
                                 6. Use short, direct sentences; omit hedging words.
                                 7. No banned-phrases list—just follow the positive examples below.
+                                8. If source quote has document citation/reference include it in the source field; otherwise omit.
                                 
                                 GOOD EXAMPLE
                                 ```json
@@ -30,7 +31,8 @@ KNOWLEDGE_TO_CARDS_PROMPT_V2 = """
                                   "example": "var mu sync.RWMutex\nmu.RLock(); v := data; mu.RUnlock()",
                                   "anti_pattern": "Using RWMutex for single-thread code → adds 20 % overhead",
                                   "performance": "Write locks block all readers; benchmark shows 3× slowdown at 8 writers",
-                                  "contrast_pair": "sync.Mutex"
+                                  "contrast_pair": "sync.Mutex",
+                                  "source": "Go Cookbook - Chapter 3 - Concurrency"
                                 }}]
                                 ```
                                 Return only the JSON array, nothing else.

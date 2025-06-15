@@ -6,6 +6,10 @@ You are an HTML renderer for Anki.
 INPUT  →  `concepts` (JSON list of objects with concept, category, definition,
 example?, anti_pattern?, contrast_pair?, performance?).
 
+<concepts>
+{key_concepts}
+</concepts>
+
 OUTPUT →  JSON list of **cards**:
 [
   {{ "front": "<h3>…</h3>", "back": "<div>…</div>", "category": "string" }}
@@ -16,10 +20,11 @@ RULES
 2. **Back** layout (all HTML, no Markdown):
    • definition  → `<div class="definition">…</div>`
    • example     → if exists wrap in `<pre><code>…</code></pre>`
-   • anti-pattern→ if exists wrap in `<div class="anti">️☣️ …</div>`
-   • contrast    → if exists wrap in `<div class="contrast">☯️ …</div>`
-3. Use `<u>` around **up to 3** key terms inside the definition.
-4. Return **only** the JSON array; validation schema will reject extras.
+   • anti-pattern→ if exists wrap in `<div class="anti">️…</div>`
+   • contrast    → if exists wrap in `<div class="contrast">…</div>`
+   • source    → if exists wrap in `<div class="source">…</div>`
+3. If definition has concepts wrapped in <u>...</u> use those as they are.
+3. Return **only** the JSON array; validation schema will reject extras.
 
 EXAMPLE
 
@@ -31,7 +36,8 @@ CONCEPT
   "definition": "<u>Read</u> ops can share the lock; <u>write</u> blocks all",
   "example": "var mu sync.RWMutex\\nmu.RLock()",
   "anti_pattern": "Using RWMutex in single-thread code → 15 % slower",
-  "contrast_pair": "sync.Mutex"
+  "contrast_pair": "sync.Mutex",
+  "source": "Go Cookbook - Chapter 3 - Concurrency"
 }}
 ```
 

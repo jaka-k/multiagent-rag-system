@@ -16,6 +16,7 @@ class Concept(BaseModel):
     anti_pattern: Optional[str] = Field(None, description="Specific mistake + consequence")
     performance: Optional[str] = Field(None, description="Quantifiable metric, e.g. O(n) or 30 % latency")
     contrast_pair: Optional[str] = Field(None, description="Concept it is often confused with")
+    source: Optional[str] = Field(None, description="Source reference from the retrieved document")
 
 
 class ConceptList(BaseModel):

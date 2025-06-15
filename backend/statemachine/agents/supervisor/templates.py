@@ -12,7 +12,7 @@ MEMORIZABLE_KNOWLEDGE_PROMPT = PromptTemplate.from_template("""
                   {{
                     "concept"      : string,            # short technical term or phrase
                     "justification": string,            # maximum ≤ 90 words: why it matters for the user
-                    "source_quote" : string,            # maximum ≤ 180 words copied verbatim
+                    "source_quote" : string,            # maximum ≤ 180 words copied verbatim, with document reference if extracted from document section
                     "example_code" : string | null      # minimal runnable snippet, null if N/A
                   }},
                   ...
