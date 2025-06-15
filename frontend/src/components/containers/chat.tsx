@@ -1,8 +1,6 @@
 'use client'
 
-// TODO: handle locally
-// eslint-disable-next-line import/no-unresolved
-import 'highlight.js/styles/nnfx-light.css'
+
 
 import { Button } from '@components/ui/button'
 import { logger } from '@lib/logger.ts'
