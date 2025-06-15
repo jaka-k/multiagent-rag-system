@@ -19,6 +19,7 @@ jobs:
           host: ${{ secrets.HETZNER_HOST }}
           username: root
           key: ${{ secrets.ACTIONS_SSH_KEY }}
+          passphrase: ${{secrets.ACTIONS_SSH_PASSWORD}}
           port: 22
           script: |
             cd /home/app/multiagent-rag-system/
