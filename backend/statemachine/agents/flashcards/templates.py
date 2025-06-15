@@ -18,11 +18,11 @@ OUTPUT →  JSON list of **cards**:
 RULES
 1. **Front**: `<h3>{{concept}}</h3>`
 2. **Back** layout (all HTML, no Markdown):
-   • definition  → `<div class="definition">…</div>`
+   • definition  → `<div class="definition">…</div>`, can be slightly formatted with html tags if applicable, otherwise use as is
    • example     → if exists wrap in `<pre><code class="hljs">…</code></pre>`
    • anti-pattern→ if exists wrap in `<div class="anti">️…</div>`
-   • contrast    → if exists wrap in `<div class="contrast">…</div>`
-   • source    → if exists wrap in `<div class="source">…</div>`
+   • contrast    → if exists wrap in `<div class="contrast">(can use emojis at the beginning like ☣,⚠, or similar)…</div>`
+   • source    → if exists wrap in `<div class="source">(can use emojis at the beginning like ☯,🔀 or similar ️)…</div>`
 3. If definition has concepts wrapped in <u>...</u> use those as they are.
 3. Return **only** the JSON array; validation schema will reject extras.
 
