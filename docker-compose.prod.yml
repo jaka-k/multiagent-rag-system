@@ -92,7 +92,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "993:993"    # IMAPS
+      - "995:995"    # POP3S
+      - "587:587"    # SMTP Submission (STARTTLS)
     networks:
+      - email_network
       - app_network
       - monitoring_network
     depends_on:
@@ -103,6 +107,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped
+
   stalwart:
     image: stalwartlabs/stalwart:latest
     container_name: stalwart
@@ -114,6 +119,8 @@ services:
       - "995"    # POP3S
     ports:
       - "8060:8080"  # Admin GUI
+    networks:
+      - email_network
     volumes:
       - stalwart_data:/data
       - stalwart_config:/etc/stalwart
@@ -257,4 +264,6 @@ networks:
   app_network:
     driver: bridge
   monitoring_network:
+    driver: bridge
+  email_network:
     driver: bridge
