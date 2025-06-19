@@ -10,6 +10,32 @@ api.mrag.krajnc.cc {
     }
 }
 
+chroma.mrag.krajnc.cc {
+    handle {
+        reverse_proxy backend:8000
+    }
+}
+
+# MAIL ->
+
+# IMAPS
+mail.krajnc.cc:993 {
+  tls admin@krajnc.cc
+  reverse_proxy stalwart:993
+}
+
+# POP3S
+mail.krajnc.cc:995 {
+  tls admin@krajnc.cc
+  reverse_proxy stalwart:995
+}
+
+# SMTP Submission (STARTTLS)
+mail.krajnc.cc:587 {
+  tls admin@krajnc.cc
+  reverse_proxy stalwart:587
+}
+
 mailadmin.mrag.krajnc.cc {
     handle {
         reverse_proxy stalwart:8060
@@ -17,11 +43,7 @@ mailadmin.mrag.krajnc.cc {
     encode gzip
 }
 
-chroma.mrag.krajnc.cc {
-    handle {
-        reverse_proxy backend:8000
-    }
-}
+# OBSERVABILITY ->
 
 grafana.mrag.krajnc.cc {
   handle {
