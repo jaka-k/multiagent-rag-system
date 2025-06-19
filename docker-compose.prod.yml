@@ -127,6 +127,7 @@ services:
     environment:
       STALWART_SERVER_HOSTNAME: mail.krajnc.cc
       STALWART_DIRECTORY_PROVIDER: internal
+      STALWART_ADMIN_DISABLE_BASIC_AUTH: "true"
 
 
 
