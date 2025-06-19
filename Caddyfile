@@ -42,7 +42,7 @@ mail.krajnc.cc:587 {
   reverse_proxy stalwart:587
 }
 
-mailadmin.mrag.krajnc.cc {
+mailadmin.krajnc.cc {
     handle {
         reverse_proxy stalwart:8060
     }
