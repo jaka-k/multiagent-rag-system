@@ -103,6 +103,25 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped
+  stalwart:
+    image: stalwartlabs/stalwart:latest
+    container_name: stalwart
+    restart: unless-stopped
+    ports:
+      - "25:25"      # SMTP
+      - "587:587"    # Submission (SMTP/TLS)
+      - "993:993"    # IMAPS
+      - "995:995"    # POP3S
+      - "8060:8080"  # Admin GUI
+    volumes:
+      - stalwart_data:/data
+      - stalwart_config:/etc/stalwart
+      - stalwart_logs:/logs
+    environment:
+      STALWART_SERVER_HOSTNAME: mail.krajnc.cc
+      STALWART_DIRECTORY_PROVIDER: internal
+
+
 
 
   grafana:
@@ -230,7 +249,9 @@ volumes:
   caddy_data:
   caddy_config:
   anki_data:
-
+  stalwart_data:
+  stalwart_config:
+  stalwart_logs:
 networks:
   app_network:
     driver: bridge

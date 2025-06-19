@@ -10,6 +10,13 @@ api.mrag.krajnc.cc {
     }
 }
 
+mailadmin.mrag.krajnc.cc {
+    handle {
+        reverse_proxy 127.0.0.1:8060
+    }
+    encode gzip
+}
+
 chroma.mrag.krajnc.cc {
     handle {
         reverse_proxy backend:8000
