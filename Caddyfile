@@ -18,6 +18,15 @@ chroma.mrag.krajnc.cc {
 
 # MAIL ->
 
+# HTTP-01
+mail.krajnc.cc {
+  # This tells Caddy to obtain/renew the cert for mail.krajnc.cc
+  tls admin@krajnc.cc
+
+  # We don’t need to actually serve a website here, so just 404 everything
+  respond "Not Found" 404
+}
+
 # IMAPS
 mail.krajnc.cc:993 {
   tls admin@krajnc.cc
