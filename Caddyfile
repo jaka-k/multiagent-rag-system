@@ -18,28 +18,25 @@ chroma.mrag.krajnc.cc {
 
 # MAIL ->
 
-# HTTP-01
+# HTTP site just for ACME
 mail.krajnc.cc {
-  # This tells Caddy to obtain/renew the cert for mail.krajnc.cc
   tls admin@krajnc.cc
-
-  # We don’t need to actually serve a website here, so just 404 everything
   respond "Not Found" 404
 }
 
-# IMAPS
+# IMAPS (port 993)
 mail.krajnc.cc:993 {
   tls admin@krajnc.cc
   reverse_proxy stalwart:993
 }
 
-# POP3S
+# POP3S (port 995)
 mail.krajnc.cc:995 {
   tls admin@krajnc.cc
   reverse_proxy stalwart:995
 }
 
-# SMTP Submission (STARTTLS)
+# SMTP Submission w/ STARTTLS
 mail.krajnc.cc:587 {
   tls admin@krajnc.cc
   reverse_proxy stalwart:587

@@ -107,11 +107,12 @@ services:
     image: stalwartlabs/stalwart:latest
     container_name: stalwart
     restart: unless-stopped
+    expose:
+      - "25"      # SMTP
+      - "587"    # Submission (SMTP/TLS)
+      - "993"    # IMAPS
+      - "995"    # POP3S
     ports:
-      - "25:25"      # SMTP
-      - "587:587"    # Submission (SMTP/TLS)
-      - "993:993"    # IMAPS
-      - "995:995"    # POP3S
       - "8060:8080"  # Admin GUI
     volumes:
       - stalwart_data:/data
