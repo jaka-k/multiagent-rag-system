@@ -44,7 +44,7 @@ mail.krajnc.cc:587 {
 
 mailadmin.krajnc.cc {
     handle {
-        reverse_proxy stalwart:8060
+        reverse_proxy stalwart:8080
     }
     encode gzip
 }

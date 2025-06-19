@@ -117,8 +117,7 @@ services:
       - "587"    # Submission (SMTP/TLS)
       - "993"    # IMAPS
       - "995"    # POP3S
-    ports:
-      - "8060:8080"  # Admin GUI
+      - "8080"  # Admin GUI
     networks:
       - email_network
     volumes:
