@@ -12,7 +12,7 @@ api.mrag.krajnc.cc {
 
 mailadmin.mrag.krajnc.cc {
     handle {
-        reverse_proxy 127.0.0.1:8060
+        reverse_proxy stalwart:8060
     }
     encode gzip
 }
