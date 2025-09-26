@@ -18,7 +18,7 @@ class FlashcardsOutput(BaseModel):
 class FlashcardAgent:
     def __init__(self):
         self.model = ChatOpenAI(
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             temperature=0
         )
 

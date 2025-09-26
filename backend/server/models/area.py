@@ -28,7 +28,6 @@ class Area(SQLModel, table=True):
     documents: List["Document"] = Relationship(back_populates="area",
                                                sa_relationship_kwargs={"order_by": "Document.created_at.asc()"}, )
 
-    # Connect to embeddings somehow
 
 
 class Instruction(SQLModel, table=True):

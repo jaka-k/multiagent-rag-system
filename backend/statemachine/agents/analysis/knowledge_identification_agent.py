@@ -35,7 +35,7 @@ class KnowledgeIdentificationAgent:
 
     def __init__(self):
         self.model = ChatOpenAI(
-            model="gpt-4.1",
+            model="gpt-5",
             temperature=0,
         )
         self.llm = self.model.with_structured_output(ConceptList)

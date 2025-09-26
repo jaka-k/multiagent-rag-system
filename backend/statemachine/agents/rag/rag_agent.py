@@ -20,11 +20,11 @@ class RagAgent:
         self.chat_id = chat_id
         self.area = area
         self.llm = ChatOpenAI(
-            model_name="gpt-4.1",
+            model_name="gpt-5",
             temperature=0,
             stream_usage=True,
         )
-        self.llm_mini = ChatOpenAI(model_name="gpt-4.1", temperature=0)
+        self.llm_mini = ChatOpenAI(model_name="gpt-5-mini", temperature=0)
         self.retriever_tool = get_retriever_tool
 
         self.history_aware_prompt = ChatPromptTemplate.from_messages(
