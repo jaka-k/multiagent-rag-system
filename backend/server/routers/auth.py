@@ -1,12 +1,14 @@
 from datetime import timedelta, datetime, timezone
 from typing import List
 
+import firebase_admin.auth
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+import server.core.firebase
 from server.core.config import settings
 from server.core.logger import app_logger
 from server.core.security import (
@@ -32,6 +34,10 @@ class TokenSchema(BaseModel):
 
 class LogoutResponse(BaseModel):
     ok: bool
+
+
+class FirebaseTokenResponse(BaseModel):
+    firebase_token: str
 
 
 class UserCreationRequest(BaseModel):
@@ -149,6 +155,25 @@ async def read_own_areas(
 @router.get("/status/")
 async def read_system_status(current_user: User = Depends(get_current_user)):
     return {"status": "ok"}
+
+
+@router.get("/firebase-token", response_model=FirebaseTokenResponse)
+async def get_firebase_token(
+        current_user: User = Depends(get_current_active_user),
+):
+    """
+    Exchange a valid FastAPI JWT for a Firebase Custom Token.
+    The frontend can then call signInWithCustomToken(auth, firebaseToken)
+    to obtain a Firebase Auth session, which satisfies Storage Security Rules.
+    """
+    try:
+        token_bytes: bytes = firebase_admin.auth.create_custom_token(str(current_user.id))
+        return FirebaseTokenResponse(firebase_token=token_bytes.decode())
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not create Firebase token: {e}",
+        )
 
 
 @router.post("/test-user/", tags=["dev-test"])

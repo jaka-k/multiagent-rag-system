@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     next_public_backend_domain: Optional[str] = None
     next_public_backend_url: Optional[str] = None
 
+    firebase_cred_path: Optional[str] = None
+
     grafana_domain: Optional[str] = None
     grafana_admin_password: Optional[str] = None
     grafana_admin_user: Optional[str] = None
