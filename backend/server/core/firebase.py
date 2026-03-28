@@ -5,7 +5,7 @@ from firebase_admin import credentials
 
 from server.core.config import settings
 
-_default_cred_path = Path(__file__).resolve().parents[3] / "firebaseServiceAccount.json"
+_default_cred_path = Path(__file__).resolve().parents[2] / "firebaseServiceAccount.json"
 _CRED_PATH = Path(settings.firebase_cred_path or _default_cred_path)
 _STORAGE_BUCKET = settings.next_public_firebase_bucket
 

@@ -8,7 +8,7 @@ _ENV_FILE = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=_ENV_FILE)
+    model_config = SettingsConfigDict(env_file=_ENV_FILE, extra="ignore")
 
     environment: Optional[str] = Field(default="development")
     learning_area: Optional[str] = Field(default="general")
