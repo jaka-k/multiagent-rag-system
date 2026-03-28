@@ -1,7 +1,8 @@
 COMPOSE_DEV  = docker compose -f docker-compose.dev.yml
 COMPOSE_PROD = docker compose -f docker-compose.prod.yml
 
-.PHONY: dev infra monitor stop install docker-dev help
+.PHONY: dev infra monitor stop install docker-dev help \
+        migration migrate db-rollback db-history db-current
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -56,3 +57,21 @@ logs: ## Tail logs for all running infra containers
 
 reset-db: ## Drop and recreate the vector DB collections
 	cd backend && poetry run reset-vector-db
+
+# ── Database migrations (Alembic) ────────────────────────────────────────────
+
+migration: ## Autogenerate a migration (usage: make migration msg="add foo column")
+	@test -n "$(msg)" || (echo "Usage: make migration msg=\"description\""; exit 1)
+	cd backend && poetry run alembic revision --autogenerate -m "$(msg)"
+
+migrate: ## Apply all pending migrations to head
+	cd backend && poetry run alembic upgrade head
+
+db-rollback: ## Roll back the last applied migration
+	cd backend && poetry run alembic downgrade -1
+
+db-history: ## Show full migration history
+	cd backend && poetry run alembic history --verbose
+
+db-current: ## Show the current migration revision of the live DB
+	cd backend && poetry run alembic current
