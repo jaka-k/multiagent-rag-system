@@ -13,6 +13,11 @@ const firebaseAuth = getAuth(app)
  * immediately, so it is safe to call before every upload.
  */
 export async function signInToFirebase(): Promise<void> {
+  // Wait for Firebase to restore any persisted session from indexedDB before
+  // checking currentUser. Without this, currentUser is always null on page load
+  // even if a valid session already exists, causing an unnecessary token fetch.
+  await firebaseAuth.authStateReady()
+
   if (firebaseAuth.currentUser) {
     return
   }
