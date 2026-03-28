@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     postgres_user: Optional[str] = None
     postgres_password: Optional[str] = None
     postgres_db: Optional[str] = None
+    postgres_port: int = 5432
 
     hashing_secret_key: Optional[str] = None
     hashing_algorithm: str = "HS512"
@@ -32,7 +33,7 @@ class Settings(BaseSettings):
 
     anki_url: Optional[str] = None
     chroma_host: Optional[str] = None
-    chroma_port: Optional[int] = None
+    chroma_port: int = 8000
 
     next_public_firebase_api_key: Optional[str] = None
     next_public_firebase_project_id: Optional[str] = None
@@ -50,20 +51,6 @@ class Settings(BaseSettings):
 
     otel_enabled: bool = False
     otel_endpoint: str = "otelcol:4317"
-
-    @property
-    def database_url(self) -> Optional[str]:
-        if all(
-                [
-                    self.postgres_user,
-                    self.postgres_password,
-                    self.postgres_host,
-                    self.postgres_db,
-                ]
-        ):
-            # TODO: NOT USED, CONSIDER asyncpg
-            return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}/{self.postgres_db}"
-        return None
 
 
 settings = Settings()
