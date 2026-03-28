@@ -23,6 +23,7 @@ def extract_chapters(file_path):
 
         toc_file_used = None
         toc_content = None
+        title = ""
 
         for toc_file in toc_files:
             if toc_file.endswith(".ncx"):
@@ -99,7 +100,7 @@ def extract_chapters(file_path):
                                 "content": chapter_text,
                                 "label": file_name,
                                 "parent_label": "",
-                                "playOrder": -1,
+                                "play_order": -1,
                             }
                         )
 

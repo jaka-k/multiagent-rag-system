@@ -2,7 +2,7 @@ from typing import List
 
 
 class ChapterDTO:
-    def __init__(self, label: str, parent_label: str, content: str, play_order: str):
+    def __init__(self, label: str, parent_label: str, content: str, play_order: int):
         self.label = label
         self.parent_label = parent_label
         self.content = content

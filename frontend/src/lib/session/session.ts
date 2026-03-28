@@ -32,5 +32,6 @@ export async function updateSession(newToken: string) {
 
 export async function deleteSession() {
   const cookieStore = await cookies()
+  cookieStore.delete('token')
   cookieStore.delete('refreshToken')
 }

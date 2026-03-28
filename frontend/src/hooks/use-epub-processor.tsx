@@ -12,6 +12,7 @@ type UseEpubProcessor = {
   loading: boolean
   error: string | null
   processEpub: (file: File) => Promise<void>
+  resetMetadata: () => void
 }
 
 /**
@@ -83,7 +84,8 @@ const useEpubProcessor = (): UseEpubProcessor => {
     metadata,
     loading,
     error,
-    processEpub
+    processEpub,
+    resetMetadata: () => setMetadata(null)
   }
 }
 

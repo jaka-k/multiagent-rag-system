@@ -40,7 +40,8 @@ export function FileUpload() {
     metadata: metadataFromWorker,
     loading,
     error,
-    processEpub
+    processEpub,
+    resetMetadata
   } = useEpubProcessor()
 
   const {
@@ -120,7 +121,8 @@ export function FileUpload() {
           '',
         file_path: mainFileMetadata.fullPath,
         file_size: mainFileMetadata.size,
-        cover_image: createPersistentDownloadUrl(coverFileMetadata)
+        cover_image: createPersistentDownloadUrl(coverFileMetadata),
+        author: metadataFromWorker.metadata.creator
       }
 
       const response = await createDocument(request)
@@ -137,7 +139,7 @@ export function FileUpload() {
 
       if (fileInputRef.current) fileInputRef.current.value = ''
       setFile(undefined)
-      metadataFromWorker.coverImage = undefined
+      resetMetadata()
     } catch (err) {
       logger.error({ err }, 'Epub upload failed in handler')
       toast({

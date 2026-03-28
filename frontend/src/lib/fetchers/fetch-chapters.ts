@@ -22,15 +22,9 @@ export const getChapterQueue = async (chatId: string) => {
 }
 
 export const getSingleChapter = async (chapterTag: string) => {
-  const response = await fetchWithAuth<{ chapter: Chapter }>(`/api/chapter`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      chapter_tag: chapterTag
-    })
-  })
+  const response = await fetchWithAuth<{ chapter: Chapter }>(
+    `/api/chapter?chapter_tag=${encodeURIComponent(chapterTag)}`
+  )
 
   if (!response.ok) {
     logger.error('Error while fetching chapter data')

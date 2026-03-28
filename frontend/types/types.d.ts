@@ -12,6 +12,7 @@ export interface Document {
   areaId: string
   createdAt: Date
   title: string
+  author?: string
   fileSize: number
   description: string
   coverImage: string
@@ -113,6 +114,7 @@ export type CreateDocumentRequest = {
   file_path: string
   file_size: number
   cover_image: string
+  author?: string
 }
 
 export type CreateDocumentResponse = {
