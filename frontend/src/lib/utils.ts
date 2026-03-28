@@ -44,7 +44,7 @@ export function base64ToUint8Array(base64: string): Uint8Array {
 
     return bytes
   } catch (error) {
-    logger.error('Base64 decoding failed:', error)
+    logger.error({ err: error }, 'Base64 decoding failed')
     return new Uint8Array()
   }
 }
@@ -91,7 +91,7 @@ export function getCoverMetadata(
   const coverFilename = `${noSpaceFilename(epubFile.name.split('.')[0])}.${ext}`
 
   const blobData = base64ToUint8Array(coverImage?.base64 || '')
-  const blob = new Blob([blobData], {
+  const blob = new Blob([blobData.buffer as ArrayBuffer], {
     type
   })
   const coverFile = new File([blob], coverFilename, {

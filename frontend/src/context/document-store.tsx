@@ -61,7 +61,7 @@ const useDocumentStore = create(
             }
           }))
         } catch (error) {
-          logger.error(`Failed to fetch documents for area ${areaId}:`, error)
+          logger.error({ err: error }, `Failed to fetch documents for area ${areaId}`)
 
           set((state) => ({
             errorStates: {

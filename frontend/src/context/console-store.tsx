@@ -80,7 +80,7 @@ const useConsoleStore = create(
             })
           }
         } catch (error) {
-          logger.error('Failed to fetch console queues:', error)
+          logger.error({ err: error }, 'Failed to fetch console queues')
         }
       },
 

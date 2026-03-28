@@ -19,6 +19,7 @@ class EmbeddingStatus(str, Enum):
 class Document(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     title: str
+    author: str = Field(default=None, nullable=True)
     user_id: uuid.UUID = Field(foreign_key="user.id")
     area_id: uuid.UUID = Field(foreign_key="area.id")
     description: str = Field(default=None, nullable=True)

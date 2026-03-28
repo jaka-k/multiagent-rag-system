@@ -37,7 +37,7 @@ const useChatStore = create<ChatStoreState>()(
             isLoading: false
           })
         } catch (error) {
-          logger.error('Failed to fetch chats:', error)
+          logger.error({ err: error }, 'Failed to fetch chats')
           set({
             error: error instanceof Error ? error.message : 'Unknown error',
             isLoading: false

@@ -4,8 +4,12 @@ from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_ENV_FILE = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
+
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=_ENV_FILE)
+
     environment: Optional[str] = Field(default="development")
     learning_area: Optional[str] = Field(default="general")
 
@@ -42,6 +46,9 @@ class Settings(BaseSettings):
 
     grafana_api_key: Optional[str] = None
 
+    otel_enabled: bool = False
+    otel_endpoint: str = "otelcol:4317"
+
     @property
     def database_url(self) -> Optional[str]:
         if all(
@@ -52,13 +59,9 @@ class Settings(BaseSettings):
                     self.postgres_db,
                 ]
         ):
-            # TODO: NOT USED, CONSDIER asyncpg
+            # TODO: NOT USED, CONSIDER asyncpg
             return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}/{self.postgres_db}"
         return None
-
-    class Config:
-        env_file = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
-        model_config = SettingsConfigDict(env_file=str(Path(__file__).resolve().parent.parent.parent.parent / ".env"))
 
 
 settings = Settings()

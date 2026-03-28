@@ -12,7 +12,7 @@ def log_empty_chapters(chapters):
                 {
                     "file": chapter_info.get("file", "unknown"),
                     "chapter": chapter_info["label"],
-                    "playOrder": chapter_info["playOrder"],
+                    "play_order": chapter_info["play_order"],
                 }
             )
 
@@ -20,7 +20,7 @@ def log_empty_chapters(chapters):
         logger.info("⛔️ Chapters with empty or very short content:")
         for info in empty_chapter_info:
             logger.info(
-                f"File: {info['file']}, Chapter: {info['chapter']}, PlayOrder: {info['playOrder']}"
+                f"File: {info['file']}, Chapter: {info['chapter']}, PlayOrder: {info['play_order']}"
             )
 
     else:

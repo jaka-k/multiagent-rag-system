@@ -58,7 +58,7 @@ export default function CreateChat({
         title: 'Chat was not created!',
         description: 'Something went wrong while creating your chat. 👀'
       })
-      logger.error('Chat could not be created', error)
+      logger.error({ err: error }, 'Chat could not be created')
     }
   }
 

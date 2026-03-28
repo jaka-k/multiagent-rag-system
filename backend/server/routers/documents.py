@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from fastapi.params import Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
@@ -26,11 +26,7 @@ class EpubUploadRequest(BaseModel):
     file_path: str
     file_size: int
     cover_image: str
-
-
-class ChapterRequest(BaseModel):
-    chapter_tag: str
-    document_id: str
+    author: Optional[str] = None
 
 
 class ChapterRead(SQLModel):
@@ -61,7 +57,8 @@ async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = D
                        description=body["description"],
                        file_path=body["file_path"],
                        file_size=body["file_size"],
-                       cover_image=body["cover_image"])
+                       cover_image=body["cover_image"],
+                       author=body.get("author"))
         ## TODO: Handle all endpoints like this
     except Exception as e:
         print(e)
@@ -82,6 +79,7 @@ async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = D
 
 @router.post("/embedding/{document_id}")
 async def embedd_epub(document_id: str, background_tasks: BackgroundTasks,
+                      current_user: User = Depends(get_current_active_user),
                       session: AsyncSession = Depends(get_session)):
     stmt = select(Document).where(Document.id == document_id)
     result = await session.execute(stmt)
@@ -90,19 +88,27 @@ async def embedd_epub(document_id: str, background_tasks: BackgroundTasks,
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    if document.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorised to embed this document")
+
     background_tasks.add_task(background_embedding_process, document_id, session)
 
     return {"message": "Embedding started", "id": document_id}
 
 
 @router.get("/embedding-status/{document_id}")
-async def embedding_status(document_id: str, session: AsyncSession = Depends(get_session)):
+async def embedding_status(document_id: str,
+                           current_user: User = Depends(get_current_active_user),
+                           session: AsyncSession = Depends(get_session)):
     stmt = select(Document).where(Document.id == document_id)
     result = await session.execute(stmt)
     document = result.scalar_one_or_none()
 
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    if document.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorised to view this document")
 
     if document.embedding_status == EmbeddingStatus.IDLE:
         raise HTTPException(status_code=500, detail="Document embedding stopped abruptly")
@@ -125,16 +131,15 @@ async def get_document(document_id: str, session: AsyncSession = Depends(get_ses
 
 
 @router.get("/chapter")
-async def get_chapter(request: ChapterRequest, session: AsyncSession = Depends(get_session)):
-    body = request.model_dump()
-    stmt = select(Chapter).where(Chapter.chapter_tag == body["chapter_tag"])
+async def get_chapter(chapter_tag: str = Query(...), session: AsyncSession = Depends(get_session)):
+    stmt = select(Chapter).where(Chapter.chapter_tag == chapter_tag)
     result = await session.execute(stmt)
 
     chapter = result.scalar_one_or_none()
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
 
-    return chapter
+    return {"chapter": chapter}
 
 
 @router.get("/chapter-queue/{chat_id}", response_model=ChapterQueueRead)

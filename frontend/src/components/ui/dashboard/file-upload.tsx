@@ -40,7 +40,8 @@ export function FileUpload() {
     metadata: metadataFromWorker,
     loading,
     error,
-    processEpub
+    processEpub,
+    resetMetadata
   } = useEpubProcessor()
 
   const {
@@ -120,13 +121,14 @@ export function FileUpload() {
           '',
         file_path: mainFileMetadata.fullPath,
         file_size: mainFileMetadata.size,
-        cover_image: createPersistentDownloadUrl(coverFileMetadata)
+        cover_image: createPersistentDownloadUrl(coverFileMetadata),
+        author: metadataFromWorker.metadata.creator
       }
 
       const response = await createDocument(request)
 
       if (!response.id) {
-        logger.error('Document creation failed', response)
+        logger.error({ err: response }, 'Document creation failed')
         toast({
           title: 'Document creation failed! 🫣',
           description: 'This is an invalid app state and should not happen!'
@@ -137,9 +139,9 @@ export function FileUpload() {
 
       if (fileInputRef.current) fileInputRef.current.value = ''
       setFile(undefined)
-      metadataFromWorker.coverImage = undefined
+      resetMetadata()
     } catch (err) {
-      logger.error('Epub upload failed in handler:', err)
+      logger.error({ err }, 'Epub upload failed in handler')
       toast({
         title: 'Epub upload failed in handler! 🫣',
         description:

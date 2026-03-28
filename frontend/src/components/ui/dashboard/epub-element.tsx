@@ -55,12 +55,12 @@ function EpubElement({ doc }: { doc: Document }) {
             clearInterval(interval)
           }
         } catch (error) {
-          logger.error('Failed to fetch embedding status:', error)
+          logger.error({ err: error }, 'Failed to fetch embedding status')
           clearInterval(interval)
         }
       }, 500)
     } catch (error) {
-      logger.error('Embedding creation failed:', error)
+      logger.error({ err: error }, 'Embedding creation failed')
     }
   }
 

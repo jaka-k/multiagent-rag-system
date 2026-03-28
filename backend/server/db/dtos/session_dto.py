@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from server.models.flashcard import Flashcard
 
@@ -12,17 +12,18 @@ from server.models.flashcard import Flashcard
 
 
 class MessageDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     session_id: uuid.UUID
     role: str
     content: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class SessionDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     total_tokens: int
     title: str
@@ -32,12 +33,9 @@ class SessionDTO(BaseModel):
     messages: List[MessageDTO]
     area_id: uuid.UUID
 
-    class Config:
-        from_attributes = True
 
 class FQueueDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     flashcards: List[Flashcard]
-
-    class Config:
-        from_attributes = True
