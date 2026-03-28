@@ -39,7 +39,7 @@ export function useFirebaseUpload(): UseFirebaseUploadReturn {
           setUploadProgress(progress)
         },
         (error: Error) => {
-          logger.error('Firebase error:', error)
+          logger.error({ err: error }, 'Firebase error')
           throw error
         }
       )
@@ -73,7 +73,7 @@ export function useFirebaseUpload(): UseFirebaseUploadReturn {
           setUploadCoverProgress(progress)
         },
         (error: Error) => {
-          logger.error('Firebase cover error:', error)
+          logger.error({ err: error }, 'Firebase cover error')
           throw error
         }
       )

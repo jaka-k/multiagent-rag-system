@@ -91,7 +91,7 @@ export function Chat({ chatData }: { chatData: ChatData }) {
           appendMetadataMessage(messageData.metadata)
         }
       } catch (error) {
-        logger.error('Error parsing WebSocket message:', error)
+        logger.error({ err: error }, 'Error parsing WebSocket message')
       }
     },
     onClose: () => {},

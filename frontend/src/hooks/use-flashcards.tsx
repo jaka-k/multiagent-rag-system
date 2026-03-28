@@ -48,7 +48,7 @@ export function useFlashcards(
         removeFlashcardFromStore(chatId, id)
       }
     } catch (err) {
-      logger.error(`Failed to add flashcard ${id}:`, err)
+      logger.error({ err }, `Failed to add flashcard ${id}`)
 
       toast({
         title: 'Something went wrong! 📛',
@@ -75,7 +75,7 @@ export function useFlashcards(
         removeFlashcardFromStore(chatId, id)
       }
     } catch (err) {
-      logger.error(`Failed to delete flashcard ${id}:`, err)
+      logger.error({ err }, `Failed to delete flashcard ${id}`)
 
       toast({
         title: 'Something went wrong! 📛',

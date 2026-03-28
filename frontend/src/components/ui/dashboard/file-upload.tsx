@@ -126,7 +126,7 @@ export function FileUpload() {
       const response = await createDocument(request)
 
       if (!response.id) {
-        logger.error('Document creation failed', response)
+        logger.error({ err: response }, 'Document creation failed')
         toast({
           title: 'Document creation failed! 🫣',
           description: 'This is an invalid app state and should not happen!'
@@ -139,7 +139,7 @@ export function FileUpload() {
       setFile(undefined)
       metadataFromWorker.coverImage = undefined
     } catch (err) {
-      logger.error('Epub upload failed in handler:', err)
+      logger.error({ err }, 'Epub upload failed in handler')
       toast({
         title: 'Epub upload failed in handler! 🫣',
         description:

@@ -7,7 +7,7 @@ export async function register() {
       logger.info('Successfully imported instrumentation.node.ts')
       node.register()
     } catch (error) {
-      logger.error('Failed to import instrumentation.node.ts', error)
+      logger.error({ err: error }, 'Failed to import instrumentation.node.ts')
     }
   }
 }

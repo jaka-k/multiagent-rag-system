@@ -73,7 +73,7 @@ const useEpubProcessor = (): UseEpubProcessor => {
         }
       })
     } catch (err) {
-      logger.error('Error processing EPUB:', err)
+      logger.error({ err }, 'Error processing EPUB')
       setError((err as Error).message || 'Unknown error')
       setLoading(false)
     }

@@ -55,7 +55,7 @@ export async function fetchWithAuth<T>(
             refreshedToken: newToken
           }
         } catch (e) {
-          logger.error('Error parsing response data in retry:', e)
+          logger.error({ err: e }, 'Error parsing response data in retry')
 
           return {
             ok: retryResponse.ok,
@@ -65,7 +65,7 @@ export async function fetchWithAuth<T>(
         }
       }
     } catch (error) {
-      logger.error('Error during token refresh:', error)
+      logger.error({ err: error }, 'Error during token refresh')
       throw new Error('Authentication failed')
     }
   }
@@ -80,7 +80,7 @@ export async function fetchWithAuth<T>(
       refreshedToken: null
     }
   } catch (e) {
-    logger.error('Error parsing response data:', e)
+    logger.error({ err: e }, 'Error parsing response data')
     return {
       ok: response.ok,
       data: {} as T,

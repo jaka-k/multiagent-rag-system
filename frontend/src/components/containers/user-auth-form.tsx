@@ -32,7 +32,7 @@ export function UserAuthForm() {
       await signIn(formData)
     } catch (error: unknown) {
       if (error instanceof Error) {
-        logger.error('Handled sign in error', error)
+        logger.error({ err: error }, 'Handled sign in error')
         setErrorMessage(error.message)
       } else {
         logger.error(
