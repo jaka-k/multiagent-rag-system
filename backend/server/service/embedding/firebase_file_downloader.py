@@ -1,19 +1,10 @@
 import logging
 import os
 import tempfile
-from pathlib import Path
 
-import firebase_admin
-from firebase_admin import credentials, storage
+from firebase_admin import storage
 
-default_path = Path(__file__).resolve().parents[3] / "firebaseServiceAccount.json"
-cred_path = Path(os.getenv("FIREBASE_CRED_PATH", default_path))
-
-cred = credentials.Certificate(cred_path)
-
-firebase_admin.initialize_app(cred, {
-    'storageBucket': 'ninja-firegram-49725.firebasestorage.app'
-})
+import server.core.firebase  # noqa: F401 — ensures Firebase app is initialised
 
 
 class FirebaseFileDownloader:

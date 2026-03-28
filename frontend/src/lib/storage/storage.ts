@@ -8,4 +8,4 @@ const app = initializeApp(firebaseConfig)
 // Initialize Cloud Storage and get a reference to the service
 const storage = getStorage(app)
 
-export { storage }
+export { app, storage }
