@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-RUN pip install poetry==2.0.1
+RUN pip install poetry==2.1.3
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
@@ -8,13 +8,17 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache \
     PYTHONPATH=/backend
 
+RUN apt-get update && \
+    apt-get install -y libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /backend
 
-COPY . .
+COPY pyproject.toml poetry.lock ./
 
 RUN touch README.md
 
-RUN poetry install
+RUN poetry install --no-interaction
 
 COPY . .
 

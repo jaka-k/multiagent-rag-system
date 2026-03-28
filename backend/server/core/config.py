@@ -42,6 +42,9 @@ class Settings(BaseSettings):
 
     grafana_api_key: Optional[str] = None
 
+    otel_enabled: bool = False
+    otel_endpoint: str = "otelcol:4317"
+
     @property
     def database_url(self) -> Optional[str]:
         if all(

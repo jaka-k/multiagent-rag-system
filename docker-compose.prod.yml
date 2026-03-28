@@ -1,4 +1,5 @@
 services:
+  # ── App services ────────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -33,6 +34,7 @@ services:
     networks:
       - app_network
 
+  # ── Infrastructure ──────────────────────────────────────────────────────────
   postgres-server:
     image: postgres:16.4-alpine
     container_name: postgres
@@ -92,11 +94,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "993:993"    # IMAPS
-      - "995:995"    # POP3S
-      - "587:587"    # SMTP Submission (STARTTLS)
     networks:
-      - email_network
       - app_network
       - monitoring_network
     depends_on:
@@ -108,31 +106,9 @@ services:
       - caddy_config:/config
     restart: unless-stopped
 
-  stalwart:
-    image: stalwartlabs/stalwart:latest
-    container_name: stalwart
-    restart: unless-stopped
-    expose:
-      - "25"      # SMTP
-      - "587"    # Submission (SMTP/TLS)
-      - "993"    # IMAPS
-      - "995"    # POP3S
-      - "8080"  # Admin GUI
-    networks:
-      - email_network
-    volumes:
-      - stalwart_data:/data
-      - stalwart_config:/etc/stalwart
-      - stalwart_logs:/logs
-    environment:
-      STALWART_SERVER_HOSTNAME: mail.krajnc.cc
-      STALWART_DIRECTORY_PROVIDER: internal
-      STALWART_ADMIN_DISABLE_BASIC_AUTH: "true"
-
-
-
-
+  # ── Monitoring (started only with --profile monitoring) ────────────────────
   grafana:
+    profiles: [monitoring]
     image: grafana/grafana:latest
     container_name: grafana
     networks:
@@ -159,6 +135,7 @@ services:
       - prometheus
 
   loki:
+    profiles: [monitoring]
     image: grafana/loki:latest
     container_name: loki
     command:
@@ -179,11 +156,9 @@ services:
     volumes:
       - ./loki-config.yaml:/etc/loki/loki-config.yaml
       - loki_data:/loki
-    depends_on:
-      - backend
-      - frontend
 
   tempo:
+    profiles: [monitoring]
     image: grafana/tempo:latest
     container_name: tempo
     command: [ "-config.file=/etc/tempo-config.yaml" ]
@@ -206,6 +181,7 @@ services:
       - loki
 
   prometheus:
+    profiles: [monitoring]
     image: prom/prometheus:latest
     container_name: prometheus
     networks:
@@ -222,6 +198,7 @@ services:
       - loki
 
   otelcol:
+    profiles: [monitoring]
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otelcol
     networks:
@@ -241,11 +218,6 @@ services:
       - loki
       - tempo
       - prometheus
-      - backend
-      - frontend
-
-
-
 
 volumes:
   postgres_data:
@@ -257,13 +229,9 @@ volumes:
   caddy_data:
   caddy_config:
   anki_data:
-  stalwart_data:
-  stalwart_config:
-  stalwart_logs:
+
 networks:
   app_network:
     driver: bridge
   monitoring_network:
-    driver: bridge
-  email_network:
     driver: bridge
