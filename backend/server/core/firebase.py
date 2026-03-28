@@ -1,12 +1,13 @@
-import os
 from pathlib import Path
 
 import firebase_admin
 from firebase_admin import credentials
 
+from server.core.config import settings
+
 _default_cred_path = Path(__file__).resolve().parents[3] / "firebaseServiceAccount.json"
-_CRED_PATH = Path(os.getenv("FIREBASE_CRED_PATH", _default_cred_path))
-_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "ninja-firegram-49725.firebasestorage.app")
+_CRED_PATH = Path(settings.firebase_cred_path or _default_cred_path)
+_STORAGE_BUCKET = settings.next_public_firebase_bucket
 
 
 def _get_or_create_app() -> firebase_admin.App:
