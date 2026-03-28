@@ -4,7 +4,7 @@ import tempfile
 
 from firebase_admin import storage
 
-import server.core.firebase  # noqa: F401 — ensures Firebase app is initialised
+import server.core.firebase
 
 
 class FirebaseFileDownloader:

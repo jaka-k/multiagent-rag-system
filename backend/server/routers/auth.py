@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-import server.core.firebase  # noqa: F401 — ensures Firebase app is initialised
+import server.core.firebase
 from server.core.config import settings
 from server.core.logger import app_logger
 from server.core.security import (
