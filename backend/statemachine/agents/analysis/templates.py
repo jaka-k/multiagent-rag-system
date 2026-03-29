@@ -1,5 +1,3 @@
-from langchain_core.prompts import PromptTemplate
-
 KNOWLEDGE_TO_CARDS_PROMPT_V2 = """
                                 You are a *Flash-card Concept Builder*.
                                 

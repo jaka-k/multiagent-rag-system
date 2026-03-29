@@ -1,11 +1,10 @@
 import uuid
+from typing import AsyncIterator
 
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.beta.runnables.context import Context
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
-from langchain_core.prompts import MessagesPlaceholder
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
-from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableLambda
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.retriever import get_retriever_tool
@@ -19,12 +18,14 @@ class RagAgent:
     def __init__(self, chat_id: uuid.UUID, area: str):
         self.chat_id = chat_id
         self.area = area
-        self.llm = ChatOpenAI(
-            model_name="gpt-5",
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro",
             temperature=0,
-            stream_usage=True,
         )
-        self.llm_mini = ChatOpenAI(model_name="gpt-5-mini", temperature=0)
+        self.llm_flash = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0,
+        )
         self.retriever_tool = get_retriever_tool
 
         self.history_aware_prompt = ChatPromptTemplate.from_messages(
@@ -41,32 +42,17 @@ class RagAgent:
             ]
         )
 
-        self.history_aware_retriever = (self.history_aware_prompt | self.llm_mini | JsonOutputParser()
-                                        )
+        self.history_aware_retriever = (
+            self.history_aware_prompt | self.llm_flash | JsonOutputParser()
+        )
         self.rewrite_chain = RunnableLambda(self.resolve_query)
-        self.retrieval_chain = RunnableLambda(self.retrieve)
-        self.qa_chain = (
-                RunnableParallel(
-                    modified_input=lambda x: x["query"],
-                    context=self.retrieval_chain,
-                ) | Context.setter("retriever_context")
-                | self.rag_prompt
-                | self.llm | StrOutputParser() | {
-                    "result": RunnablePassthrough(),
-                    "context": Context.getter("retriever_context")
-                }
-        )
-
-        self.agent_chain = (
-                self.rewrite_chain | self.qa_chain
-        )
+        self.agent_chain = RunnableLambda(self._run_agent)
 
     def resolve_query(self, inp):
         result = self.history_aware_retriever.invoke({
-            "chat_history": inp["chat_history"][-3:],   # list of messages
+            "chat_history": inp["chat_history"][-3:],
             "input":        inp["input"]
         })
-
 
         if result["needs_more_history"]:
             result = self.history_aware_retriever.invoke({
@@ -92,6 +78,24 @@ class RagAgent:
         retriever = self.retriever_tool(self.area, k)
         docs = retriever.invoke(full_query)
         return docs
+
+    async def _run_agent(self, inp) -> AsyncIterator[dict]:
+        """
+        Async generator: yields {"result": token} for each LLM token,
+        then yields {"context": docs} once at the end.
+        """
+        rewritten = self.resolve_query(inp)
+
+        docs = self.retrieve(rewritten)
+
+        qa_chain = self.rag_prompt | self.llm | StrOutputParser()
+        async for token in qa_chain.astream({
+            "modified_input": rewritten["query"],
+            "context": docs,
+        }):
+            yield {"result": token}
+
+        yield {"context": docs}
 
     async def process_chain_input(self, user_input: str, thread_id: uuid.UUID):
         chat_history = await get_chat_history(self.chat_id)

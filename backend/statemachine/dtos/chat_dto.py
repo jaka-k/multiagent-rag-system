@@ -16,15 +16,9 @@ class MetaDataDTO(BaseModel):
 
 
 class ChatOutputStreamDTO:
-    def __init__(self, raw_stream, metadata):
+    def __init__(self, raw_stream, metadata: "MetaDataDTO"):
         self.raw_stream = raw_stream
-
-        self.metadata = MetaDataDTO(
-            total_tokens=metadata.total_tokens,
-            prompt_tokens=metadata.prompt_tokens,
-            completion_tokens=metadata.completion_tokens,
-            total_cost=metadata.total_cost,
-        )
+        self.metadata = metadata
 
     async def stream_messages(self):
         try:

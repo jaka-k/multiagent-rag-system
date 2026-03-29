@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 30 * 24 * 60
 
-    openai_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
     langchain_api_key: Optional[str] = None
     langchain_project: Optional[str] = None
     langchain_endpoint: Optional[str] = None
