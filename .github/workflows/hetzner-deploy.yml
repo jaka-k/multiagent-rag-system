@@ -12,17 +12,17 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HETZNER_HOST }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd /home/app/multiagent-rag-system/
-            git pull origin master
-            docker compose -f docker-compose.prod.yml up -d --build
-            docker builder prune -f
-            docker image prune --force
+#
+#      - name: Deploy via SSH
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.HETZNER_HOST }}
+#          username: root
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          port: 22
+#          script: |
+#            cd /home/app/multiagent-rag-system/
+#            git pull origin master
+#            docker compose -f docker-compose.prod.yml up -d --build
+#            docker builder prune -f
+#            docker image prune --force
