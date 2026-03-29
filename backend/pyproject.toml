@@ -38,11 +38,11 @@ firebase-admin = "^6.6.0"
 
 
 [tool.poetry.group.statemachine.dependencies]
-langchain = "^0.3.27"
-langgraph = "^0.6.9"
-langchain-openai = "^0.3.35"
-langchain-community = "^0.3.31"
-langchain-chroma = "^0.2"
+langchain = "^1.2"
+langgraph = "^1.1"
+langchain-google-genai = "^4.2"
+langchain-community = "^0.4"
+langchain-chroma = "^1.1"
 orjson = "^3.10"
 psycopg = { version = "^3.2.4", extras = ["binary"] }
 psycopg-pool = "^3.2.2"

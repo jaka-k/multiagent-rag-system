@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
-from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import ValidationError, BaseModel, Field
 
 from statemachine.agents.analysis.templates import KNOWLEDGE_TO_CARDS_PROMPT_V2
@@ -34,8 +34,8 @@ class KnowledgeIdentificationAgent:
     """
 
     def __init__(self):
-        self.model = ChatOpenAI(
-            model="gpt-5",
+        self.model = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro",
             temperature=0,
         )
         self.llm = self.model.with_structured_output(ConceptList)

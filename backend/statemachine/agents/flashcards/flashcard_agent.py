@@ -1,8 +1,8 @@
 import json
 from typing import List
 
-from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field, ValidationError
 
 from server.core.logger import app_logger
@@ -17,9 +17,9 @@ class FlashcardsOutput(BaseModel):
 
 class FlashcardAgent:
     def __init__(self):
-        self.model = ChatOpenAI(
-            model="gpt-5-mini",
-            temperature=0
+        self.model = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0,
         )
 
         self.llm = self.model.with_structured_output(FlashcardsOutput)
