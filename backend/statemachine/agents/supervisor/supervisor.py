@@ -1,6 +1,6 @@
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.constants import START, END
+from server.core.config import LLM_MODEL
 from langgraph.graph import StateGraph
 
 from statemachine.agents.analysis.knowledge_identification_agent import KnowledgeIdentificationAgent
@@ -19,7 +19,7 @@ class SupervisorAgent:
         self.web_search_agent = WebSearchAgent()
         self.summarizer_agent = SummarizerAgent()
 
-        self.supervisor_llm = ChatOpenAI(model="gpt-5", temperature=0).with_structured_output(NuggetList)
+        self.supervisor_llm = ChatGoogleGenerativeAI(model=LLM_MODEL, temperature=0).with_structured_output(NuggetList)
         self.knowledge_gaps_prompt = MEMORIZABLE_KNOWLEDGE_PROMPT
         self.knowledge_gaps_chain = self.knowledge_gaps_prompt | self.supervisor_llm
 
