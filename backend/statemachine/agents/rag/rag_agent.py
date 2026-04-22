@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from server.core.config import LLM_MODEL, LLM_FAST_MODEL
 from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.retriever import get_retriever_tool
 from statemachine.agents.rag.templates import (
@@ -19,11 +20,11 @@ class RagAgent:
         self.chat_id = chat_id
         self.area = area
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
+            model=LLM_MODEL,
             temperature=0,
         )
         self.llm_flash = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model=LLM_FAST_MODEL,
             temperature=0,
         )
         self.retriever_tool = get_retriever_tool

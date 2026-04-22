@@ -54,3 +54,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+LLM_MODEL = "gemini-2.5-pro"
+LLM_FAST_MODEL = "gemini-2.5-flash"
