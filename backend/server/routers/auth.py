@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta, datetime, timezone
 from typing import List
 
@@ -44,6 +45,13 @@ class UserCreationRequest(BaseModel):
     mail: str
     user: str
     password: str
+
+
+class UserResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    username: str
+    created_at: datetime
 
 
 router = APIRouter()
@@ -176,25 +184,37 @@ async def get_firebase_token(
         )
 
 
-@router.post("/test-user/", tags=["dev-test"])
-async def create_test_user(
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(
         request: UserCreationRequest,
         session: AsyncSession = Depends(get_session),
 ):
-    body = request.model_dump()
+    existing = await session.exec(
+        select(User).where(
+            (User.email == request.mail) | (User.username == request.user)
+        )
+    )
+    if existing.one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with that email or username already exists.",
+        )
 
-    test_user = User(
-        email=body["mail"],
-        username=body["user"],
-        hashed_password=get_password_hash(body["password"]),
+    new_user = User(
+        email=request.mail,
+        username=request.user,
+        hashed_password=get_password_hash(request.password),
         disabled=False,
     )
-
-    session.add(test_user)
-
+    session.add(new_user)
     await session.commit()
-    app_logger.info(
-        f"Test user created with username: {test_user.username} and password: 'admin'"
+    await session.refresh(new_user)
+
+    app_logger.info(f"New user registered: {new_user.username}")
+    return UserResponse(
+        id=new_user.id,
+        email=new_user.email,
+        username=new_user.username,
+        created_at=new_user.created_at,
     )
 
-    return {"status": "ok"}
