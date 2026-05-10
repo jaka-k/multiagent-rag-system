@@ -86,14 +86,13 @@ async def refresh_access_token(
         refresh_data: RefreshTokenSchema,
         session: AsyncSession = Depends(get_session),
 ):
-    print("refresh_data Y21", refresh_data)
     stmt = select(Token).where(
         Token.token == refresh_data.refresh_token,
         Token.revoked == False,
         Token.expires_at > datetime.now(timezone.utc))
 
-    result = await session.execute(stmt)
-    token = result.scalar_one_or_none()
+    result = await session.exec(stmt)
+    token = result.one_or_none()
 
     if not token:
         print("Token Y22", token)
@@ -128,15 +127,15 @@ async def logout_user(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    ## TODO: FIX
     stmt = select(Token).where(Token.user_id == current_user.id)
-    result = await session.execute(stmt)
+    result = await session.exec(stmt)
+    tokens = result.all()
 
-    if not result.scalars().all():
+    if not tokens:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No active session found."
         )
-    for token in result:
+    for token in tokens:
         await session.delete(token)
 
     await session.commit()
@@ -155,9 +154,8 @@ async def read_own_areas(
         session: AsyncSession = Depends(get_session),
 ):
     stmt = select(Area).where(Area.user_id == current_user.id)
-    result = await session.execute(stmt)
-
-    return result.scalars().all()
+    result = await session.exec(stmt)
+    return result.all()
 
 
 @router.get("/status/")
