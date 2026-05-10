@@ -4,8 +4,6 @@ import tempfile
 
 from firebase_admin import storage
 
-import server.core.firebase
-
 
 class FirebaseFileDownloader:
     def __init__(self):
