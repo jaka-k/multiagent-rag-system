@@ -57,130 +57,7 @@ class UserResponse(BaseModel):
 router = APIRouter()
 
 
-@router.post("/token", response_model=TokenSchema)
-async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(),
-        session: AsyncSession = Depends(get_session),
-):
-    user = await authenticate_user(session, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(
-        data={"sub": str(user.id)},
-        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
-    )
-    refresh_token = await create_refresh_token(session, user)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "refresh_token": refresh_token.token,
-    }
-
-
-@router.post("/refresh", response_model=TokenSchema)
-async def refresh_access_token(
-        refresh_data: RefreshTokenSchema,
-        session: AsyncSession = Depends(get_session),
-):
-    stmt = select(Token).where(
-        Token.token == refresh_data.refresh_token,
-        Token.revoked == False,
-        Token.expires_at > datetime.now(timezone.utc))
-
-    result = await session.exec(stmt)
-    token = result.one_or_none()
-
-    if not token:
-        print("Token Y22", token)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user = await get_user_by_id(session, token.user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    access_token = create_access_token(
-        data={"sub": str(user.id)},
-        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
-    )
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "refresh_token": refresh_data.refresh_token,
-    }
-
-
-@router.post("/logout", response_model=LogoutResponse)
-async def logout_user(
-        current_user: User = Depends(get_current_active_user),
-        session: AsyncSession = Depends(get_session),
-):
-    stmt = select(Token).where(Token.user_id == current_user.id)
-    result = await session.exec(stmt)
-    tokens = result.all()
-
-    if not tokens:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No active session found."
-        )
-    for token in tokens:
-        await session.delete(token)
-
-    await session.commit()
-
-    return LogoutResponse(ok=True)
-
-
-@router.get("/users/me/", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
-
-@router.get("/users/me/areas/", response_model=List[Area])
-async def read_own_areas(
-        current_user: User = Depends(get_current_active_user),
-        session: AsyncSession = Depends(get_session),
-):
-    stmt = select(Area).where(Area.user_id == current_user.id)
-    result = await session.exec(stmt)
-    return result.all()
-
-
-@router.get("/status/")
-async def read_system_status(current_user: User = Depends(get_current_user)):
-    return {"status": "ok"}
-
-
-@router.get("/firebase-token", response_model=FirebaseTokenResponse)
-async def get_firebase_token(
-        current_user: User = Depends(get_current_active_user),
-):
-    """
-    Exchange a valid FastAPI JWT for a Firebase Custom Token.
-    The frontend can then call signInWithCustomToken(auth, firebaseToken)
-    to obtain a Firebase Auth session, which satisfies Storage Security Rules.
-    """
-    try:
-        token_bytes: bytes = firebase_admin.auth.create_custom_token(str(current_user.id))
-        return FirebaseTokenResponse(firebase_token=token_bytes.decode())
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Could not create Firebase token: {e}",
-        )
-
+# --- Auth lifecycle ---
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(
@@ -216,3 +93,127 @@ async def register_user(
         created_at=new_user.created_at,
     )
 
+
+@router.post("/token", response_model=TokenSchema)
+async def login_for_access_token(
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate_user(session, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
+    )
+    refresh_token = await create_refresh_token(session, user)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "refresh_token": refresh_token.token,
+    }
+
+
+@router.post("/refresh", response_model=TokenSchema)
+async def refresh_access_token(
+        refresh_data: RefreshTokenSchema,
+        session: AsyncSession = Depends(get_session),
+):
+    result = await session.exec(
+        select(Token).where(
+            Token.token == refresh_data.refresh_token,
+            Token.revoked == False,
+            Token.expires_at > datetime.now(timezone.utc),
+        )
+    )
+    token = result.one_or_none()
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = await get_user_by_id(session, token.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
+    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "refresh_token": refresh_data.refresh_token,
+    }
+
+
+@router.post("/logout", response_model=LogoutResponse)
+async def logout_user(
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
+    result = await session.exec(select(Token).where(Token.user_id == current_user.id))
+    tokens = result.all()
+
+    if not tokens:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No active session found."
+        )
+    for token in tokens:
+        await session.delete(token)
+
+    await session.commit()
+    return LogoutResponse(ok=True)
+
+
+# --- User resources ---
+
+@router.get("/users/me/", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.get("/users/me/areas/", response_model=List[Area])
+async def read_own_areas(
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
+    result = await session.exec(select(Area).where(Area.user_id == current_user.id))
+    return result.all()
+
+
+# --- Utility ---
+
+@router.get("/firebase-token", response_model=FirebaseTokenResponse)
+async def get_firebase_token(
+        current_user: User = Depends(get_current_active_user),
+):
+    """
+    Exchange a valid FastAPI JWT for a Firebase Custom Token.
+    The frontend can then call signInWithCustomToken(auth, firebaseToken)
+    to obtain a Firebase Auth session, which satisfies Storage Security Rules.
+    """
+    try:
+        token_bytes: bytes = firebase_admin.auth.create_custom_token(str(current_user.id))
+        return FirebaseTokenResponse(firebase_token=token_bytes.decode())
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not create Firebase token: {e}",
+        )
+
+
+@router.get("/status/")
+async def read_system_status(current_user: User = Depends(get_current_user)):
+    return {"status": "ok"}
