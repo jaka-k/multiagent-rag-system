@@ -98,6 +98,7 @@ class SupervisorServerService:
         data = json.dumps(payload)
 
         stmt = text("SELECT pg_notify(:channel, :payload)")
+        # Raw parameterized SQL needs SQLAlchemy execute()
         await self.db_session.execute(stmt, {"channel": SSE_NOTIFY_CHANNEL, "payload": data})
         await self.db_session.commit()
 
@@ -110,5 +111,6 @@ class SupervisorServerService:
         data = json.dumps(payload)
 
         stmt = text("SELECT pg_notify(:channel, :payload)")
+        # Raw parameterized SQL needs SQLAlchemy execute()
         await self.db_session.execute(stmt, {"channel": SSE_NOTIFY_CHANNEL, "payload": data})
         await self.db_session.commit()
