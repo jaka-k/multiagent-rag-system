@@ -1,6 +1,6 @@
 from langchain_chroma import Chroma
 
-from server.db.vectordb.embdeddings import get_embedding_function
+from server.db.vectordb.embeddings import get_embedding_function
 from server.db.vectordb.vectordb import get_vector_db_client
 
 

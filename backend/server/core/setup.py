@@ -4,6 +4,7 @@ from typing import Any, AsyncGenerator, Callable
 import anyio.to_thread
 from fastapi import FastAPI
 
+from server.core.firebase import init_firebase
 from server.core.logger import app_logger
 from server.db.database import init_db
 from server.db.pubsub import start_all_listeners
@@ -20,6 +21,9 @@ def lifespan_factory(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator:
         await set_threadpool_tokens()
+
+        init_firebase()
+        app_logger.info("🔥 Firebase initialized successfully.")
 
         if create_tables_on_start:
             try:

@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from server.core.logger import app_logger
-from server.db.vectordb.embdeddings import get_embedding_function
+from server.db.vectordb.embeddings import get_embedding_function
 from server.db.vectordb.vectordb import get_vector_db_client
 from server.models.document import Document
 

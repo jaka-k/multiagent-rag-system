@@ -1,5 +1,3 @@
-from langchain_core.prompts import PromptTemplate
-
 CARDS_TO_HTML_PROMPT_V2 = """
 You are an HTML renderer for Anki.
 

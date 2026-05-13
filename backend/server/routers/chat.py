@@ -88,9 +88,15 @@ async def websocket_endpoint(
         chat_id: uuid.UUID,
         db: AsyncSession = Depends(get_session),
 ):
+    await websocket.accept()
+
     stmt = select(Session).options(selectinload(Session.area)).where(Session.id == chat_id)
     result = await db.execute(stmt)
     chat = result.scalars().first()
+
+    if not chat:
+        await websocket.close(code=1008, reason="Chat session not found")
+        return
 
     # TODO: Error handling is non-existent, The service should be integrated inside the controller
     chat_service = ChatService(chat_id, chat.area.label, db)
@@ -98,8 +104,6 @@ async def websocket_endpoint(
 
     flashcard_queue = await chat_service.get_flashcard_queue()
     supervisor_service = SupervisorServerService(db, chat_id, flashcard_queue.id)
-
-    await websocket.accept()
     try:
         while True:
             data = await websocket.receive_text()

@@ -1,13 +1,12 @@
 import uuid
 
 from fastapi import HTTPException
-from langchain_community.callbacks.manager import get_openai_callback
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.models.session import FlashcardQueue
 from statemachine.agents.rag.rag_agent import RagAgent
-from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputStreamDTO
+from statemachine.dtos.chat_dto import ChatInputDTO, ChatOutputStreamDTO, MetaDataDTO
 
 
 class ChatService:
@@ -17,14 +16,21 @@ class ChatService:
         self.langchain_chat = RagAgent(chat_id, area)
 
     async def handle_chat(self, chat_input: ChatInputDTO):
-        with get_openai_callback() as cb:
-            response_stream = await self.langchain_chat.process_chain_input(
-                chat_input.user_input, chat_input.thread_id
-            )
+        response_stream = await self.langchain_chat.process_chain_input(
+            chat_input.user_input, chat_input.thread_id
+        )
 
-            yield ChatOutputStreamDTO(
-                raw_stream=response_stream, metadata=cb
-            )
+        # Token tracking is not available via a direct Gemini callback equivalent;
+        # yield zeroed metadata so the downstream pipeline stays intact.
+        empty_metadata = MetaDataDTO(
+            total_tokens=0,
+            prompt_tokens=0,
+            completion_tokens=0,
+            total_cost=0.0,
+        )
+        yield ChatOutputStreamDTO(
+            raw_stream=response_stream, metadata=empty_metadata
+        )
 
     async def get_flashcard_queue(self) -> FlashcardQueue:
         result = await self.db_session.execute(

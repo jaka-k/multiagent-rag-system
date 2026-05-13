@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta, datetime, timezone
 from typing import List
 
@@ -8,7 +9,6 @@ from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-import server.core.firebase
 from server.core.config import settings
 from server.core.logger import app_logger
 from server.core.security import (
@@ -46,7 +46,51 @@ class UserCreationRequest(BaseModel):
     password: str
 
 
+class UserResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    username: str
+    created_at: datetime
+
+
 router = APIRouter()
+
+
+# --- Auth lifecycle ---
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(
+        request: UserCreationRequest,
+        session: AsyncSession = Depends(get_session),
+):
+    existing = await session.exec(
+        select(User).where(
+            (User.email == request.mail) | (User.username == request.user)
+        )
+    )
+    if existing.one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with that email or username already exists.",
+        )
+
+    new_user = User(
+        email=request.mail,
+        username=request.user,
+        hashed_password=get_password_hash(request.password),
+        disabled=False,
+    )
+    session.add(new_user)
+    await session.commit()
+    await session.refresh(new_user)
+
+    app_logger.info(f"New user registered: {new_user.username}")
+    return UserResponse(
+        id=new_user.id,
+        email=new_user.email,
+        username=new_user.username,
+        created_at=new_user.created_at,
+    )
 
 
 @router.post("/token", response_model=TokenSchema)
@@ -78,17 +122,16 @@ async def refresh_access_token(
         refresh_data: RefreshTokenSchema,
         session: AsyncSession = Depends(get_session),
 ):
-    print("refresh_data Y21", refresh_data)
-    stmt = select(Token).where(
-        Token.token == refresh_data.refresh_token,
-        Token.revoked == False,
-        Token.expires_at > datetime.now(timezone.utc))
-
-    result = await session.execute(stmt)
-    token = result.scalar_one_or_none()
+    result = await session.exec(
+        select(Token).where(
+            Token.token == refresh_data.refresh_token,
+            Token.revoked == False,
+            Token.expires_at > datetime.now(timezone.utc),
+        )
+    )
+    token = result.one_or_none()
 
     if not token:
-        print("Token Y22", token)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
@@ -107,7 +150,6 @@ async def refresh_access_token(
         data={"sub": str(user.id)},
         expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
     )
-
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -120,21 +162,21 @@ async def logout_user(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    ## TODO: FIX
-    stmt = select(Token).where(Token.user_id == current_user.id)
-    result = await session.execute(stmt)
+    result = await session.exec(select(Token).where(Token.user_id == current_user.id))
+    tokens = result.all()
 
-    if not result.scalars().all():
+    if not tokens:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No active session found."
         )
-    for token in result:
+    for token in tokens:
         await session.delete(token)
 
     await session.commit()
-
     return LogoutResponse(ok=True)
 
+
+# --- User resources ---
 
 @router.get("/users/me/", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_user)):
@@ -146,16 +188,11 @@ async def read_own_areas(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    stmt = select(Area).where(Area.user_id == current_user.id)
-    result = await session.execute(stmt)
-
-    return result.scalars().all()
+    result = await session.exec(select(Area).where(Area.user_id == current_user.id))
+    return result.all()
 
 
-@router.get("/status/")
-async def read_system_status(current_user: User = Depends(get_current_user)):
-    return {"status": "ok"}
-
+# --- Utility ---
 
 @router.get("/firebase-token", response_model=FirebaseTokenResponse)
 async def get_firebase_token(
@@ -176,25 +213,6 @@ async def get_firebase_token(
         )
 
 
-@router.post("/test-user/", tags=["dev-test"])
-async def create_test_user(
-        request: UserCreationRequest,
-        session: AsyncSession = Depends(get_session),
-):
-    body = request.model_dump()
-
-    test_user = User(
-        email=body["mail"],
-        username=body["user"],
-        hashed_password=get_password_hash(body["password"]),
-        disabled=False,
-    )
-
-    session.add(test_user)
-
-    await session.commit()
-    app_logger.info(
-        f"Test user created with username: {test_user.username} and password: 'admin'"
-    )
-
+@router.get("/status/")
+async def read_system_status(current_user: User = Depends(get_current_user)):
     return {"status": "ok"}

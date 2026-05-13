@@ -1,10 +1,11 @@
 import json
 from typing import List
 
-from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field, ValidationError
 
+from server.core.config import LLM_FAST_MODEL
 from server.core.logger import app_logger
 from statemachine.agents.analysis.knowledge_identification_agent import Concept
 from statemachine.agents.flashcards.templates import CARDS_TO_HTML_PROMPT_V2
@@ -17,9 +18,9 @@ class FlashcardsOutput(BaseModel):
 
 class FlashcardAgent:
     def __init__(self):
-        self.model = ChatOpenAI(
-            model="gpt-5-mini",
-            temperature=0
+        self.model = ChatGoogleGenerativeAI(
+            model=LLM_FAST_MODEL,
+            temperature=0,
         )
 
         self.llm = self.model.with_structured_output(FlashcardsOutput)
