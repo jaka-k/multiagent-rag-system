@@ -1,6 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.constants import START, END
-from server.core.config import LLM_MODEL
+from server.core.config import LLM_MODEL, settings
 from langgraph.graph import StateGraph
 
 from statemachine.agents.analysis.knowledge_identification_agent import KnowledgeIdentificationAgent
@@ -19,7 +19,7 @@ class SupervisorAgent:
         self.web_search_agent = WebSearchAgent()
         self.summarizer_agent = SummarizerAgent()
 
-        self.supervisor_llm = ChatGoogleGenerativeAI(model=LLM_MODEL, temperature=0).with_structured_output(NuggetList)
+        self.supervisor_llm = ChatGoogleGenerativeAI(model=LLM_MODEL, temperature=0, google_api_key=settings.google_api_key).with_structured_output(NuggetList)
         self.knowledge_gaps_prompt = MEMORIZABLE_KNOWLEDGE_PROMPT
         self.knowledge_gaps_chain = self.knowledge_gaps_prompt | self.supervisor_llm
 
@@ -39,15 +39,16 @@ class SupervisorAgent:
         builder.add_conditional_edges(
             "knowledge_analysis",
             lambda state: determine_next_nodes(state),
-            then="summarizer"
         )
 
+        builder.add_edge("flashcard", "summarizer")
+        builder.add_edge("web_search", "summarizer")
         builder.add_edge("summarizer", END)
 
         self.graph = builder.compile()
 
     async def invoke(self, load: dict) -> SupervisorAgentState:
-        self.state = SupervisorAgentState(
+        state = SupervisorAgentState(
             question=load.get("question", ""),
             llm_response=load.get("llm_response", ""),
             knowledge_nuggets=NuggetList(nuggets=[]),
@@ -56,17 +57,13 @@ class SupervisorAgent:
             documents=load.get("documents", [])
         )
 
-        return await self.graph.ainvoke(self.state)
+        return await self.graph.ainvoke(state)
 
-    def supervisor_node(self, state: SupervisorAgentState) -> SupervisorAgentState:
-        question = state.get("question", "")
-        llm_response = state.get("llm_response", "")
-        documents = state.get("documents", [])
-
-        state["knowledge_nuggets"] = self.knowledge_gaps_chain.invoke({
-            "question": question,
-            "llm_response": llm_response,
-            "documents": documents
+    async def supervisor_node(self, state: SupervisorAgentState) -> SupervisorAgentState:
+        state["knowledge_nuggets"] = await self.knowledge_gaps_chain.ainvoke({
+            "question": state.get("question", ""),
+            "llm_response": state.get("llm_response", ""),
+            "documents": state.get("documents", []),
         })
 
         return state
@@ -78,4 +75,4 @@ def determine_next_nodes(state: SupervisorAgentState):
         next_nodes.append("flashcard")
     if state.get("web_search_agent", False):
         next_nodes.append("web_search")
-    return next_nodes if next_nodes else []
+    return next_nodes if next_nodes else "summarizer"

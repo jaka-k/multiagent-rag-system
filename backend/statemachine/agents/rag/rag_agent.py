@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from server.core.config import LLM_MODEL, LLM_FAST_MODEL
+from server.core.config import LLM_MODEL, LLM_FAST_MODEL, settings
 from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.retriever import get_retriever_tool
 from statemachine.agents.rag.templates import (
@@ -22,10 +22,12 @@ class RagAgent:
         self.llm = ChatGoogleGenerativeAI(
             model=LLM_MODEL,
             temperature=0,
+            google_api_key=settings.google_api_key,
         )
         self.llm_flash = ChatGoogleGenerativeAI(
             model=LLM_FAST_MODEL,
             temperature=0,
+            google_api_key=settings.google_api_key,
         )
         self.retriever_tool = get_retriever_tool
 
