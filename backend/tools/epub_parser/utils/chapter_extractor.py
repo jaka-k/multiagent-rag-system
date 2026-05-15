@@ -1,15 +1,44 @@
-from tools.epub_parser.utils.file import (
-    read_file_with_error_handling,
-    resolve_relative_path,
-    match_toc_reference,
-)
-from tools.epub_parser.utils.logging import logger
-from tools.epub_parser.utils.toc import parse_toc_ncx
-from tools.epub_parser.utils.inspector import find_toc_file
+import zipfile
 
 from bs4 import BeautifulSoup
+from markdownify import MarkdownConverter
 
-import zipfile
+from tools.epub_parser.utils.file import (
+    match_toc_reference,
+    read_file_with_error_handling,
+    resolve_relative_path,
+)
+from tools.epub_parser.utils.inspector import find_toc_file
+from tools.epub_parser.utils.logging import logger
+from tools.epub_parser.utils.toc import parse_toc_ncx
+
+
+class EpubMarkdownConverter(MarkdownConverter):
+    """HTML→Markdown for EPUB content. EPUB-internal anchor URLs are dropped:
+    the link text usually carries the meaningful signal ("see chapter 3"),
+    while the href is a per-file anchor that adds noise to the embedding."""
+
+    def convert_a(self, el, text, parent_tags):
+        return text or ""
+
+    def convert_img(self, *_, **__):
+        return ""
+
+
+_md = EpubMarkdownConverter(
+    heading_style="ATX",
+    code_language="",
+    strip=["figure", "figcaption", "nav", "header", "footer", "script", "style"],
+)
+
+# Top-level block elements we want to render. Children are subsumed by
+# markdownify when it converts the parent, so we don't enumerate inline
+# tags here.
+BLOCK_TAGS = {
+    "p", "div", "section", "article", "pre", "blockquote",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "ul", "ol", "table",
+}
 
 
 def extract_chapters(file_path):
@@ -94,7 +123,7 @@ def extract_chapters(file_path):
                     file_content = read_file_with_error_handling(zip_ref, file_name)
                     if file_content:
                         soup = BeautifulSoup(file_content, "html.parser")
-                        chapter_text = soup.get_text()
+                        chapter_text = _md.convert_soup(soup)
                         chapters.append(
                             {
                                 "content": chapter_text,
@@ -108,58 +137,36 @@ def extract_chapters(file_path):
 
 
 def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
-    """Extract text from a specific fragment ID to the next fragment ID or to the end of the file."""
-    start_tag = soup.find(id=fragment_id)
+    """Render the slice of `soup` between fragment_id and next_fragment_id as Markdown.
+
+    fragment_id is typically a heading anchor (O'Reilly, Manning, Packt all use this
+    idiom — one XHTML file containing multiple TOC entries separated by ID anchors).
+    When next_fragment_id is set, we stop just before that element.
+    """
+    start_tag = soup.find(id=fragment_id) if fragment_id else soup
     if not start_tag:
         return ""
 
-    chapter_text = []
-    processed_elements = set()
+    parts = []
+    processed = set()
 
     for element in start_tag.next_elements:
-        if is_descendant_of_processed(element, processed_elements):
+        if is_descendant_of_processed(element, processed):
             continue
-        if next_fragment_id and element.name and element.get("id") == next_fragment_id:
+        if next_fragment_id and getattr(element, "name", None) and element.get("id") == next_fragment_id:
             break
-
         if isinstance(element, str):
-            chapter_text.append(element)
-        elif element.name in [
-            "p",
-            "div",
-            "span",
-            "pre",
-            "code",
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-        ]:
-            chapter_text.append(process_element(element, processed_elements))
+            continue  # inter-block whitespace; markdownify produces its own
+        if element.name in BLOCK_TAGS:
+            # convert(html_string) treats the tag as a block (emitting ## etc.);
+            # convert_soup(tag) on a bare Tag inlines its contents and loses
+            # heading prefixes.
+            rendered = _md.convert(str(element)).strip()
+            if rendered:
+                parts.append(rendered)
+            processed.add(element)
 
-    return "".join(chapter_text)
-
-
-def process_element(element, processed_elements):
-    """Recursively process an element to handle nested tags without duplication."""
-    if is_descendant_of_processed(element, processed_elements):
-        return ""
-
-    processed_elements.add(element)
-
-    if element.name in ["img", "figure", "figcaption"]:
-        # Skip images and figures entirely
-        return ""
-    if element.name in ["pre"]:
-        # add [CODE] tag around <pre> elements
-        text = element.get_text()
-        return f"[CODE]\n{text}[/CODE]"
-    else:
-        # Handle inline text elements
-        text = element.get_text()
-        return text
+    return "\n\n".join(parts)
 
 
 def is_descendant_of_processed(element, processed_elements):
