@@ -71,3 +71,20 @@ You are a query-rewriter.
 3. Choose retrieval_tag.
 4. Output JSON only.
 """
+
+### Rerank retrieved chunks ###
+RERANK_PROMPT = """You are a relevance judge for a retrieval system.
+Given a user question and a list of numbered excerpts, score each excerpt 0-10
+by how directly it helps answer the question. Be strict: 10 means the excerpt
+contains the answer; 0 means unrelated.
+
+Question:
+{query}
+
+Excerpts:
+{excerpts}
+
+Return ONLY valid JSON, an array of objects with this exact shape:
+[{{"id": 0, "score": 8}}, {{"id": 1, "score": 2}}, ...]
+
+Include one entry per excerpt. No commentary, no markdown."""
