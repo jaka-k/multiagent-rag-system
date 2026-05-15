@@ -32,8 +32,6 @@ class Settings(BaseSettings):
     langchain_tracing_v2: Optional[str] = None
 
     anki_url: Optional[str] = None
-    chroma_host: Optional[str] = None
-    chroma_port: int = 8000
 
     next_public_firebase_api_key: Optional[str] = None
     next_public_firebase_project_id: Optional[str] = None
