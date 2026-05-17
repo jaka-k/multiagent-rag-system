@@ -10,7 +10,6 @@ ENV DISPLAY=:1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     xorg \
-    openbox \
     xdg-utils \
     xterm \
     xvfb \
