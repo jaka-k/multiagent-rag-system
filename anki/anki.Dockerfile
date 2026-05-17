@@ -80,9 +80,12 @@ RUN wget https://github.com/ankitects/anki/releases/download/25.02.5/anki-25.02.
     cd .. && \
     rm -rf anki-25.02.5-linux-qt6 anki-25.02.5-linux-qt6.tar.zst
 
+ARG ANKI_CONNECT_REF=4064fa142785975255457abd6a496015f5b71f38
 RUN mkdir -p /usr/share/anki/addons21 && \
-    cd /usr/share/anki/addons21 && \
-    git clone https://git.foosoft.net/alex/anki-connect
+    git clone https://github.com/FooSoft/anki-connect.git \
+        /usr/share/anki/addons21/anki-connect && \
+    git -C /usr/share/anki/addons21/anki-connect checkout ${ANKI_CONNECT_REF} && \
+    rm -rf /usr/share/anki/addons21/anki-connect/.git
 
 RUN pip3 install flask
 
