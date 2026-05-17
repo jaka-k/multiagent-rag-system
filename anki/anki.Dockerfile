@@ -87,7 +87,8 @@ RUN mkdir -p /usr/share/anki/addons21 && \
     git -C /usr/share/anki/addons21/anki-connect checkout ${ANKI_CONNECT_REF} && \
     rm -rf /usr/share/anki/addons21/anki-connect/.git
 
-RUN pip3 install flask
+ARG FLASK_VERSION=3.0.3
+RUN pip3 install --no-cache-dir flask==${FLASK_VERSION}
 
 RUN x11vnc -storepasswd 1990 /etc/vncsecret
 
