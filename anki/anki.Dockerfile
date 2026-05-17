@@ -79,12 +79,16 @@ RUN useradd -m ankiuser
 ARG ANKI_VERSION=25.2.5
 RUN pip3 install --no-cache-dir "aqt[qt6]==${ANKI_VERSION}"
 
+# AnkiConnect is staged in /opt at build time; the entrypoint copies it
+# into the mounted profile dir at startup. /usr/share/anki/addons21/ is
+# not reliably loaded by modern Anki — addons must live under the user's
+# ~/.local/share/Anki2/addons21/, which is inside the anki_data volume.
 ARG ANKI_CONNECT_REF=4064fa142785975255457abd6a496015f5b71f38
-RUN mkdir -p /usr/share/anki/addons21 && \
+RUN mkdir -p /opt/anki-addons && \
     git clone https://github.com/FooSoft/anki-connect.git \
-        /usr/share/anki/addons21/anki-connect && \
-    git -C /usr/share/anki/addons21/anki-connect checkout ${ANKI_CONNECT_REF} && \
-    rm -rf /usr/share/anki/addons21/anki-connect/.git
+        /opt/anki-addons/anki-connect && \
+    git -C /opt/anki-addons/anki-connect checkout ${ANKI_CONNECT_REF} && \
+    rm -rf /opt/anki-addons/anki-connect/.git
 
 ARG FLASK_VERSION=3.0.3
 RUN pip3 install --no-cache-dir flask==${FLASK_VERSION}
@@ -96,15 +100,18 @@ RUN chown -R ankiuser:ankiuser /usr/share/novnc
 RUN mkdir -p /config/app /var/log/supervisor && \
     chmod -R 755 /var/log/supervisor
 
-RUN chown -R ankiuser:ankiuser /config/app /usr/share/anki
+RUN chown -R ankiuser:ankiuser /config/app /opt/anki-addons
 
 RUN chown -R ankiuser:ankiuser /home/ankiuser
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /config/app
 
 
 EXPOSE 3100 8765
 
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
