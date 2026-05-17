@@ -1,16 +1,16 @@
-FROM --platform=linux/amd64 ubuntu:jammy AS build_amd64
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:1
 
+# Multi-arch build — Anki is installed via pip (the `aqt` package), which has
+# wheels for both linux/amd64 and linux/arm64. We deliberately do NOT use the
+# ankitects/anki GitHub release tarball — it's x86_64-only and would force
+# qemu emulation on Apple Silicon.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
     curl \
-    gnupg2 \
-    software-properties-common \
     xorg \
     openbox \
-    zstd \
     xdg-utils \
     xterm \
     xvfb \
@@ -73,12 +73,11 @@ ENV LC_ALL=en_US.UTF-8
 
 RUN useradd -m ankiuser
 
-RUN wget https://github.com/ankitects/anki/releases/download/25.02.5/anki-25.02.5-linux-qt6.tar.zst && \
-    tar --use-compress-program=unzstd -xvf anki-25.02.5-linux-qt6.tar.zst && \
-    cd anki-25.02.5-linux-qt6 && \
-    ./install.sh && \
-    cd .. && \
-    rm -rf anki-25.02.5-linux-qt6 anki-25.02.5-linux-qt6.tar.zst
+# Anki via the official `aqt` PyPI package. `aqt` is pure-Python; the
+# underlying `anki` package ships manylinux wheels for both x86_64 and
+# aarch64 (glibc ≥ 2.35 — Ubuntu 22.04 hits this exactly).
+ARG ANKI_VERSION=25.2.5
+RUN pip3 install --no-cache-dir "aqt[qt6]==${ANKI_VERSION}"
 
 ARG ANKI_CONNECT_REF=4064fa142785975255457abd6a496015f5b71f38
 RUN mkdir -p /usr/share/anki/addons21 && \
