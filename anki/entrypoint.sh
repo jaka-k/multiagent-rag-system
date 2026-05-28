@@ -25,6 +25,15 @@ else
     echo "[entrypoint] AnkiConnect already present, skipping seed."
 fi
 
+# Ensure the live config.json binds to 0.0.0.0 even on pre-existing volumes
+# that were seeded by an older image build. AnkiConnect's util.setting reads
+# config.json first and only falls back to ANKICONNECT_BIND_ADDRESS as a
+# default, so editing the file is the only reliable lever.
+ADDON_CONFIG="${ADDON_TARGET}/config.json"
+if [ -f "${ADDON_CONFIG}" ]; then
+    sed -i 's/"webBindAddress": "127.0.0.1"/"webBindAddress": "0.0.0.0"/' "${ADDON_CONFIG}"
+fi
+
 # 2. Profile registration — must run AS ankiuser so the resulting prefs21.db
 #    is owned by them. Must run BEFORE supervisord launches anki, otherwise
 #    the SQLite lock blocks the registration.
