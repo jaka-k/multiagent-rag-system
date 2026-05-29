@@ -56,20 +56,10 @@ CONTEXTUALIZE_Q_SYSTEM_PROMPT = (
 CONTEXTUALIZE_Q_SYSTEM_PROMPT_V2 = """
 You are a query-rewriter.
 
-■■ OUTPUT FORMAT (Return valid JSON)
-{{
-  "query": string,
-  "expansion_terms": string[],
-  "retrieval_tag": "shallow" | "normal" | "deep",
-  "needs_more_history": boolean
-}}
-
-
-■■ RULES
-1. Resolve pronouns; if ambiguous set "needs_more_history": true.
-2. Fill expansion_terms with search-helpful tokens not already in query.
-3. Choose retrieval_tag.
-4. Output JSON only.
+RULES
+1. Resolve pronouns into the rewritten query; if the referent is ambiguous, set needs_more_history true.
+2. Fill expansion_terms with search-helpful tokens that are not already present in the query.
+3. Choose retrieval_tag: "shallow" for trivial/factual lookups, "deep" for synthesis across the corpus, "normal" otherwise.
 """
 
 ### Rerank retrieved chunks ###
