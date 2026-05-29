@@ -13,7 +13,7 @@ from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.retriever import retrieve_chapters
 from statemachine.agents.rag.templates import (
     SYSTEM_PROMPT,
-    CONTEXTUALIZE_Q_SYSTEM_PROMPT_V2,
+    CONTEXTUALIZE_Q_SYSTEM_PROMPT,
 )
 
 
@@ -51,7 +51,7 @@ class RagAgent:
             [
                 MessagesPlaceholder("chat_history"),
                 ("user", "{input}"),
-                ("system", CONTEXTUALIZE_Q_SYSTEM_PROMPT_V2),
+                ("system", CONTEXTUALIZE_Q_SYSTEM_PROMPT),
             ]
         )
         self.rag_prompt = ChatPromptTemplate.from_messages(
