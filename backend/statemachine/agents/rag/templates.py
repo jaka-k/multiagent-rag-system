@@ -76,15 +76,11 @@ You are a query-rewriter.
 RERANK_PROMPT = """You are a relevance judge for a retrieval system.
 Given a user question and a list of numbered excerpts, score each excerpt 0-10
 by how directly it helps answer the question. Be strict: 10 means the excerpt
-contains the answer; 0 means unrelated.
+contains the answer; 0 means unrelated. Include one entry per excerpt; reuse
+the excerpt's bracketed index as the id.
 
 Question:
 {query}
 
 Excerpts:
-{excerpts}
-
-Return ONLY valid JSON, an array of objects with this exact shape:
-[{{"id": 0, "score": 8}}, {{"id": 1, "score": 2}}, ...]
-
-Include one entry per excerpt. No commentary, no markdown."""
+{excerpts}"""

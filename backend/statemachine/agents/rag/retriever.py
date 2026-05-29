@@ -1,10 +1,12 @@
 import uuid
+from functools import lru_cache
 from typing import Sequence
 
 from langchain_core.documents import Document
-from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
 from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic import BaseModel, Field
 from sqlmodel import select
 
 from server.core.config import LLM_FAST_MODEL, settings
@@ -15,30 +17,41 @@ from server.models.document import Chapter
 from statemachine.agents.rag.templates import RERANK_PROMPT
 
 
-def _rerank_llm() -> ChatGoogleGenerativeAI:
-    return ChatGoogleGenerativeAI(
+class RerankItem(BaseModel):
+    id: int = Field(description="Index of the excerpt as given in brackets.")
+    score: float = Field(ge=0, le=10, description="Relevance 0 (unrelated) to 10 (contains the answer).")
+
+
+class RerankResponse(BaseModel):
+    items: list[RerankItem] = Field(description="One entry per excerpt.")
+
+
+@lru_cache(maxsize=1)
+def _rerank_chain() -> Runnable:
+    llm = ChatGoogleGenerativeAI(
         model=LLM_FAST_MODEL,
         temperature=0,
         google_api_key=settings.google_api_key,
-    )
+    ).with_structured_output(RerankResponse)
+    return ChatPromptTemplate.from_messages([("system", RERANK_PROMPT)]) | llm
 
 
 async def _rerank_chunks(
     query: str, hits: Sequence[tuple[Document, float]]
 ) -> list[tuple[Document, float]]:
-    """Score each chunk 0-10 with Gemini Flash; fall back to vector score on parse failure."""
+    """Score each chunk 0-10 with Gemini Flash; fall back to vector score on rerank failure."""
     if not hits:
         return []
 
     excerpts = "\n\n".join(
         f"[{i}] {doc.page_content[:1200]}" for i, (doc, _) in enumerate(hits)
     )
-    prompt = ChatPromptTemplate.from_messages([("system", RERANK_PROMPT)])
-    chain = prompt | _rerank_llm() | JsonOutputParser()
 
     try:
-        scored: list[dict] = await chain.ainvoke({"query": query, "excerpts": excerpts})
-        score_by_id = {int(item["id"]): float(item["score"]) for item in scored}
+        result: RerankResponse = await _rerank_chain().ainvoke(
+            {"query": query, "excerpts": excerpts}
+        )
+        score_by_id = {item.id: item.score for item in result.items}
     except Exception as e:
         app_logger.warning(f"Rerank failed ({e}); falling back to vector similarity.")
         # invert similarity distance into a relevance proxy
