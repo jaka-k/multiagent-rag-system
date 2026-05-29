@@ -128,7 +128,3 @@ export type CreateAreaResponse = {
   name: string
   label: string
 }
-
-export type WithRefreshedToken<T> = T & {
-  refreshToken: string | null
-}
