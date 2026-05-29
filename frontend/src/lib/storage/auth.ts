@@ -34,7 +34,7 @@ export async function signInToFirebase(): Promise<void> {
     return
   }
 
-  const response = await fetchWithAuth<{ firebase_token: string }>(
+  const response = await fetchWithAuth<{ firebaseToken: string }>(
     '/auth/firebase-token',
     { method: 'GET' }
   )
@@ -43,5 +43,5 @@ export async function signInToFirebase(): Promise<void> {
     throw new Error('Failed to obtain Firebase token from backend')
   }
 
-  await signInWithCustomToken(firebaseAuth, response.data.firebase_token)
+  await signInWithCustomToken(firebaseAuth, response.data.firebaseToken)
 }
