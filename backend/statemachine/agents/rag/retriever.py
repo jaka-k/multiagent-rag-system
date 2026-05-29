@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import select
 
 from server.core.config import LLM_FAST_MODEL, settings
+from server.core.exceptions import RetrievalError
 from server.core.logger import app_logger
 from server.db.database import get_single_session
 from server.db.vectordb.vectordb import get_vector_store
@@ -52,8 +53,20 @@ async def _rerank_chunks(
             {"query": query, "excerpts": excerpts}
         )
         score_by_id = {item.id: item.score for item in result.items}
-    except Exception as e:
-        app_logger.warning(f"Rerank failed ({e}); falling back to vector similarity.")
+    except Exception as exc:
+        # Degrade gracefully (vector-similarity order) — but log loudly so the
+        # observability stack can alert on rising rerank failure rates.
+        app_logger.error(
+            "Rerank call failed; falling back to vector similarity",
+            exc_info=exc,
+            extra={
+                "step": "rag.rerank",
+                "error_type": type(exc).__name__,
+                "model": LLM_FAST_MODEL,
+                "hits_count": len(hits),
+                "fallback_taken": True,
+            },
+        )
         # invert similarity distance into a relevance proxy
         return sorted(hits, key=lambda h: -h[1])
 
@@ -77,9 +90,19 @@ async def retrieve_chapters(
     2. LLM rerank → relevance score per chunk
     3. group by chapter, keep max score per chapter
     4. fetch full chapter text for the top k_chapters
+
+    Raises RetrievalError on pgvector or chapter-lookup failures so the
+    WebSocket / HTTP layer can surface a 500 with step="rag.retrieval".
+    Rerank degrades gracefully and is not classified as RetrievalError.
     """
     vector_store = get_vector_store(collection)
-    hits = await vector_store.asimilarity_search_with_score(query, k=k_raw)
+    try:
+        hits = await vector_store.asimilarity_search_with_score(query, k=k_raw)
+    except Exception as exc:
+        raise RetrievalError(
+            f"Vector similarity search failed on collection {collection!r}: {exc}"
+        ) from exc
+
     if not hits:
         return []
 
@@ -98,11 +121,16 @@ async def retrieve_chapters(
         return []
 
     chapter_uuids = [uuid.UUID(cid) for cid, _ in top]
-    async with get_single_session() as session:
-        result = await session.execute(
-            select(Chapter).where(Chapter.id.in_(chapter_uuids))
-        )
-        chapters = {c.id: c for c in result.scalars().all()}
+    try:
+        async with get_single_session() as session:
+            result = await session.execute(
+                select(Chapter).where(Chapter.id.in_(chapter_uuids))
+            )
+            chapters = {c.id: c for c in result.scalars().all()}
+    except Exception as exc:
+        raise RetrievalError(
+            f"Chapter lookup failed for {len(chapter_uuids)} ids: {exc}"
+        ) from exc
 
     docs: list[Document] = []
     for cid, (score, hit_doc) in top:

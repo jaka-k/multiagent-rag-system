@@ -8,6 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 from server.core.config import LLM_MODEL, LLM_FAST_MODEL, settings
+from server.core.exceptions import QueryRewriteError
 from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.retriever import retrieve_chapters
 from statemachine.agents.rag.templates import (
@@ -67,17 +68,22 @@ class RagAgent:
         self.agent_chain = RunnableLambda(self._run_agent)
 
     async def resolve_query(self, inp) -> RewrittenQuery:
-        result: RewrittenQuery = await self.history_aware_retriever.ainvoke({
-            "chat_history": inp["chat_history"][-3:],
-            "input":        inp["input"],
-        })
-
-        if result.needs_more_history:
-            result = await self.history_aware_retriever.ainvoke({
-                "chat_history": inp["chat_history"][-6:],
+        try:
+            result: RewrittenQuery = await self.history_aware_retriever.ainvoke({
+                "chat_history": inp["chat_history"][-3:],
                 "input":        inp["input"],
             })
-        return result
+
+            if result.needs_more_history:
+                result = await self.history_aware_retriever.ainvoke({
+                    "chat_history": inp["chat_history"][-6:],
+                    "input":        inp["input"],
+                })
+            return result
+        except Exception as exc:
+            raise QueryRewriteError(
+                f"Query rewriter failed for chat {self.chat_id}: {exc}"
+            ) from exc
 
     async def retrieve(self, rewritten: RewrittenQuery):
         full_query = rewritten.query
