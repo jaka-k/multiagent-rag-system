@@ -42,8 +42,6 @@ class EmbeddingService:
         result = await self.db_session.execute(stmt)
         document = result.scalar_one_or_none()
 
-        await self.db_session.refresh(document, attribute_names=["chapters"])
-
         if not document:
             app_logger.error(f"Document {self.doc_id} not found in background task.")
             return
