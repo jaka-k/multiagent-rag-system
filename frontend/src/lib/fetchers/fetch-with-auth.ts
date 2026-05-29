@@ -8,14 +8,10 @@ import { cookies } from 'next/headers'
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
-export type WithRefreshedToken<T> = T & {
-  refreshedToken?: string | null
-}
-
 export async function fetchWithAuth<T>(
   url: string,
   options: RequestInit = {}
-): Promise<WithRefreshedToken<{ ok: boolean; data: T }>> {
+): Promise<{ ok: boolean; data: T }> {
   const cookieStore = await cookies()
   const token = cookieStore.get('token')?.value
   const refreshToken = cookieStore.get('refreshToken')?.value
@@ -51,16 +47,14 @@ export async function fetchWithAuth<T>(
             ok: retryResponse.ok,
             data: camelcaseKeys(retryData, {
               deep: true
-            }),
-            refreshedToken: newToken
+            })
           }
         } catch (e) {
           logger.error({ err: e }, 'Error parsing response data in retry')
 
           return {
             ok: retryResponse.ok,
-            data: {} as T,
-            refreshedToken: newToken
+            data: {} as T
           }
         }
       }
@@ -76,15 +70,13 @@ export async function fetchWithAuth<T>(
       ok: response.ok,
       data: camelcaseKeys(data, {
         deep: true
-      }),
-      refreshedToken: null
+      })
     }
   } catch (e) {
     logger.error({ err: e }, 'Error parsing response data')
     return {
       ok: response.ok,
-      data: {} as T,
-      refreshedToken: null
+      data: {} as T
     }
   }
 }
