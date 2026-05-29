@@ -4,13 +4,7 @@ import { ChatData } from '@mytypes/types'
 export async function createChat(title: string, areaId: string) {
   const response = await fetchWithAuth<ChatData>('/api/create-chat', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      title,
-      area_id: areaId
-    })
+    body: { title, areaId }
   })
 
   if (!response.ok) {
@@ -22,10 +16,7 @@ export async function createChat(title: string, areaId: string) {
 
 export async function getAllChats() {
   const response = await fetchWithAuth<ChatData[]>('/api/me/chats', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    }
+    method: 'GET'
   })
 
   if (!response.ok) {

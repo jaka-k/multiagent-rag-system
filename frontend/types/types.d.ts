@@ -109,11 +109,11 @@ export type EpubFile = {
 
 export type CreateDocumentRequest = {
   title: string
-  area_id: string
+  areaId: string
   description: string
-  file_path: string
-  file_size: number
-  cover_image: string
+  filePath: string
+  fileSize: number
+  coverImage: string
   author?: string
 }
 
@@ -127,8 +127,4 @@ export type CreateAreaResponse = {
   created: Date
   name: string
   label: string
-}
-
-export type WithRefreshedToken<T> = T & {
-  refreshToken: string | null
 }
