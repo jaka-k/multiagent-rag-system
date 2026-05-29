@@ -37,12 +37,7 @@ export const addFlashcard = async (id: string, areaId: string) => {
     `/api/flashcard/${id}`,
     {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        area_id: areaId
-      })
+      body: { areaId }
     }
   )
 

@@ -8,10 +8,7 @@ export async function createDocument(
     '/api/epub-upload',
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(request)
+      body: request
     }
   )
 
@@ -22,16 +19,9 @@ export async function createDocument(
   return response.data
 }
 
-export async function createVectorEmbedding(
-  docId: string
-): Promise<{ ok: boolean; data: { message: string; id: string } }> {
+export async function createVectorEmbedding(docId: string) {
   return fetchWithAuth<{ message: string; id: string }>(
     `/api/embedding/${docId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
+    { method: 'POST' }
   )
 }
