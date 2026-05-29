@@ -37,7 +37,15 @@ fi
 # 2. Profile registration — must run AS ankiuser so the resulting prefs21.db
 #    is owned by them. Must run BEFORE supervisord launches anki, otherwise
 #    the SQLite lock blocks the registration.
-chown -R ankiuser:ankiuser /home/ankiuser/.local
+#
+# Stale volumes from older image builds can have /home/ankiuser or its
+# parents root-owned without traversal perms for ankiuser, which makes
+# even pathlib.Path.stat() fail with EACCES inside seed-profile.py. Widen
+# the chown to the entire home tree and pre-create ANKI_HOME as root so
+# the python script never has to mkdir anything itself.
+mkdir -p "${ANKI_HOME}"
+chown -R ankiuser:ankiuser /home/ankiuser
+chmod -R u+rwX,go+rX /home/ankiuser
 ANKI_HOME="${ANKI_HOME}" su ankiuser -s /bin/bash -c \
     "/opt/anki-venv/bin/python /opt/seed-profile.py"
 

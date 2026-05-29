@@ -20,8 +20,6 @@ from aqt.profiles import ProfileManager
 ANKI_HOME = Path(os.environ.get("ANKI_HOME", "/home/ankiuser/.local/share/Anki2"))
 PROFILE_NAME = os.environ.get("ANKI_PROFILE", "User 1")
 
-ANKI_HOME.mkdir(parents=True, exist_ok=True)
-
 pm = ProfileManager(ANKI_HOME)
 pm.setupMeta()
 pm.create(PROFILE_NAME)  # no-op if it already exists
