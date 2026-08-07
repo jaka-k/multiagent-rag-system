@@ -8,7 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from server.core.config import LLM_MODEL, LLM_FAST_MODEL, settings
 from statemachine.agents.rag.rag_agent_history import get_chat_history
-from statemachine.agents.rag.retriever import get_retriever_tool
+from statemachine.agents.rag.retriever import retrieve_chapters
 from statemachine.agents.rag.templates import (
     SYSTEM_PROMPT,
     CONTEXTUALIZE_Q_SYSTEM_PROMPT_V2,
@@ -29,8 +29,6 @@ class RagAgent:
             temperature=0,
             google_api_key=settings.google_api_key,
         )
-        self.retriever_tool = get_retriever_tool
-
         self.history_aware_prompt = ChatPromptTemplate.from_messages(
             [
                 MessagesPlaceholder("chat_history"),
@@ -64,7 +62,7 @@ class RagAgent:
             })
         return result
 
-    def retrieve(self, payload):
+    async def retrieve(self, payload):
         tag = payload["retrieval_tag"]
 
         full_query = payload["query"]
@@ -78,9 +76,7 @@ class RagAgent:
         else:
             k = 5
 
-        retriever = self.retriever_tool(self.area, k)
-        docs = retriever.invoke(full_query)
-        return docs
+        return await retrieve_chapters(query=full_query, collection=self.area, k_chapters=k)
 
     async def _run_agent(self, inp) -> AsyncIterator[dict]:
         """
@@ -89,7 +85,7 @@ class RagAgent:
         """
         rewritten = self.resolve_query(inp)
 
-        docs = self.retrieve(rewritten)
+        docs = await self.retrieve(rewritten)
 
         qa_chain = self.rag_prompt | self.llm | StrOutputParser()
         async for token in qa_chain.astream({
