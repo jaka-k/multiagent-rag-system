@@ -79,14 +79,14 @@ async def _rerank_chunks(
 
 async def retrieve_chapters(
     query: str,
-    collection: str,
+    area: str,
     k_chapters: int,
     k_raw: int = 20,
 ) -> list[Document]:
     """
     Embed-at-chunk, retrieve-at-chapter.
 
-    1. similarity search → k_raw chunks
+    1. similarity search scoped to the area → k_raw chunks
     2. LLM rerank → relevance score per chunk
     3. group by chapter, keep max score per chapter
     4. fetch full chapter text for the top k_chapters
@@ -95,12 +95,14 @@ async def retrieve_chapters(
     WebSocket / HTTP layer can surface a 500 with step="rag.retrieval".
     Rerank degrades gracefully and is not classified as RetrievalError.
     """
-    vector_store = get_vector_store(collection)
+    vector_store = await get_vector_store()
     try:
-        hits = await vector_store.asimilarity_search_with_score(query, k=k_raw)
+        hits = await vector_store.asimilarity_search_with_score(
+            query, k=k_raw, filter={"area": {"$eq": area}}
+        )
     except Exception as exc:
         raise RetrievalError(
-            f"Vector similarity search failed on collection {collection!r}: {exc}"
+            f"Vector similarity search failed for area {area!r}: {exc}"
         ) from exc
 
     if not hits:

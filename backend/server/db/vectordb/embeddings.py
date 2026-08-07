@@ -13,9 +13,9 @@ Dimensionality (EMBEDDING_DIM):
     gemini-embedding-001 supports 128, 256, 512, 768, 1536, 3072. We default
     to 1536 as a balanced choice between storage cost (4× smaller than 3072)
     and retrieval quality (matches OpenAI ada-002 / text-embedding-3-small
-    reference benchmarks). To change it, update EMBEDDING_DIM here and run
-    the alembic migration that drops the langchain_pg_* tables so the next
-    insert recreates them at the new dimension.
+    reference benchmarks). To change it, update EMBEDDING_DIM here and add
+    an alembic migration recreating book_embeddings with the new vector(N)
+    column, then re-embed.
 """
 from functools import lru_cache
 
