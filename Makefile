@@ -22,7 +22,7 @@ dev: infra ## Start infra containers + run backend and frontend locally
 		wait
 
 infra: ## Start core infrastructure containers (postgres, chroma, anki)
-	$(COMPOSE_DEV) up -d postgres-server chroma-server anki
+	$(COMPOSE_DEV) up -d postgres-server anki
 
 monitor: ## Start the monitoring stack (grafana, loki, tempo, prometheus, otelcol)
 	$(COMPOSE_DEV) --profile monitoring up -d
