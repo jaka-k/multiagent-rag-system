@@ -10,8 +10,10 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - postgres-server
-      - chroma-server
+      postgres-server:
+        condition: service_healthy
+      anki:
+        condition: service_healthy
     networks:
       - app_network
     healthcheck:
@@ -36,7 +38,7 @@ services:
 
   # ── Infrastructure ──────────────────────────────────────────────────────────
   postgres-server:
-    image: postgres:16.4-alpine
+    image: pgvector/pgvector:pg16
     container_name: postgres
     restart: always
     env_file:
@@ -53,25 +55,6 @@ services:
       timeout: 5s
       retries: 10
 
-  chroma-server:
-    image: chromadb/chroma:latest
-    container_name: chroma
-    environment:
-      - IS_PERSISTENT=1
-    networks:
-      - app_network
-    ports:
-      - '8000:8000'
-    expose:
-      - 8000
-    volumes:
-      - chroma:/chroma/chroma
-    healthcheck:
-      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   anki:
     build:
       context: ./anki
@@ -87,6 +70,12 @@ services:
       - '8765:8765' # Anki-Connect
     volumes:
       - anki_data:/home/ankiuser
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -X POST -H 'Content-Type: application/json' -d '{\"action\":\"version\",\"version\":6}' http://localhost:8765 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
 
   caddy:
     image: caddy:latest
@@ -221,7 +210,6 @@ services:
 
 volumes:
   postgres_data:
-  chroma:
   grafana_data:
   loki_data:
   tempo_data:

@@ -16,7 +16,7 @@ with systems design and working with a modern, service-oriented stack.
 - **LangGraph** – Multi-agent state machine orchestrator for LLM workflows
 - **Server** – Python 3.12, FastAPI, Pydantic, structured as multiple Poetry-managed packages
 - **Frontend** – Next.js App Router with Server Actions and Server-Sent Events
-- **Databases** – PostgreSQL for structured data, Chroma for embeddings, Firebase for blob storage
+- **Databases** – PostgreSQL (with pgvector) for structured data and embeddings, Firebase for blob storage
 - **Deployment** – Docker Compose for local orchestration
 
 ---
@@ -51,7 +51,7 @@ cd frontend
 pnpm dev
 ```
 
-*Make sure the Docker services (Postgres, Chroma, etc.) are still running in the background via Compose.*
+*Make sure the Docker services (Postgres, etc.) are still running in the background via Compose.*
 
 ---
 
@@ -107,13 +107,13 @@ A dedicated EmbeddingService handles the transformation of parsed chapters into 
 
 - Retrieves sanitized plain text of each chapter from Postgres
 
-- Generates vector embeddings in Chroma DB, organizing collections by learning area
+- Generates vector embeddings via pgvector, organizing collections by learning area
 
 - Applies metadata weighting experiments (e.g. boosting title tokens for more relevant retrieval)
 
 **Libraries used**:
 
-- `chromadb` client for vector storage
+- `langchain-postgres` + `pgvector` for vector storage
 
 ## 🔄 Statemachine Package
 

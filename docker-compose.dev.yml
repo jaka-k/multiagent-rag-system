@@ -29,8 +29,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - chroma-server
-      - postgres-server
+      postgres-server:
+        condition: service_healthy
+      anki:
+        condition: service_healthy
 
   frontend:
     profiles: [app]
@@ -54,7 +56,7 @@ services:
 
   # ── Infrastructure (always started) ────────────────────────────────────────
   postgres-server:
-    image: postgres:16.4-alpine
+    image: pgvector/pgvector:pg16
     container_name: postgres
     restart: always
     env_file:
@@ -71,25 +73,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  chroma-server:
-    image: chromadb/chroma:latest
-    container_name: chroma
-    environment:
-      - IS_PERSISTENT=1
-    networks:
-      - app_network
-    ports:
-      - '8000:8000'
-    expose:
-      - 8000
-    volumes:
-      - chroma:/chroma/chroma
-    healthcheck:
-      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   anki:
     build:
       context: ./anki
@@ -105,6 +88,14 @@ services:
       - '8765:8765' # Anki-Connect
     volumes:
       - anki_data:/home/ankiuser
+    healthcheck:
+      # AnkiConnect responds once the addon is loaded inside the running
+      # Anki desktop. Anki cold-starts under Xvfb in ~30–60s.
+      test: ["CMD-SHELL", "curl -sf -X POST -H 'Content-Type: application/json' -d '{\"action\":\"version\",\"version\":6}' http://localhost:8765 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
 
   # ── Monitoring (started only with --profile monitoring) ────────────────────
   grafana:
@@ -216,7 +207,6 @@ services:
 
 volumes:
   postgres_data:
-  chroma:
   grafana_data:
   loki_data:
   tempo_data:
