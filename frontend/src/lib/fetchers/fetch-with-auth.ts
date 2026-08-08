@@ -23,8 +23,10 @@ function prepareInit(options: FetchAuthOptions, bearer?: string): RequestInit {
   }
 
   let serializedBody: string | undefined
+
   if (body !== undefined) {
     serializedBody = JSON.stringify(snakecaseKeys(body, { deep: true }))
+
     if (!headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')
     }
@@ -41,7 +43,10 @@ export async function fetchWithAuth<T>(
   const token = cookieStore.get('token')?.value
   const refreshToken = cookieStore.get('refreshToken')?.value
 
-  const response = await fetch(`${BACKEND_URL}${url}`, prepareInit(options, token))
+  const response = await fetch(
+    `${BACKEND_URL}${url}`,
+    prepareInit(options, token)
+  )
 
   if (response.status === 401 && refreshToken) {
     try {
@@ -57,7 +62,9 @@ export async function fetchWithAuth<T>(
           const retryData = await retryResponse.json()
           return {
             ok: retryResponse.ok,
-            data: camelcaseKeys(retryData, { deep: true }) as CamelCasedPropertiesDeep<T>
+            data: camelcaseKeys(retryData, {
+              deep: true
+            }) as CamelCasedPropertiesDeep<T>
           }
         } catch (e) {
           logger.error({ err: e }, 'Error parsing response data in retry')

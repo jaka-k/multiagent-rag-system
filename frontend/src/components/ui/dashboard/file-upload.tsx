@@ -85,8 +85,9 @@ export function FileUpload() {
   }
 
   const handleFileUpload:
-    | React.FormEventHandler<HTMLFormElement>
-    | undefined = async (event: FormEvent) => {
+    React.FormEventHandler<HTMLFormElement> | undefined = async (
+    event: FormEvent
+  ) => {
     event.preventDefault()
 
     if (!file) {

@@ -1,6 +1,6 @@
 import { logger } from '@lib/logger'
-import { storage } from '@lib/storage/storage'
 import { signInToFirebase } from '@lib/storage/auth'
+import { storage } from '@lib/storage/storage'
 import { getCoverMetadata } from '@lib/utils'
 import { CoverImage } from '@mytypes/epub-processor'
 import {
