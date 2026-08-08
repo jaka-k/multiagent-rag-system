@@ -10,7 +10,10 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - postgres-server
+      postgres-server:
+        condition: service_healthy
+      anki:
+        condition: service_healthy
     networks:
       - app_network
     healthcheck:
@@ -67,6 +70,12 @@ services:
       - '8765:8765' # Anki-Connect
     volumes:
       - anki_data:/home/ankiuser
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -X POST -H 'Content-Type: application/json' -d '{\"action\":\"version\",\"version\":6}' http://localhost:8765 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
 
   caddy:
     image: caddy:latest
