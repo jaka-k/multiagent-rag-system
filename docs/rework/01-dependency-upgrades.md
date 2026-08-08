@@ -54,11 +54,10 @@ real drift.
 
 ## Tier 4 — repo hygiene (not versions)
 
-- [ ] **Makefile rot** from the ChromaDB removal:
-  - `logs` target still tails `chroma-server` → the command fails.
-  - `infra` help-text still says "(postgres, chroma, anki)".
-  - `reset-db` calls `poetry run reset-vector-db`, which no longer exists
-    in `[tool.poetry.scripts]` → fix or delete (02 supersedes it).
+- [x] **Makefile rot** from the ChromaDB removal — already fixed on master
+      by PR #6 (`logs` rewritten, `reset-db` → `db-shell`, help-text clean).
+      The rot was only visible on the pre-merge PR-stack checkout and went
+      away when the branches were updated from master (2026-08-08).
 - [ ] **AnkiConnect failure mode**: `POST /api/area` returns 500 when
       AnkiConnect is unreachable, *after* the area row commits — the client
       sees an error for a half-succeeded operation. Make deck creation
@@ -70,8 +69,9 @@ real drift.
       from those checkouts lack the fix. Rebuilding the container from
       master's `anki/` immediately fixed it (AnkiConnect responds on 8765;
       the entrypoint repairs the stale volume in place — no volume wipe
-      needed). Remaining: update the open PR branches from master so
-      `make infra`/`docker-dev` builds the fixed image from any checkout.
+      needed). Both open PR branches were updated from master on 2026-08-08,
+      and the compose-managed container rebuilt from the updated checkout is
+      healthy — `make infra` now builds the fixed image from any checkout.
       Note: `ANKI_URL` in `.env` was never the problem.
 - [ ] **ESLint**: `next build` warns about a `react-hooks` plugin conflict
       (declared in both `.eslintrc.json` and `eslint-config-next`). Remove
