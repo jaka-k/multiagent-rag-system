@@ -11,12 +11,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.14"
 black = "^24.8.0"
 pydantic-settings = "^2.6.0"
 fastapi = { version = ">=0.115.0", extras = ["standard"] }
-opentelemetry-sdk = "^1.29.0"
-opentelemetry-exporter-otlp-proto-grpc = "^1.29.0"
+opentelemetry-sdk = "^1.44.0"
+opentelemetry-exporter-otlp-proto-grpc = "^1.44.0"
 bcrypt = "^5.0.0"
 tiktoken = "^0.13.0"
 
@@ -27,7 +27,8 @@ profile = "black"
 pytest = "^8.3.2"
 websockets = "^13.0"
 sqlmodel = ">=0.0.22"
-psycopg = "^3.2.1"
+psycopg = { version = "^3.3", extras = ["binary"] }
+psycopg-pool = "^3.2.2"
 pyjwt = "^2.9.0"
 greenlet = "^3.1.1"
 asyncpg = ">=0.29.0"
@@ -36,9 +37,9 @@ sqlalchemy = "^2.0"
 pgvector = "^0.3.6"
 langchain-postgres = ">=0.0.12"
 anyio = "^4.6.2.post1"
-opentelemetry-instrumentation-fastapi = "^0.50b0"
-opentelemetry-instrumentation-requests = "^0.50b0"
-opentelemetry-instrumentation-sqlalchemy = "^0.50b0"
+opentelemetry-instrumentation-fastapi = "^0.65b0"
+opentelemetry-instrumentation-requests = "^0.65b0"
+opentelemetry-instrumentation-sqlalchemy = "^0.65b0"
 firebase-admin = "^6.6.0"
 
 
@@ -48,8 +49,6 @@ langgraph = "^1.1"
 langchain-google-genai = "^4.2"
 langchain-community = "^0.4"
 orjson = "^3.10"
-psycopg = { version = "^3.2.4", extras = ["binary"] }
-psycopg-pool = "^3.2.2"
 
 [tool.poetry.group.tools.dependencies]
 beautifulsoup4 = "^4.12.3"
