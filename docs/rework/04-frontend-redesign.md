@@ -159,9 +159,13 @@ These block full parity and need product decisions, not just UI work:
    has no review-state field. Cards sync to Anki (`Flashcard.anki_id`,
    `Deck.anki_id`) — check whether AnkiConnect can report review stats per
    card/deck to back the progress bar, or add local tracking.
-5. **"Loose cards" is UI-only work** — `Flashcard.queue_id` is already
-   nullable, so unassigned cards already exist at the schema level; this
-   tab just needs a query and a grid.
+5. **"Loose cards" is the MRAG Clipper's landing zone.** `Flashcard.queue_id`
+   is already nullable, so unassigned cards exist at the schema level and the
+   band itself is a query + grid. But per product direction (2026-08), the
+   Chrome extension **is planned** — clipped web content arrives as loose
+   cards first, to be filed into queues later. So the schema should be
+   clipper-ready from the start (source URL, provenance) even though the
+   extension ships as its own later epic — see doc 05's loose-cards section.
 6. **Book covers**: `Document.cover_image` exists; confirm the EPUB parser
    actually populates it. If covers are frequently missing, port the
    mockup's gradient-+-abbreviation `BookCover` as the fallback (it's
@@ -171,10 +175,15 @@ These block full parity and need product decisions, not just UI work:
 ## Explicit non-goals for this rework
 
 - **Chrome extension** ("MRAG Clipper", the "Connected" banner in
-  `agents.jsx`) does not exist and is not part of this plan — the mockup
-  hardcodes it as always-connected. Treat as a separate future epic if
-  wanted; for now the Agent Instructions tab ships without the extension
-  banner/routing-settings section, or with it visibly disabled.
+  `agents.jsx`) — **planned, but a separate epic**, not built in this
+  rework (confirmed as product direction 2026-08, superseding the earlier
+  read that it was mockup fiction). This rework prepares for it rather than
+  ships it: the loose-cards band is its landing zone (gap #5), and the
+  Flashcard schema gains clipper-ready provenance fields (doc 05). The
+  Agent Instructions tab ships with the extension banner/routing-settings
+  section absent or in a visible "not connected / coming soon" state — the
+  mockup's hardcoded "Connected" must not appear before the extension is
+  real.
 - Page numbers on EPUB content (see gap #2) — ship heading-based
   subsections, not literal page numbers, unless a real pagination source
   is found.

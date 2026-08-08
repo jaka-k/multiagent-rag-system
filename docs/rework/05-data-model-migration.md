@@ -160,13 +160,23 @@ proposed here beyond what's already listed.
 
 ## Flashcards main tab
 
-- **Loose-cards band ("not in a queue") — already works.**
+- **Loose-cards band ("not in a queue") — the MRAG Clipper's landing zone.**
+  Product direction (2026-08): the Chrome extension is a planned feature,
+  and clipped web content lands here first, to be filed into queues later.
   `Flashcard.queue_id` is nullable today, so "loose" already means
-  `queue_id IS NULL` at the schema level. Once `chapter_id` (Rail section,
-  above) lands, the loose-cards grid can also show a proper source badge
-  ("web · MDN" vs. "DDIA · §5.1") by checking whether `chapter_id` is set;
-  add `Flashcard.source_url: Optional[str]` for the web-clip case so
-  non-chapter cards have something to display and link back to.
+  `queue_id IS NULL` at the schema level — but the schema should be
+  clipper-ready now so the extension epic doesn't need its own migration
+  wave later:
+  - `Flashcard.source_url: Optional[str]` — the clipped page's URL, cited
+    on every card (the mockup's "Keep source: URL + selection" setting).
+  - `Flashcard.origin: str` — enum `chat | clip | manual`, so the UI badges
+    provenance ("web · MDN" vs. "DDIA · §5.1" vs. "manual") without
+    inferring it from which FKs happen to be null. Chat-generated cards get
+    `chapter_id` set; clipper cards get `source_url`; manual cards neither.
+  - The clipper itself will need an authenticated ingest endpoint
+    (`POST /api/flashcards` accepting origin=clip + source_url + agent to
+    run) — out of scope for this doc's schema work, but the columns above
+    are exactly what that endpoint writes into.
 - **Queue grid — the largest structural mismatch in this entire redesign.**
   The mockup's `queues` (`data.js`) are **persistent, cross-session, named
   collections** scoped to a book/chapter — cards accumulate into a queue
@@ -241,7 +251,8 @@ still reads `Instruction` before deciding to fold it in or deprecate it.
 | `Flashcard.chapter_id` (nullable FK → `chapter.id`) | new column | Rail card counts, loose-card source badges |
 | `Flashcard.card_type` | new column/enum | Flashcards sidebar tab, main-tab cards |
 | `Flashcard.question` / `.answer` / `.code_snippet` | new columns | Flashcards sidebar tab, main-tab cards |
-| `Flashcard.source_url` | new column | Loose-cards source badge |
+| `Flashcard.source_url` | new column | Loose-cards source badge; MRAG Clipper ingest |
+| `Flashcard.origin` (`chat \| clip \| manual`) | new column/enum | Provenance badges; MRAG Clipper ingest |
 | `MessageRetrieval` (message_id, chapter_id, relevance_score, rank) | new table | Chapters sidebar tab (reload persistence), Conversation citations, Chat-Home primary-book derivation |
 | `Session.document_id` (nullable FK) *or* derive from `MessageRetrieval* | new column *or* none | Chat-Home book cover (pending decision) |
 | `Agent` (replaces `CustomInstructionQueue`'s role) | new table | Agent Instructions main tab |
