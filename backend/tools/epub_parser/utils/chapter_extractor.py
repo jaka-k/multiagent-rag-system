@@ -112,7 +112,7 @@ def extract_chapters(file_path):
                             )
 
         else:
-            print("No TOC file found. Processing all document items.")
+            logger.info("No TOC file found. Processing all document items.")
 
             for file_name in file_list:
                 if (

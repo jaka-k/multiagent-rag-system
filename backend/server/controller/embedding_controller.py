@@ -2,6 +2,11 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from server.core.exceptions import (
+    EmbeddingDownloadError,
+    EmbeddingParseError,
+    EmbeddingPipelineError,
+)
 from server.core.logger import app_logger
 from server.models.document import Document, EmbeddingStatus
 from server.service.embedding.embedding_service import EmbeddingService
@@ -30,41 +35,60 @@ async def background_embedding_process(document_id: str, session: AsyncSession):
         await session.close()
         raise HTTPException(status_code=404, detail="Document not found")
 
-    await update_document_status(session, document_id, EmbeddingStatus.PROCESSING)
+    log_ctx = {"doc_id": str(document_id), "file_path": document.file_path}
     downloader = FirebaseFileDownloader()
 
     try:
-        file_path = downloader.download_epub(document.file_path)
+        await update_document_status(session, document_id, EmbeddingStatus.PROCESSING)
 
-    except Exception as e:
-        await update_document_status(session, document_id, EmbeddingStatus.FAILED)
-        app_logger.error(f"Error during downloading of epub {document_id}: {e}")
-        await session.close()
-        raise e
+        try:
+            file_path = downloader.download_epub(document.file_path)
+        except EmbeddingDownloadError:
+            raise
+        except Exception as exc:
+            raise EmbeddingDownloadError(f"Firebase download failed: {exc}") from exc
 
-    epub_service = EpubProcessingService(document, session)
+        try:
+            epub_service = EpubProcessingService(document, session)
+            await epub_service.process_and_commit(file_path)
+        except Exception as exc:
+            raise EmbeddingParseError(f"EPUB parsing failed: {exc}") from exc
 
-    try:
-        await epub_service.process_and_commit(file_path)
-
-    except Exception as e:
-        await update_document_status(session, document_id, EmbeddingStatus.FAILED)
-        app_logger.error(f"Error during parsing of document {document_id}: {e}")
-        await session.close()
-        raise e
-
-    await update_document_status(session, document_id, EmbeddingStatus.EMBEDDING)
-    embedding_service = EmbeddingService(document_id, session)
-
-    try:
+        await update_document_status(session, document_id, EmbeddingStatus.EMBEDDING)
+        embedding_service = EmbeddingService(document_id, session)
         await embedding_service.parse_chapters()
-    except Exception as e:
+
+        await update_document_status(session, document_id, EmbeddingStatus.COMPLETED)
+        app_logger.info(
+            "Embedding pipeline succeeded",
+            extra={"step": "embedding.complete", **log_ctx},
+        )
+
+    except EmbeddingPipelineError as exc:
         await update_document_status(session, document_id, EmbeddingStatus.FAILED)
-        app_logger.error(f"Error during embedding process for document {document_id}: {e}")
+        app_logger.error(
+            f"{exc.step} failed",
+            exc_info=exc,
+            extra={
+                "step": exc.step,
+                "error_type": type(exc).__name__,
+                "cause_type": type(exc.__cause__).__name__ if exc.__cause__ else None,
+                **log_ctx,
+            },
+        )
+        raise
+    except Exception as exc:
+        await update_document_status(session, document_id, EmbeddingStatus.FAILED)
+        app_logger.error(
+            "Unhandled exception in embedding pipeline",
+            exc_info=exc,
+            extra={
+                "step": "embedding.unhandled",
+                "error_type": type(exc).__name__,
+                **log_ctx,
+            },
+        )
+        raise
+    finally:
+        downloader.cleanup()
         await session.close()
-        raise e
-
-    await update_document_status(session, document_id, EmbeddingStatus.COMPLETED)
-
-    downloader.cleanup()
-    await session.close()

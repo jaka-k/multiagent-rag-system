@@ -1,8 +1,13 @@
+import uuid
+
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from server.core.exceptions import AppError
+from server.core.logger import app_logger
 from server.core.otel import init_telemetry
 from server.core.setup import lifespan_factory
 from server.routers import auth, flashcards, chat, sse_router, documents, areas
@@ -10,6 +15,59 @@ from server.routers import auth, flashcards, chat, sse_router, documents, areas
 app = FastAPI(lifespan=lifespan_factory(create_tables_on_start=True))
 
 init_telemetry(app)
+
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    """Surface typed pipeline errors with a correlatable error_id, step, and code.
+
+    The HTTP status comes from the exception's five-digit code (first three
+    digits), so 400xx/404xx errors respond as client errors and 500xx as 500s.
+    """
+    error_id = str(uuid.uuid4())
+    app_logger.error(
+        f"{exc.step} failed",
+        exc_info=exc,
+        extra={
+            "error_id": error_id,
+            "step": exc.step,
+            "code": exc.code,
+            "error_type": type(exc).__name__,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+    return JSONResponse(
+        status_code=exc.http_status,
+        content={
+            "detail": str(exc) or "Internal server error",
+            "error_id": error_id,
+            "step": exc.step,
+            "code": exc.code,
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Last-resort handler: anything that escaped a typed AppError still produces
+    one structured log line and a 500 with a correlatable error_id."""
+    error_id = str(uuid.uuid4())
+    app_logger.error(
+        "Unhandled exception",
+        exc_info=exc,
+        extra={
+            "error_id": error_id,
+            "step": "unhandled",
+            "error_type": type(exc).__name__,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "error_id": error_id},
+    )
 
 # CORS settings
 origins = [

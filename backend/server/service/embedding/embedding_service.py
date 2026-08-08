@@ -3,6 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
+from server.core.exceptions import EmbeddingModelError, EmbeddingStoreError
 from server.core.logger import app_logger
 from server.db.vectordb.vectordb import get_vector_store
 from server.models.document import Document
@@ -42,8 +43,6 @@ class EmbeddingService:
         result = await self.db_session.execute(stmt)
         document = result.scalar_one_or_none()
 
-        await self.db_session.refresh(document, attribute_names=["chapters"])
-
         if not document:
             app_logger.error(f"Document {self.doc_id} not found in background task.")
             return
@@ -80,25 +79,58 @@ class EmbeddingService:
             chapters_to_mark.append((chapter, len(chunks)))
 
         if not pending_chunks:
-            app_logger.warning("No new chunks to embed.")
+            app_logger.warning(
+                "No new chunks to embed",
+                extra={"step": "embedding.chunk", "doc_id": str(self.doc_id)},
+            )
             return
 
         try:
             for batch in batchify(pending_chunks):
                 await vector_store.aadd_documents(documents=batch)
+        except Exception as exc:
+            raise _classify_vector_store_error(exc, self.doc_id, len(pending_chunks)) from exc
 
-            for chapter, chunk_count in chapters_to_mark:
-                chapter.is_embedded = True
-                app_logger.info(f"Embedded {chunk_count} chunks for chapter {chapter.label}.")
-
-            await self.db_session.commit()
+        for chapter, chunk_count in chapters_to_mark:
+            chapter.is_embedded = True
             app_logger.info(
-                f"Embedded {len(pending_chunks)} chunks across "
-                f"{len(chapters_to_mark)} chapters successfully."
+                "Embedded chapter",
+                extra={
+                    "step": "embedding.chunk",
+                    "doc_id": str(self.doc_id),
+                    "chapter_id": str(chapter.id),
+                    "chunk_count": chunk_count,
+                },
             )
-        except Exception as e:
-            app_logger.error(f"Failed to embed chunks: {e}")
-            raise
+
+        await self.db_session.commit()
+        app_logger.info(
+            "Embedding pipeline completed",
+            extra={
+                "step": "embedding.complete",
+                "doc_id": str(self.doc_id),
+                "chunks": len(pending_chunks),
+                "chapters": len(chapters_to_mark),
+            },
+        )
+
+
+def _classify_vector_store_error(exc: Exception, doc_id, chunks: int):
+    """Best-effort split between Gemini-side and pgvector-side failures.
+
+    google.api_core.exceptions.* indicate the embedding API rejected the call
+    (404 for retired models, 429 rate limit, 401 auth, etc); everything else
+    is treated as a pgvector write failure. The original exception chains via
+    `from exc` either way, so the original type lands in the error log.
+    """
+    module = type(exc).__module__ or ""
+    if module.startswith("google.api_core") or module.startswith("google.auth"):
+        return EmbeddingModelError(
+            f"Embedding model call failed for doc {doc_id} ({chunks} chunks): {exc}"
+        )
+    return EmbeddingStoreError(
+        f"Vector store write failed for doc {doc_id} ({chunks} chunks): {exc}"
+    )
 
 
 def batchify(items, batch_size=20):

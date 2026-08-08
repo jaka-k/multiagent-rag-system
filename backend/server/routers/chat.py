@@ -9,6 +9,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.chat_controller import ChatController
+from server.core.exceptions import AppError
 from server.core.logger import app_logger
 from server.core.security import get_current_active_user
 from server.db.database import get_session
@@ -98,7 +99,6 @@ async def websocket_endpoint(
         await websocket.close(code=1008, reason="Chat session not found")
         return
 
-    # TODO: Error handling is non-existent, The service should be integrated inside the controller
     chat_service = ChatService(chat_id, chat.area.label, db)
     chat_controller = ChatController(chat_id, db)
 
@@ -135,4 +135,52 @@ async def websocket_endpoint(
             await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
 
     except WebSocketDisconnect:
-        app_logger.info("WebSocket connection was closed")
+        app_logger.info(
+            "WebSocket connection was closed",
+            extra={"chat_id": str(chat_id)},
+        )
+    except AppError as exc:
+        error_id = str(uuid.uuid4())
+        app_logger.error(
+            f"{exc.step} failed in chat WebSocket",
+            exc_info=exc,
+            extra={
+                "error_id": error_id,
+                "step": exc.step,
+                "code": exc.code,
+                "error_type": type(exc).__name__,
+                "chat_id": str(chat_id),
+            },
+        )
+        await _send_ws_error(
+            websocket, error_id, exc.step, str(exc) or "Pipeline error", code=exc.code
+        )
+    except Exception as exc:
+        error_id = str(uuid.uuid4())
+        app_logger.error(
+            "Unhandled exception in chat WebSocket",
+            exc_info=exc,
+            extra={
+                "error_id": error_id,
+                "step": "chat.websocket",
+                "error_type": type(exc).__name__,
+                "chat_id": str(chat_id),
+            },
+        )
+        await _send_ws_error(websocket, error_id, "chat.websocket", "Internal server error")
+
+
+async def _send_ws_error(
+    websocket: WebSocket, error_id: str, step: str, detail: str, code: int = 50000
+) -> None:
+    """Deliver a structured error frame and close 1011, tolerating an already-closed socket."""
+    try:
+        await websocket.send_text(
+            json.dumps({"error": {"detail": detail, "error_id": error_id, "step": step, "code": code}})
+        )
+    except Exception:
+        pass
+    try:
+        await websocket.close(code=1011, reason="Internal error")
+    except Exception:
+        pass
