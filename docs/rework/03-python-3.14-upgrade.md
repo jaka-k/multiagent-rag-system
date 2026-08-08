@@ -89,14 +89,18 @@ Two structural takeaways:
    - [x] alembic upgrade head; app boot (24 routes, Firebase init OK, DB
          init OK); pgvector smoke (introspection/insert/upsert/filtered
          search) all pass on 3.14.
-   - [x] Live smoke, partial: **Firebase Admin initialized against real
-         credentials on protobuf 7** — the riskiest surface validated. The
-         Gemini call reached Google and round-tripped a well-formed API
-         error through the new grpc/protobuf/httpx stack, but the response
-         was `API_KEY_INVALID`: **the GOOGLE_API_KEY in `.env` is being
-         rejected by Google** (not a 3.14 issue — same key fails on any
-         stack). Rotate the key, then re-run one embedding + one chat turn
-         to finish this checkbox.
+   - [x] Live smoke **complete** (2026-08-08, after key rotation):
+         embedding returns a real 1536-dim vector from
+         `gemini-embedding-001`; chat returns via `gemini-flash-latest`;
+         Firebase Admin initializes against real credentials. protobuf 7
+         validated end-to-end on all three surfaces.
+         Side findings (key-tier, not 3.14): the rotated key is free-tier —
+         `gemini-2.5-*` are retired for new users and pro-class models have
+         free-tier quota 0, so the config constants must move off
+         `gemini-2.5-pro`/`-flash` (handled in the Tier-1 hygiene branch);
+         LangSmith tracing is enabled in `.env` with a dead key and 403s on
+         every LLM call — disable `LANGCHAIN_TRACING_V2` or rotate that key
+         too.
    - [ ] Monitoring stack up: traces/logs still arrive (otel 1.44 vs the
          collector image — bump the collector if the OTLP handshake fails).
    - [ ] `make docker-dev` full-stack rebuild on the 3.14 image.
