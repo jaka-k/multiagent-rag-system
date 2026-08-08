@@ -1,0 +1,15 @@
+# Keep the build context minimal. Only the files explicitly COPY'd by
+# anki.Dockerfile need to be sent to the daemon:
+#   - supervisord.conf
+#   - seed-profile.py
+#   - entrypoint.sh
+# Anything else in this directory is editor cruft or future drift.
+
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+__pycache__/
+*.pyc

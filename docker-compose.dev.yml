@@ -29,7 +29,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres-server
+      postgres-server:
+        condition: service_healthy
+      anki:
+        condition: service_healthy
 
   frontend:
     profiles: [app]
@@ -85,6 +88,14 @@ services:
       - '8765:8765' # Anki-Connect
     volumes:
       - anki_data:/home/ankiuser
+    healthcheck:
+      # AnkiConnect responds once the addon is loaded inside the running
+      # Anki desktop. Anki cold-starts under Xvfb in ~30–60s.
+      test: ["CMD-SHELL", "curl -sf -X POST -H 'Content-Type: application/json' -d '{\"action\":\"version\",\"version\":6}' http://localhost:8765 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
 
   # ── Monitoring (started only with --profile monitoring) ────────────────────
   grafana:

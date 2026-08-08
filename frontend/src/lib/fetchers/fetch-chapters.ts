@@ -2,7 +2,6 @@
 
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth'
 import { logger } from '@lib/logger'
-import { updateSession } from '@lib/session/session'
 import type { Chapter, ChapterQueue } from '@mytypes/types'
 
 export const getChapterQueue = async (chatId: string) => {
@@ -12,10 +11,6 @@ export const getChapterQueue = async (chatId: string) => {
 
   if (!response.ok) {
     logger.error(`Failed to fetch ChapterQueue for chat: ${chatId}`)
-  }
-
-  if (response.refreshedToken) {
-    await updateSession(response.refreshedToken)
   }
 
   return response.data
@@ -28,10 +23,6 @@ export const getSingleChapter = async (chapterTag: string) => {
 
   if (!response.ok) {
     logger.error('Error while fetching chapter data')
-  }
-
-  if (response.refreshedToken) {
-    await updateSession(response.refreshedToken)
   }
 
   return response.data

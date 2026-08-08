@@ -2,7 +2,7 @@ COMPOSE_DEV  = docker compose -f docker-compose.dev.yml
 COMPOSE_PROD = docker compose -f docker-compose.prod.yml
 
 .PHONY: dev infra monitor stop install docker-dev help \
-        migration migrate db-rollback db-history db-current
+        migration migrate db-rollback db-history db-current db-shell
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -21,7 +21,7 @@ dev: infra ## Start infra containers + run backend and frontend locally
 		(cd frontend && pnpm dev) & \
 		wait
 
-infra: ## Start core infrastructure containers (postgres, chroma, anki)
+infra: ## Start core infrastructure containers (postgres, anki)
 	$(COMPOSE_DEV) up -d postgres-server anki
 
 monitor: ## Start the monitoring stack (grafana, loki, tempo, prometheus, otelcol)
@@ -53,10 +53,10 @@ install-fe: ## Install frontend dependencies only
 # ── Utilities ────────────────────────────────────────────────────────────────
 
 logs: ## Tail logs for all running infra containers
-	$(COMPOSE_DEV) logs -f postgres-server chroma-server anki
+	$(COMPOSE_DEV) logs -f postgres-server anki
 
-reset-db: ## Drop and recreate the vector DB collections
-	cd backend && poetry run reset-vector-db
+db-shell: ## Open a psql shell inside the postgres container (vectors live in pgvector tables; reset with TRUNCATE)
+	$(COMPOSE_DEV) exec postgres-server psql -U $${POSTGRES_USER:-multirag_dev} -d $${POSTGRES_DB:-multirag_db}
 
 # ── Database migrations (Alembic) ────────────────────────────────────────────
 

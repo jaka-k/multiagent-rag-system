@@ -18,10 +18,7 @@ function EpubElement({ doc }: { doc: Document }) {
       setCurrentStep('processing')
 
       const response = await fetchWithAuth(`/api/embedding/${doc.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        method: 'POST'
       })
 
       if (!response.ok) {

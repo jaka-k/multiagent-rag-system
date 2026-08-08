@@ -113,15 +113,15 @@ export function FileUpload() {
 
       const request: CreateDocumentRequest = {
         title: metadataFromWorker.metadata.title ?? mainFileMetadata.name,
-        area_id: activeArea.id,
+        areaId: activeArea.id,
         description:
           metadataFromWorker.metadata.description ||
           mainFileMetadata.customMetadata?.description ||
           metadataFromWorker.metadata.title ||
           '',
-        file_path: mainFileMetadata.fullPath,
-        file_size: mainFileMetadata.size,
-        cover_image: createPersistentDownloadUrl(coverFileMetadata),
+        filePath: mainFileMetadata.fullPath,
+        fileSize: mainFileMetadata.size,
+        coverImage: createPersistentDownloadUrl(coverFileMetadata),
         author: metadataFromWorker.metadata.creator
       }
 

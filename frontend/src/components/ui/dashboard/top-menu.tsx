@@ -63,13 +63,10 @@ const TopMenu = () => {
 
     const response = await fetchWithAuth<CreateAreaResponse>('/api/area', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+      body: {
         name: newAreaName,
         label: newAreaLabel
-      })
+      }
     })
 
     if (!response.ok) {
