@@ -9,8 +9,10 @@ alone: findings first, then a concrete, ordered plan.
 | [01-dependency-upgrades.md](01-dependency-upgrades.md) | Backend/frontend version bumps + repo hygiene | 1–2 sessions, tiered |
 | [02-embedding-export-import.md](02-embedding-export-import.md) | Scripts to export/import embeddings per book or area | ~1 session |
 | [03-python-3.14-upgrade.md](03-python-3.14-upgrade.md) | Align Python at 3.14 everywhere (prod runs 3.12 today) | ~half a session |
+| [04-frontend-redesign.md](04-frontend-redesign.md) | Chat-first app-shell redesign, modeled on the claude.ai/design "MRAG" project | Multi-phase, the largest item here |
 
-Recommended order: **03 → 01 → 02**. The Python bump first, so the dependency
-upgrades in 01 are resolved once against the final interpreter; 02 is
-independent and can happen anytime after the `book_embeddings` table lands
-(PR #12).
+Recommended order: **03 → 01 → 02**, independently of **04** (the frontend
+redesign). The Python bump first, so the dependency upgrades in 01 are
+resolved once against the final interpreter; 02 is independent and can
+happen anytime after the `book_embeddings` table lands (PR #12). 04 is the
+biggest single effort and has its own internal phasing — see the doc.
