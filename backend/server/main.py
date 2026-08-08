@@ -19,7 +19,11 @@ init_telemetry(app)
 
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
-    """Surface typed pipeline errors as 500s with a correlatable error_id and step."""
+    """Surface typed pipeline errors with a correlatable error_id, step, and code.
+
+    The HTTP status comes from the exception's five-digit code (first three
+    digits), so 400xx/404xx errors respond as client errors and 500xx as 500s.
+    """
     error_id = str(uuid.uuid4())
     app_logger.error(
         f"{exc.step} failed",
@@ -27,14 +31,20 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         extra={
             "error_id": error_id,
             "step": exc.step,
+            "code": exc.code,
             "error_type": type(exc).__name__,
             "path": request.url.path,
             "method": request.method,
         },
     )
     return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc) or "Internal server error", "error_id": error_id, "step": exc.step},
+        status_code=exc.http_status,
+        content={
+            "detail": str(exc) or "Internal server error",
+            "error_id": error_id,
+            "step": exc.step,
+            "code": exc.code,
+        },
     )
 
 
