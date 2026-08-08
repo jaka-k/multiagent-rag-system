@@ -92,7 +92,7 @@ class RagAgent:
 
         k = {"shallow": 3, "deep": 8}.get(rewritten.retrieval_tag, 5)
 
-        return await retrieve_chapters(query=full_query, collection=self.area, k_chapters=k)
+        return await retrieve_chapters(query=full_query, area=self.area, k_chapters=k)
 
     async def _run_agent(self, inp) -> AsyncIterator[dict]:
         """

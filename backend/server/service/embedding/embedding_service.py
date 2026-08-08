@@ -47,7 +47,8 @@ class EmbeddingService:
             app_logger.error(f"Document {self.doc_id} not found in background task.")
             return
 
-        vector_store = get_vector_store(document.area.label)
+        vector_store = await get_vector_store()
+        area_label = document.area.label
 
         pending_chunks: list[PGVectorDocument] = []
         chapters_to_mark = []
@@ -66,6 +67,7 @@ class EmbeddingService:
                     PGVectorDocument(
                         page_content=chunk_text,
                         metadata={
+                            "area": area_label,
                             "title": document.title,
                             "chapter": chapter.parent_label,
                             "subchapter": chapter.label,
