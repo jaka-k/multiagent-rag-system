@@ -147,11 +147,14 @@ async def websocket_endpoint(
             extra={
                 "error_id": error_id,
                 "step": exc.step,
+                "code": exc.code,
                 "error_type": type(exc).__name__,
                 "chat_id": str(chat_id),
             },
         )
-        await _send_ws_error(websocket, error_id, exc.step, str(exc) or "Pipeline error")
+        await _send_ws_error(
+            websocket, error_id, exc.step, str(exc) or "Pipeline error", code=exc.code
+        )
     except Exception as exc:
         error_id = str(uuid.uuid4())
         app_logger.error(
@@ -167,11 +170,13 @@ async def websocket_endpoint(
         await _send_ws_error(websocket, error_id, "chat.websocket", "Internal server error")
 
 
-async def _send_ws_error(websocket: WebSocket, error_id: str, step: str, detail: str) -> None:
+async def _send_ws_error(
+    websocket: WebSocket, error_id: str, step: str, detail: str, code: int = 50000
+) -> None:
     """Deliver a structured error frame and close 1011, tolerating an already-closed socket."""
     try:
         await websocket.send_text(
-            json.dumps({"error": {"detail": detail, "error_id": error_id, "step": step}})
+            json.dumps({"error": {"detail": detail, "error_id": error_id, "step": step, "code": code}})
         )
     except Exception:
         pass
