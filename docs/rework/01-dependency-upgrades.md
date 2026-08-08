@@ -63,9 +63,13 @@ real drift.
       AnkiConnect is unreachable, *after* the area row commits — the client
       sees an error for a half-succeeded operation. Make deck creation
       non-fatal (log + retry later) so area creation degrades gracefully.
-- [ ] **Anki image on Apple Silicon**: the container starts but nothing
-      listens on 8765 (Anki itself never comes up). Finish/merge
-      `fix/anki-image-multiarch`.
+- [ ] **AnkiConnect unreachable locally**: the multiarch image fix (PR #8)
+      is merged and the local image is current, but the follow-up commit
+      `e31bad6` ("rewrite webBindAddress to 0.0.0.0 on stale volumes") is
+      still unmerged on `fix/anki-image-multiarch` — and the symptom matches
+      exactly (container up, nothing listening on 8765, old `anki_data`
+      volume). Merge that commit; interim workaround:
+      `docker volume rm anki_data` and recreate the container.
 - [ ] **ESLint**: `next build` warns about a `react-hooks` plugin conflict
       (declared in both `.eslintrc.json` and `eslint-config-next`). Remove
       the duplicate registration. eslint 8.57 is EOL → flat-config/eslint-9
