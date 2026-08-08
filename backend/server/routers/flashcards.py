@@ -62,17 +62,21 @@ async def add_flashcard(
         raise HTTPException(status_code=501, detail="Flashcard not found")
 
     try:
-        anki_service = AnkiService(deck.name)
-        anki_id = anki_service.add_flashcard(flashcard.front, flashcard.back)
-        anki_service.sync()
+        note_ids = await AnkiService(deck.name).add_flashcards(
+            [(flashcard.front, flashcard.back)]
+        )
+        if not note_ids or note_ids[0] is None:
+            raise HTTPException(status_code=409, detail="Anki rejected the note (duplicate)")
 
-        flashcard.anki_id = str(anki_id)
+        flashcard.anki_id = note_ids[0]
         flashcard.deck_id = deck.id
         flashcard.queue_id = None
         flashcard.queue = None
-    except Exception as e :
+    except HTTPException:
+        raise
+    except Exception as e:
         app_logger.error(e)
-        raise HTTPException(status_code=505, detail=f'Internal server error, {e}')
+        raise HTTPException(status_code=500, detail=f'Internal server error, {e}')
 
 
     flashcard_data = flashcard.model_dump(exclude_unset=True)

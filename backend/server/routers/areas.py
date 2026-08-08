@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from server.core.logger import app_logger
 from server.core.security import get_current_active_user
 from server.db.database import get_session
 from server.models.area import Area
@@ -44,21 +45,27 @@ async def create_area(
         session.add(area)
         await session.commit()
         await session.refresh(area)
+    except Exception as e:
+        app_logger.error(f"Area creation failed: {e}", exc_info=e)
+        raise HTTPException(status_code=500, detail=f"Could not create area: {e}")
 
-        anki_service = AnkiService(label)
-        deck_id = anki_service.get_deck_id()
-        print("DECK_ID:", deck_id)
-
+    # Deck creation is non-fatal: the area row is already committed, so an
+    # unreachable AnkiConnect must not turn a half-succeeded operation into
+    # a 500. Without a Deck row, flashcard export for this area fails until
+    # the deck is created — log loudly instead.
+    try:
+        deck_id = await AnkiService(label).ensure_deck()
         deck = Deck(name=area.label, area_id=area.id, anki_id=deck_id)
-        print("deck:", deck)
         session.add(deck)
         await session.commit()
-
-        return area
-
     except Exception as e:
-        print(e)
-        raise HTTPException(status_code=500, detail=f'Could not create area {e}')
+        app_logger.error(
+            "Anki deck creation failed; area created without a deck",
+            exc_info=e,
+            extra={"step": "area.deck_create", "area_id": str(area.id), "label": label},
+        )
+
+    return area
 
 
 @router.get("/area/{area_id}/documents", response_model=List[Document])
