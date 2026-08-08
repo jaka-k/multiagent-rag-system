@@ -23,6 +23,24 @@ pydantic 2.12 / pydantic-core, psycopg 3.3, sqlalchemy 2.0.48, fastapi,
 langchain stack, tiktoken 0.13, orjson, cryptography (abi3), websockets 13,
 firebase-admin 6.9 — and everything else not listed below.
 
+**Postgres driver, verified with live traffic** (the highest-risk C
+extension): psycopg 3.3.3 + psycopg-binary loads its compiled
+implementation on 3.14 (`psycopg.pq.__impl__ == "binary"`, cp314 wheels
+exist — no pure-Python fallback), and the full PGVectorStore smoke test
+passes against live Postgres on 3.14: async engine, table introspection,
+batched inserts, upsert-by-id, area-filtered cosine similarity with correct
+metadata merge. psycopg-pool 3.3.0 likewise installs unchanged.
+
+Note: pyproject declares psycopg twice (a plain `^3.2.1` in the main deps and
+`^3.2.4` + binary extra further down) — consolidate to one declaration with
+`extras = ["binary"]` while touching this.
+
+**Watch item — langchain's pydantic.v1 shim**: importing `langchain_core`
+on 3.14 emits *"Core Pydantic V1 functionality isn't compatible with Python
+3.14 or greater"*. Our code is pydantic-v2 native and everything tested
+works; the warning comes from langchain-core's deprecated v1 compat layer.
+Bumping langchain 1.2 → 1.3 (Tier 1 in 01) should quiet it — confirm after.
+
 **Minimum bump set** (locked versions predate 3.14; these are the versions
 pip resolved to and that import cleanly):
 
