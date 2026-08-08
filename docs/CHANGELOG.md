@@ -65,8 +65,9 @@ flagged.
 ## Infra fixes on the side (2026-05-29, PRs #8, #9)
 
 - **Anki image rebuilt multi-arch (amd64 + arm64)**; broken sources, race,
-  dead deps fixed (PR #8). Known gap: the stale-volume `webBindAddress`
-  fix (`e31bad6`) is still unmerged on `fix/anki-image-multiarch`.
+  dead deps fixed; entrypoint seeds AnkiConnect, registers the profile, and
+  repairs `webBindAddress` on stale volumes; compose healthcheck added
+  (PR #8, merged into the pgvector branch and landed on master via PR #6).
 - **Frontend fetchers: symmetric case conversion + typed responses** (PR #9).
 
 ## Phase 1 — Foundation (2026-03-28 → 03-29, PRs #1–#4, marker `c1a10a0`)

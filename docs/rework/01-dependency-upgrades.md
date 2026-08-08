@@ -63,13 +63,16 @@ real drift.
       AnkiConnect is unreachable, *after* the area row commits — the client
       sees an error for a half-succeeded operation. Make deck creation
       non-fatal (log + retry later) so area creation degrades gracefully.
-- [ ] **AnkiConnect unreachable locally**: the multiarch image fix (PR #8)
-      is merged and the local image is current, but the follow-up commit
-      `e31bad6` ("rewrite webBindAddress to 0.0.0.0 on stale volumes") is
-      still unmerged on `fix/anki-image-multiarch` — and the symptom matches
-      exactly (container up, nothing listening on 8765, old `anki_data`
-      volume). Merge that commit; interim workaround:
-      `docker volume rm anki_data` and recreate the container.
+- [x] **AnkiConnect unreachable locally** — root-caused and resolved
+      2026-08-08. The reworked Anki image (PR #8, incl. the stale-volume
+      `webBindAddress` fix `e31bad6`) reached master via PR #6's merge, but
+      the open PR stack (#10 → #12) forked before that, so images built
+      from those checkouts lack the fix. Rebuilding the container from
+      master's `anki/` immediately fixed it (AnkiConnect responds on 8765;
+      the entrypoint repairs the stale volume in place — no volume wipe
+      needed). Remaining: update the open PR branches from master so
+      `make infra`/`docker-dev` builds the fixed image from any checkout.
+      Note: `ANKI_URL` in `.env` was never the problem.
 - [ ] **ESLint**: `next build` warns about a `react-hooks` plugin conflict
       (declared in both `.eslintrc.json` and `eslint-config-next`). Remove
       the duplicate registration. eslint 8.57 is EOL → flat-config/eslint-9
