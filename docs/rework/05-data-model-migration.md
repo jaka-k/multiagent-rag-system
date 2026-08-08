@@ -201,14 +201,14 @@ proposed here beyond what's already listed.
      "one card per session," accepting that "Auto by chapter" routing and
      long-lived named queues aren't part of this iteration. Much cheaper,
      but drops a feature the mockup treats as central.
-- **Progress bar (`studied`/`count`) — depends on the above, plus a source-
-  of-truth decision.** No local review-state field exists on `Flashcard`
-  today; cards sync to Anki (`anki_id`) which *does* track review state.
-  Options: (a) mirror review state locally (`Flashcard.last_reviewed_at`,
-  `review_count`) via a periodic AnkiConnect sync, or (b) query
-  AnkiConnect's batched `cardsInfo` live at render time (one call can cover
-  every card in the visible queue grid, so this may be fast enough without
-  caching — worth measuring before building a sync job).
+- **Progress bar (`studied`/`count`) — answered by
+  [06-anki-pull-sync.md](06-anki-pull-sync.md).** No local review-state
+  exists today; doc 06 plans a periodic pull from AnkiConnect into a new
+  `AnkiCardState` table (local mirror). Live `cardsInfo` queries at render
+  time were considered and rejected there — the user studies on
+  phone/desktop via AnkiWeb, so a read without a preceding AnkiWeb `sync()`
+  round-trip sees stale data anyway; a mirror refreshed by the sync loop is
+  the only shape that works.
 
 ## Agent Instructions main tab
 
