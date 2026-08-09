@@ -48,6 +48,14 @@ class AnkiService:
                 error=exc.error,
             ) from exc
 
+        # The note type's template may carry a deck override that ignores
+        # addNote's deckName (observed live: cards landing in Default).
+        # Move the generated cards to the intended deck explicitly.
+        added = [nid for nid in note_ids if nid is not None]
+        if added:
+            card_ids = await self.client.find_cards("nid:" + ",".join(added))
+            await self.client.change_deck(card_ids, self.deck_name)
+
         try:
             await self.client.sync()
         except AnkiServiceError as exc:

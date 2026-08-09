@@ -77,3 +77,26 @@ class AnkiConnectClient:
     async def sync(self) -> None:
         """One AnkiWeb round-trip. Call once per batch, not per note."""
         await self.invoke("sync")
+
+    async def change_deck(self, card_ids: List[int], deck: str) -> None:
+        """Move cards into `deck`. Needed because a note type can carry a
+        template deck-override that silently ignores addNote's deckName."""
+        if card_ids:
+            await self.invoke("changeDeck", cards=card_ids, deck=deck)
+
+    # ── read actions (pull-sync, docs/rework/06) ─────────────────────────
+
+    async def find_cards(self, query: str) -> List[int]:
+        return await self.invoke("findCards", query=query)
+
+    async def cards_info(self, card_ids: List[int]) -> List[Dict[str, Any]]:
+        """Per card: due, interval, reps, lapses, queue, type, factor, mod,
+        and `note` (the note id) — which is how note ids map to card ids."""
+        if not card_ids:
+            return []
+        return await self.invoke("cardsInfo", cards=card_ids)
+
+    async def get_latest_review_id(self, deck: str) -> int:
+        """Monotonic id of the newest review in the deck; 0 if none.
+        The cheap watermark that lets polling skip unchanged decks."""
+        return await self.invoke("getLatestReviewID", deck=deck)
