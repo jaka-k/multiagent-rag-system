@@ -58,7 +58,7 @@ orjson = "^3.10"
 
 [tool.poetry.group.tools.dependencies]
 beautifulsoup4 = "^4.12.3"
-markdownify = "^0.14"
+markdownify = "^1.2"
 
 [build-system]
 requires = ["poetry-core"]

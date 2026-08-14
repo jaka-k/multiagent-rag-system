@@ -50,9 +50,10 @@ real drift.
       so it can wait.
 - [ ] **pgvector client 0.3.6 → 0.5.0**. Check langchain-postgres's
       constraint first; it may cap it.
-- [ ] **markdownify 0.14 → 1.2**. The EPUB→Markdown parser depends on its
-      output shape — diff parser output on a sample book before/after
-      (chunk boundaries in `embedding_service` key off Markdown structure).
+- [x] **markdownify 0.14 → 1.2.3** (2026-08-14). Diffed parser output on
+      two real EPUBs: all heading/code-fence chunk separators byte-identical;
+      only paragraph-break density shifted (1.x renders <dl> as Markdown
+      definition lists — an improvement). Converter subclass API unchanged.
 - [ ] Tooling: black 24 → 26, pytest 8 → 9 (no test suite exists yet —
       writing one is its own workstream and blocks confident upgrades).
 
