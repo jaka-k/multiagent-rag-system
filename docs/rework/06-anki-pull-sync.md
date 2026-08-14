@@ -1,5 +1,13 @@
 # Anki pull-sync — review state flows back into the app
 
+> **Steps 1–4 executed 2026-08-08/09** (PRs #16 and #19): async client,
+> AnkiCardState/AnkiSyncRun mirror, watermark pull, manual trigger +
+> optional loop. E2E-verified against the live container; AnkiWeb
+> credentials confirmed working. Bonus fix: the mrag-minimal template
+> deck-override was sending every pushed card to Default — cards are now
+> moved to the intended deck explicitly. Remaining: step 5 (UI consumers)
+> lands with the redesign; step 6 (agent prompt variables) later.
+
 Today the Anki integration is **push-only**: area → `createDeck`
 (`RAG::{label}`), card → `addNote` + `sync()`, and the returned note id is
 stored on `Flashcard.anki_id` (`server/service/anki/anki_service.py`,

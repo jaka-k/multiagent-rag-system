@@ -1,5 +1,9 @@
 # Python 3.14 upgrade
 
+> **Executed 2026-08-08, merged via PR #14** (+ #15 for the model aliases).
+> Remaining loose ends: `make docker-dev` full-stack rebuild on the 3.14
+> image, and the otel-1.44-vs-collector handshake under `make monitor`.
+
 ## Current spread (found 2026-08-08)
 
 | Where | Version |

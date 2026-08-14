@@ -6,12 +6,12 @@ alone: findings first, then a concrete, ordered plan.
 
 | Doc | Topic | Effort |
 |---|---|---|
-| [01-dependency-upgrades.md](01-dependency-upgrades.md) | Backend/frontend version bumps + repo hygiene | 1–2 sessions, tiered |
-| [02-embedding-export-import.md](02-embedding-export-import.md) | Scripts to export/import embeddings per book or area | ~1 session |
-| [03-python-3.14-upgrade.md](03-python-3.14-upgrade.md) | Align Python at 3.14 everywhere (prod runs 3.12 today) | ~half a session |
+| [01-dependency-upgrades.md](01-dependency-upgrades.md) | Version bumps + hygiene | **Tiers 1–2 done** (#14/#15/#18); Tier 3 open |
+| [02-embedding-export-import.md](02-embedding-export-import.md) | Export/import embeddings per book or area | **Done** (#17) |
+| [03-python-3.14-upgrade.md](03-python-3.14-upgrade.md) | Python 3.14 everywhere | **Done** (#14) |
 | [04-frontend-redesign.md](04-frontend-redesign.md) | Chat-first app-shell redesign, modeled on the claude.ai/design "MRAG" project | Multi-phase, the largest item here |
 | [05-data-model-migration.md](05-data-model-migration.md) | Backend schema changes needed to support 04, section by section — **proposal, pending discussion** | Feeds into 04's phases |
-| [06-anki-pull-sync.md](06-anki-pull-sync.md) | Pull review/scheduling state back from Anki into the DB (progress bars, mastery, review-aware agents) | ~2 sessions incl. Anki-layer refactor |
+| [06-anki-pull-sync.md](06-anki-pull-sync.md) | Anki review-state pull-sync | **Steps 1–4 done** (#16/#19); UI consumers land with 04 |
 
 Recommended order: **03 → 01 → 02**, independently of **04 + 05** (the
 frontend redesign and its data-model prerequisites). The Python bump first,
