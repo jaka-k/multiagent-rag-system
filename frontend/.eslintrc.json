@@ -9,11 +9,9 @@
   "plugins": [
     "simple-import-sort",
     "unused-imports",
-    "react-hooks",
-    "react",
-    "import",
     "@typescript-eslint"
   ],
+  "ignorePatterns": ["next-env.d.ts"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2021,
@@ -78,6 +76,7 @@
     "import/no-unresolved": "error",
     "import/prefer-default-export": "off",
     "import/order": "off",
+    "import/extensions": "off",
     "unused-imports/no-unused-imports": "error",
     "jsx-a11y/role-supports-aria-props": "off",
     // TODO: Turn on once refactoring is finished

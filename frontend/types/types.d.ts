@@ -20,11 +20,7 @@ export interface Document {
 }
 
 export type EmbeddingStatus =
-  | 'idle'
-  | 'processing'
-  | 'embedding'
-  | 'completed'
-  | 'failed'
+  'idle' | 'processing' | 'embedding' | 'completed' | 'failed'
 
 export interface Message {
   id?: string

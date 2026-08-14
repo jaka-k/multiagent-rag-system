@@ -1,17 +1,19 @@
-import { Auth, getAuth, signInWithCustomToken } from 'firebase/auth'
-import { app } from './storage'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
+import { Auth, getAuth, signInWithCustomToken } from 'firebase/auth'
+
+import { app } from './storage'
 
 // Lazy-initialised — getAuth(app) must not run at module load time because
 // Next.js evaluates this module during SSR/prerendering where Firebase Auth
 // is not available and NEXT_PUBLIC_* vars are not injected.
-let _auth: Auth | null = null
+let cachedAuth: Auth | null = null
 
 function getFirebaseAuth(): Auth {
-  if (!_auth) {
-    _auth = getAuth(app)
+  if (!cachedAuth) {
+    cachedAuth = getAuth(app)
   }
-  return _auth
+
+  return cachedAuth
 }
 
 /**

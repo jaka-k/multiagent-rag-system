@@ -11,8 +11,7 @@ import { LoaderCircle } from 'lucide-react'
 import * as React from 'react'
 
 type ButtonEvent =
-  | React.MouseEvent<HTMLButtonElement>
-  | React.TouchEvent<HTMLButtonElement>
+  React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>
 
 export function UserAuthForm() {
   const [errorMessage, setErrorMessage] = React.useState('')
