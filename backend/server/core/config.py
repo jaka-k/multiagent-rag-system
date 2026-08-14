@@ -53,5 +53,8 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-LLM_MODEL = "gemini-2.5-pro"
-LLM_FAST_MODEL = "gemini-2.5-flash"
+# gemini-2.5-* are retired for keys created after mid-2026, and pro-class
+# models have free-tier quota 0 — flash-latest is the strongest model the
+# current key can serve. Restore a pro alias here once billing is enabled.
+LLM_MODEL = "gemini-flash-latest"
+LLM_FAST_MODEL = "gemini-flash-lite-latest"
