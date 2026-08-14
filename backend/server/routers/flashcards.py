@@ -70,8 +70,6 @@ async def add_flashcard(
 
         flashcard.anki_id = note_ids[0]
         flashcard.deck_id = deck.id
-        flashcard.queue_id = None
-        flashcard.queue = None
     except HTTPException:
         raise
     except Exception as e:
@@ -112,10 +110,12 @@ async def get_area_flashcards(
     """Area-wide card overview: one group per chat session plus loose cards.
 
     Queues stay 1:1 with sessions (2026-08 decision); area scope comes from
-    flashcard.queue -> session.area_id.
+    flashcard.queue -> session.area_id. Review state comes from the
+    AnkiCardState mirror (docs/rework/06 step 5).
     """
     from sqlalchemy.orm import selectinload as sload
 
+    from server.models.anki_sync import AnkiCardState
     from server.models.session import Session
 
     sessions = (await session.execute(
@@ -125,7 +125,24 @@ async def get_area_flashcards(
         .order_by(Session.updated_at.desc())
     )).scalars().all()
 
+    card_ids = [
+        fc.id
+        for s in sessions if s.flashcard_queue
+        for fc in s.flashcard_queue.flashcards
+    ]
+    states = {}
+    if card_ids:
+        states = {
+            st.flashcard_id: st
+            for st in (await session.execute(
+                select(AnkiCardState).where(AnkiCardState.flashcard_id.in_(card_ids))
+            )).scalars().all()
+        }
+
+    MASTERED_INTERVAL_DAYS = 21
+
     def card_dto(fc: Flashcard) -> dict:
+        st = states.get(fc.id)
         return {
             "id": str(fc.id),
             "front": fc.front,
@@ -133,15 +150,24 @@ async def get_area_flashcards(
             "tag": fc.tag,
             "anki_id": fc.anki_id,
             "created_at": fc.created_at,
+            "reps": st.reps if st else 0,
+            "interval_days": st.interval_days if st else 0,
+            "is_mastered": bool(st and st.interval_days >= MASTERED_INTERVAL_DAYS),
         }
 
-    queues = [
-        {
+    def queue_dto(s: Session) -> dict:
+        cards = [card_dto(fc) for fc in s.flashcard_queue.flashcards]
+        return {
             "session_id": str(s.id),
             "session_title": s.title,
             "updated_at": s.updated_at,
-            "cards": [card_dto(fc) for fc in s.flashcard_queue.flashcards],
+            "cards": cards,
+            "studied": sum(1 for c in cards if c["reps"] > 0),
+            "mastered": sum(1 for c in cards if c["is_mastered"]),
         }
+
+    queues = [
+        queue_dto(s)
         for s in sessions
         if s.flashcard_queue and s.flashcard_queue.flashcards
     ]
