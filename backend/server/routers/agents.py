@@ -6,6 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.authz import require_owned_area
+from server.core.exceptions import ResourceNotFoundError
 from server.core.security import get_current_active_user
 from server.db.database import get_session
 from server.models.agent import Agent
@@ -17,7 +18,7 @@ router = APIRouter()
 async def _require_owned_agent(session: AsyncSession, agent_id: str, user: User) -> Agent:
     agent = await session.get(Agent, agent_id)
     if not agent:
-        raise HTTPException(status_code=404, detail="Agent not found")
+        raise ResourceNotFoundError("Agent not found")
     await require_owned_area(session, agent.area_id, user)
     return agent
 

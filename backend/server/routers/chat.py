@@ -9,9 +9,10 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.chat_controller import ChatController
-from server.core.exceptions import AppError
 from server.core.logger import app_logger
 from server.core.authz import require_owned_area, require_owned_session
+from server.core.config import ALLOWED_ORIGINS
+from server.core.exceptions import AppError, ResourceNotFoundError
 from server.core.security import get_current_active_user, user_id_from_token
 from server.core.ws_protocol import WsEvent, ws_frame
 from server.service.ws_manager import ws_manager
@@ -58,7 +59,7 @@ async def chat_endpoint(
     )
     chat_session = result.scalar_one_or_none()
     if not chat_session:
-        raise HTTPException(status_code=404, detail="Chat history not found")
+        raise ResourceNotFoundError("Chat history not found")
 
     return chat_session
 
@@ -95,6 +96,13 @@ async def websocket_endpoint(
         chat_id: uuid.UUID,
         db: AsyncSession = Depends(get_session),
 ):
+    # WS bypasses CORS and the token cookie rides the handshake, so a strict
+    # Origin allowlist is the CSWSH defense (browsers always send Origin).
+    origin = websocket.headers.get("origin")
+    if origin is not None and origin not in ALLOWED_ORIGINS:
+        await websocket.close(code=1008, reason="Origin not allowed")
+        return
+
     await websocket.accept()
 
     # Browser WS can't send Authorization headers; the httpOnly token cookie

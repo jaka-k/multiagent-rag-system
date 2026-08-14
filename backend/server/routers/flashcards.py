@@ -6,8 +6,8 @@ from sqlalchemy.orm import selectinload
 
 from server.core.logger import app_logger
 from server.core.authz import require_owned_area, require_owned_flashcard, require_owned_session
+from server.core.exceptions import ConflictError, ResourceNotFoundError
 from server.core.security import get_current_active_user
-from server.models.area import Area
 from server.models.user import User
 from server.db.database import get_session
 from server.db.dtos.session_dto import FQueueDTO
@@ -36,7 +36,7 @@ async def get_flashcard_queue(
 
     fqueue = result.scalars().first()
     if not fqueue:
-        raise HTTPException(status_code=404, detail="Flashcard queue not found")
+        raise ResourceNotFoundError("Flashcard queue not found")
     return fqueue
 
 
@@ -48,7 +48,7 @@ async def get_flashcard(
 ):
     flashcard = await session.get(Flashcard, flashcard_id)
     if not flashcard:
-        raise HTTPException(status_code=404, detail="Flashcard not found")
+        raise ResourceNotFoundError("Flashcard not found")
     return await require_owned_flashcard(session, flashcard, current_user)
 
 
@@ -66,11 +66,11 @@ async def add_flashcard(
 
     deck = results.scalars().first()
     if not deck:
-        raise HTTPException(status_code=501, detail="Deck not found")
+        raise ResourceNotFoundError("Deck not found")
 
     flashcard = await session.get(Flashcard, flashcard_id)
     if not flashcard:
-        raise HTTPException(status_code=404, detail="Flashcard not found")
+        raise ResourceNotFoundError("Flashcard not found")
     await require_owned_flashcard(session, flashcard, current_user)
 
     try:
@@ -78,11 +78,11 @@ async def add_flashcard(
             [(flashcard.front, flashcard.back)]
         )
         if not note_ids or note_ids[0] is None:
-            raise HTTPException(status_code=409, detail="Anki rejected the note (duplicate)")
+            raise ConflictError("Anki rejected the note (duplicate)")
 
         flashcard.anki_id = note_ids[0]
         flashcard.deck_id = deck.id
-    except HTTPException:
+    except (ConflictError, ResourceNotFoundError):
         raise
     except Exception as e:
         app_logger.error(e)
@@ -109,7 +109,7 @@ async def delete_flashcard(
 ):
     flashcard = await session.get(Flashcard, flashcard_id)
     if not flashcard:
-        raise HTTPException(status_code=404, detail="Flashcard not found")
+        raise ResourceNotFoundError("Flashcard not found")
     await require_owned_flashcard(session, flashcard, current_user)
     await session.delete(flashcard)
     await session.commit()
@@ -128,9 +128,7 @@ async def get_area_flashcards(
     flashcard.queue -> session.area_id. Review state comes from the
     AnkiCardState mirror (docs/rework/06 step 5).
     """
-    area = await session.get(Area, area_id)
-    if not area or area.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Area not found")
+    await require_owned_area(session, area_id, current_user)
     from sqlalchemy.orm import selectinload as sload
 
     from server.models.anki_sync import AnkiCardState

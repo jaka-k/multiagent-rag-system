@@ -11,7 +11,8 @@ alone: findings first, then a concrete, ordered plan.
 | [03-python-3.14-upgrade.md](03-python-3.14-upgrade.md) | Python 3.14 everywhere | **Done** (#14) |
 | [04-frontend-redesign.md](04-frontend-redesign.md) | Chat-first app-shell redesign, modeled on the claude.ai/design "MRAG" project | Multi-phase, the largest item here |
 | [05-data-model-migration.md](05-data-model-migration.md) | Backend schema changes needed to support 04, section by section — **proposal, pending discussion** | Feeds into 04's phases |
-| [06-anki-pull-sync.md](06-anki-pull-sync.md) | Anki review-state pull-sync | **Steps 1–4 done** (#16/#19); UI consumers land with 04 |
+| [06-anki-pull-sync.md](06-anki-pull-sync.md) | Anki review-state pull-sync | **Steps 1–5 done** (#16/#19/#22); agent variables later |
+| [07-epub-html-reader.md](07-epub-html-reader.md) | Store chapter HTML (lazy 1:1 blob) for a real book reader | Planned 2026-08-14; design requested |
 
 Recommended order: **03 → 01 → 02**, independently of **04 + 05** (the
 frontend redesign and its data-model prerequisites). The Python bump first,

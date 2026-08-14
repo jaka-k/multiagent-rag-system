@@ -124,3 +124,56 @@ export type CreateAreaResponse = {
   name: string
   label: string
 }
+
+export interface Agent {
+  id: string
+  areaId: string
+  name: string
+  description: string
+  icon: string
+  cardType: string
+  systemPrompt: string
+  variables: string[]
+  isActive: boolean
+  difficulty: string | null
+  model: string | null
+}
+
+export interface AreaFlashcard {
+  id: string
+  front: string
+  back: string
+  tag: string
+  ankiId: string | null
+  reps: number
+  isMastered: boolean
+}
+
+export interface AreaFlashcardQueue {
+  sessionId: string
+  sessionTitle: string
+  updatedAt: string
+  cards: AreaFlashcard[]
+  studied: number
+  mastered: number
+}
+
+export interface AreaFlashcards {
+  queues: AreaFlashcardQueue[]
+  loose: AreaFlashcard[]
+}
+
+export interface RetrievedChapterRef {
+  chapterId: string
+  chapterTag: string
+  chapter: string
+  subchapter: string
+  relevanceScore: number
+  rank: number
+}
+
+export interface RetrievalGroup {
+  messageId: string
+  createdAt: string
+  chapters: RetrievedChapterRef[]
+}

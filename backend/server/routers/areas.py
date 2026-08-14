@@ -8,6 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.authz import require_owned_area
+from server.core.exceptions import ResourceNotFoundError
 from server.core.logger import app_logger
 from server.core.security import get_current_active_user
 from server.db.database import get_session
@@ -75,9 +76,9 @@ async def get_areas_documents(
 ):
     stmt = select(Area).options(selectinload(Area.documents)).where(Area.id == area_id)
     result = await session.execute(stmt)
-    area = result.scalars().one()
+    area = result.scalars().first()
 
-    if area.user_id != current_user.id:
-        raise HTTPException(404, "Not found")
+    if not area or area.user_id != current_user.id:
+        raise ResourceNotFoundError("Area not found")
 
     return area.documents

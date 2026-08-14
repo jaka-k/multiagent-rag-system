@@ -11,6 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.embedding_controller import background_embedding_process
 from server.core.authz import require_owned_chapter, require_owned_document, require_owned_session
+from server.core.exceptions import ConflictError, ResourceNotFoundError
 from server.core.security import get_current_active_user
 from server.db.database import get_session
 from server.models.document import Document, EmbeddingStatus, Chapter
@@ -87,7 +88,7 @@ async def embedd_epub(document_id: str, background_tasks: BackgroundTasks,
     document = result.scalar_one_or_none()
 
     if not document:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise ResourceNotFoundError("Document not found")
 
     if document.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorised to embed this document")
@@ -106,7 +107,7 @@ async def embedding_status(document_id: str,
     document = result.scalar_one_or_none()
 
     if not document:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise ResourceNotFoundError("Document not found")
 
     if document.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorised to view this document")
@@ -125,7 +126,7 @@ async def get_document(
 ):
     document = await require_owned_document(session, document_id, current_user)
     if document.embedding_status != EmbeddingStatus.COMPLETED:
-        raise HTTPException(status_code=500, detail="Document embedding is not finished")
+        raise ConflictError("Document embedding is not finished")
 
     return {"document": document}
 
@@ -141,7 +142,7 @@ async def get_chapter(
 
     chapter = result.scalar_one_or_none()
     if not chapter:
-        raise HTTPException(status_code=404, detail="Chapter not found")
+        raise ResourceNotFoundError("Chapter not found")
     await require_owned_chapter(session, chapter, current_user)
 
     return {"chapter": chapter}
@@ -159,6 +160,6 @@ async def get_all_documents(
 
     chapter_queue = result.scalar_one_or_none()
     if not chapter_queue:
-        raise HTTPException(status_code=404, detail="ChapterQueue not found")
+        raise ResourceNotFoundError("ChapterQueue not found")
 
     return chapter_queue
