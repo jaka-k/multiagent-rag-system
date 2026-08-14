@@ -1,7 +1,9 @@
 'use client'
 
 import TopNav, { MainView } from '@components/shell/top-nav'
+import AgentsView from '@components/views/agents-view'
 import ChatHome from '@components/views/chat-home'
+import FlashcardsView from '@components/views/flashcards-view'
 import React from 'react'
 
 export default function Home() {
@@ -13,16 +15,8 @@ export default function Home() {
       <div className="viewbody">
         <div className="content">
           {view === 'chat' && <ChatHome />}
-          {view === 'flashcards' && (
-            <div className="empty-hint" style={{ marginTop: 80 }}>
-              Flashcards view — under construction (docs/rework/04 phase 5)
-            </div>
-          )}
-          {view === 'agents' && (
-            <div className="empty-hint" style={{ marginTop: 80 }}>
-              Agent Instructions — under construction (docs/rework/04 phase 7)
-            </div>
-          )}
+          {view === 'flashcards' && <FlashcardsView />}
+          {view === 'agents' && <AgentsView />}
         </div>
       </div>
     </div>
