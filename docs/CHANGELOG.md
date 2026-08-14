@@ -56,6 +56,10 @@ flagged.
   (dead key 401s round-trip cleanly); happy-path re-smoke pending key
   rotation. Note: 2.18.1 still caps websockets <17, so #23's 16.1
   ceiling stands.
+- **Review hardening (Copilot on #21)**: auth + area-ownership checks on
+  the area-flashcards and all agent endpoints (401/404 verified live);
+  agent.variables NOT NULL with [] default; DST-safe session day-grouping;
+  stale-error reset on area switch; Space-key activation on agent cards.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild

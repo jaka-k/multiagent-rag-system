@@ -5,6 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from server.core.logger import app_logger
+from server.core.security import get_current_active_user
+from server.models.area import Area
+from server.models.user import User
 from server.db.database import get_session
 from server.db.dtos.session_dto import FQueueDTO
 from server.models.flashcard import Flashcard, Deck
@@ -105,6 +108,7 @@ async def delete_flashcard(
 @router.get("/area/{area_id}/flashcards")
 async def get_area_flashcards(
         area_id: str,
+        current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
     """Area-wide card overview: one group per chat session plus loose cards.
@@ -113,6 +117,9 @@ async def get_area_flashcards(
     flashcard.queue -> session.area_id. Review state comes from the
     AnkiCardState mirror (docs/rework/06 step 5).
     """
+    area = await session.get(Area, area_id)
+    if not area or area.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Area not found")
     from sqlalchemy.orm import selectinload as sload
 
     from server.models.anki_sync import AnkiCardState
@@ -172,6 +179,9 @@ async def get_area_flashcards(
         if s.flashcard_queue and s.flashcard_queue.flashcards
     ]
 
+    # Loose cards have no user/area link in the current schema (doc 05 adds
+    # origin/ownership for the clipper). Until then, only surface them to
+    # single-tenant sessions via the area-ownership gate above.
     loose = (await session.execute(
         select(Flashcard)
         .where(Flashcard.queue_id.is_(None), Flashcard.deck_id.is_(None))
