@@ -21,13 +21,26 @@ export default function FlashcardsView() {
   const router = useRouter()
   const { activeArea } = useAreaStore()
   const [data, setData] = React.useState<AreaFlashcards | null>(null)
+  const [failed, setFailed] = React.useState(false)
   const [filter, setFilter] = React.useState<QueueFilter>('all')
 
   React.useEffect(() => {
     if (!activeArea) return
     setData(null)
-    getAreaFlashcards(activeArea.id).then(setData)
+    setFailed(false)
+    getAreaFlashcards(activeArea.id).then((result) => {
+      if (result) setData(result)
+      else setFailed(true)
+    })
   }, [activeArea])
+
+  if (failed) {
+    return <div className="empty-hint">Failed to load cards — try again.</div>
+  }
+
+  if (activeArea && data === null) {
+    return <div className="empty-hint">Loading cards…</div>
+  }
 
   const queues = (data?.queues ?? []).filter((q) => {
     if (filter === 'progress') return q.studied < q.cards.length
