@@ -15,3 +15,13 @@ welcome in code. Longer rationale belongs in the PR description or
 meaningful unit of work (a PR's worth), add it to the Unreleased section
 in the same commit or the same session — don't let it accumulate. Promote
 Unreleased items to a numbered phase heading when their PRs merge.
+
+## API endpoint authorization
+
+Every endpoint derives identity from the auth token
+(`Depends(get_current_active_user)`) — never from a client-supplied user
+id. Any resource referenced by id (area, session, agent, flashcard,
+document, …) must be verified to belong to the caller by walking its
+ownership chain up to `user_id`; return 404 (not 403) on foreign
+resources so ids don't leak existence. No unauthenticated data
+endpoints.
