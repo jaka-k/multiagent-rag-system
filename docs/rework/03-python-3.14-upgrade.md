@@ -85,13 +85,36 @@ Two structural takeaways:
    - [ ] `dev.Dockerfile` + `prod.Dockerfile`: `FROM python:3.14-slim`.
    - [ ] Rebuild `make docker-dev` and boot the full stack once.
 4. **Verify**
-   - [ ] `poetry run python -c "import server.main"` (already proven in the
-         scratch venv).
-   - [ ] alembic chain on a fresh DB; app boot; WS chat connect.
-   - [ ] Live smoke: one embedding, one chat turn, one EPUB upload
-         (validates protobuf 7 against real Gemini + Firebase traffic).
+   - [x] `poetry run python -c "import server.main"` — clean on the real venv.
+   - [x] alembic upgrade head; app boot (24 routes, Firebase init OK, DB
+         init OK); pgvector smoke (introspection/insert/upsert/filtered
+         search) all pass on 3.14.
+   - [x] Live smoke **complete** (2026-08-08, after key rotation):
+         embedding returns a real 1536-dim vector from
+         `gemini-embedding-001`; chat returns via `gemini-flash-latest`;
+         Firebase Admin initializes against real credentials. protobuf 7
+         validated end-to-end on all three surfaces.
+         Side findings (key-tier, not 3.14): the rotated key is free-tier —
+         `gemini-2.5-*` are retired for new users and pro-class models have
+         free-tier quota 0, so the config constants must move off
+         `gemini-2.5-pro`/`-flash` (handled in the Tier-1 hygiene branch);
+         LangSmith tracing is enabled in `.env` with a dead key and 403s on
+         every LLM call — disable `LANGCHAIN_TRACING_V2` or rotate that key
+         too.
    - [ ] Monitoring stack up: traces/logs still arrive (otel 1.44 vs the
          collector image — bump the collector if the OTLP handshake fails).
+   - [ ] `make docker-dev` full-stack rebuild on the 3.14 image.
+
+### Found during execution (2026-08-08)
+
+- **httpcore 1.0.7 crashes on import under 3.14** (`typing.Union` became
+  immutable; its `setattr(__module__)` loop throws). Fixed by 1.0.9 —
+  included in this branch's lock. Anything else pinning httpcore <1.0.9
+  will hit the same wall.
+- `poetry lock` alone keeps old pins; the explicit `poetry update` of the
+  binary set was required, exactly as planned above.
+- aiohttp updated 3.11.13 (yanked) → 3.14.3 in the same pass — doc 01
+  Tier 1 item, done here.
 
 ## Not doing
 
