@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     langchain_tracing_v2: Optional[str] = None
 
     anki_url: Optional[str] = None
+    anki_pull_interval_seconds: int = 0  # 0 disables the pull-sync loop
 
     next_public_firebase_api_key: Optional[str] = None
     next_public_firebase_project_id: Optional[str] = None

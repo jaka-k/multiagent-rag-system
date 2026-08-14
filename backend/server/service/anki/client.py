@@ -1,12 +1,5 @@
-"""Thin async client for AnkiConnect.
-
-Stateless: no deck is created or assumed by constructing it. All calls go
-through `invoke`, which enforces AnkiConnect's response envelope
-({result, error}) and raises AnkiServiceError subclasses on failure.
-
-Doc 06 (anki pull-sync) builds on this client; the sync worker must be able
-to construct it purely to read.
-"""
+"""Stateless async AnkiConnect client. Construction has no side effects;
+`invoke` enforces the {result, error} envelope and raises AnkiServiceError."""
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -77,3 +70,23 @@ class AnkiConnectClient:
     async def sync(self) -> None:
         """One AnkiWeb round-trip. Call once per batch, not per note."""
         await self.invoke("sync")
+
+    async def change_deck(self, card_ids: List[int], deck: str) -> None:
+        """Move cards into `deck` (a note type's deck-override can ignore addNote's deckName)."""
+        if card_ids:
+            await self.invoke("changeDeck", cards=card_ids, deck=deck)
+
+    # ── read actions (pull-sync, docs/rework/06) ─────────────────────────
+
+    async def find_cards(self, query: str) -> List[int]:
+        return await self.invoke("findCards", query=query)
+
+    async def cards_info(self, card_ids: List[int]) -> List[Dict[str, Any]]:
+        """Scheduling fields per card, incl. `note` (maps note ids to card ids)."""
+        if not card_ids:
+            return []
+        return await self.invoke("cardsInfo", cards=card_ids)
+
+    async def get_latest_review_id(self, deck: str) -> int:
+        """Watermark: monotonic id of the deck's newest review, 0 if none."""
+        return await self.invoke("getLatestReviewID", deck=deck)

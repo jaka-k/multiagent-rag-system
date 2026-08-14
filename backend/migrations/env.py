@@ -22,6 +22,7 @@ import server.models.flashcard  # noqa: F401 — Deck, Flashcard
 import server.models.session  # noqa: F401 — Session, Message, *Queue
 import server.models.area  # noqa: F401 — Area, Instruction
 import server.models.user  # noqa: F401 — User, Token
+import server.models.anki_sync  # noqa: F401 — AnkiCardState, AnkiSyncRun
 
 # ---------------------------------------------------------------------------
 # Alembic Config object — gives access to values in alembic.ini.

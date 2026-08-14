@@ -10,7 +10,7 @@ from server.core.exceptions import AppError
 from server.core.logger import app_logger
 from server.core.otel import init_telemetry
 from server.core.setup import lifespan_factory
-from server.routers import auth, flashcards, chat, sse_router, documents, areas
+from server.routers import anki, auth, flashcards, chat, sse_router, documents, areas
 
 app = FastAPI(lifespan=lifespan_factory(create_tables_on_start=True))
 
@@ -91,6 +91,7 @@ app.include_router(flashcards.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(areas.router, prefix="/api")
 app.include_router(sse_router.router, prefix="/api")
+app.include_router(anki.router, prefix="/api")
 
 app.include_router(auth.router, prefix="/auth")
 

@@ -49,10 +49,7 @@ async def create_area(
         app_logger.error(f"Area creation failed: {e}", exc_info=e)
         raise HTTPException(status_code=500, detail=f"Could not create area: {e}")
 
-    # Deck creation is non-fatal: the area row is already committed, so an
-    # unreachable AnkiConnect must not turn a half-succeeded operation into
-    # a 500. Without a Deck row, flashcard export for this area fails until
-    # the deck is created — log loudly instead.
+    # Non-fatal: the area is already committed; a down AnkiConnect must not 500.
     try:
         deck_id = await AnkiService(label).ensure_deck()
         deck = Deck(name=area.label, area_id=area.id, anki_id=deck_id)
