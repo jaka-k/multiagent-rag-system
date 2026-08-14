@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from server.core.logger import app_logger
+from server.core.authz import require_owned_area, require_owned_flashcard, require_owned_session
 from server.core.security import get_current_active_user
 from server.models.area import Area
 from server.models.user import User
@@ -22,8 +23,11 @@ class FlashcardPatchRequest(BaseModel):
 
 @router.get("/flashcard-queue/{session_id}", response_model=FQueueDTO)
 async def get_flashcard_queue(
-        session_id: str, session: AsyncSession = Depends(get_session)
+        session_id: str,
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
 ):
+    await require_owned_session(session, session_id, current_user)
     result = await session.execute(
         select(FlashcardQueue)
         .options(selectinload(FlashcardQueue.flashcards))  # type: ignore
@@ -38,21 +42,25 @@ async def get_flashcard_queue(
 
 @router.get("/flashcard/{flashcard_id}")
 async def get_flashcard(
-        flashcard_id: str, session: AsyncSession = Depends(get_session)
+        flashcard_id: str,
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
 ):
     flashcard = await session.get(Flashcard, flashcard_id)
     if not flashcard:
         raise HTTPException(status_code=404, detail="Flashcard not found")
-    return flashcard
+    return await require_owned_flashcard(session, flashcard, current_user)
 
 
 @router.patch("/flashcard/{flashcard_id}")
 async def add_flashcard(
         flashcard_id: str,
         request: FlashcardPatchRequest,
+        current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
     body = request.model_dump()
+    await require_owned_area(session, body["area_id"], current_user)
     statement = select(Deck).where(Deck.area_id == body["area_id"])
     results = await session.execute(statement)
 
@@ -62,7 +70,8 @@ async def add_flashcard(
 
     flashcard = await session.get(Flashcard, flashcard_id)
     if not flashcard:
-        raise HTTPException(status_code=501, detail="Flashcard not found")
+        raise HTTPException(status_code=404, detail="Flashcard not found")
+    await require_owned_flashcard(session, flashcard, current_user)
 
     try:
         note_ids = await AnkiService(deck.name).add_flashcards(
@@ -95,11 +104,13 @@ async def add_flashcard(
 @router.delete("/flashcard/{flashcard_id}")
 async def delete_flashcard(
         flashcard_id: str,
+        current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
     flashcard = await session.get(Flashcard, flashcard_id)
     if not flashcard:
         raise HTTPException(status_code=404, detail="Flashcard not found")
+    await require_owned_flashcard(session, flashcard, current_user)
     await session.delete(flashcard)
     await session.commit()
     return {"detail": "Flashcard deleted successfully", "id": flashcard_id}

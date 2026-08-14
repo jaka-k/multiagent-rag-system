@@ -87,6 +87,25 @@ async def create_refresh_token(session: AsyncSession, user: User) -> Token:
     return token
 
 
+def _decode_claims(token: str) -> dict:
+    """The single decode path for our JWTs — every consumer goes through here."""
+    return jwt.decode(
+        token, settings.hashing_secret_key, algorithms=[settings.hashing_algorithm],
+        options={"require": ["exp", "sub"]}
+    )
+
+
+def user_id_from_token(token: Optional[str]) -> Optional[uuid.UUID]:
+    """Best-effort token -> user id for transports that can't use the oauth2
+    header dependency (WebSocket handshake, SSE cookie). None on any failure."""
+    if not token:
+        return None
+    try:
+        return uuid.UUID(_decode_claims(token)["sub"])
+    except (jwt.PyJWTError, KeyError, ValueError):
+        return None
+
+
 async def get_current_user(
         token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)
 ) -> User:
@@ -97,10 +116,7 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(
-            token, settings.hashing_secret_key, algorithms=[settings.hashing_algorithm],
-            options={"require": ["exp", "sub"]}
-        )
+        payload = _decode_claims(token)
         user_id: str = payload.get("sub")
         if user_id is None:
             app_logger.warning(f"Invalid credentials attempt: token={token[:10]}... (truncated)")

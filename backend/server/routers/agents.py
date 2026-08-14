@@ -5,27 +5,20 @@ from pydantic import BaseModel, Field
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from server.core.authz import require_owned_area
 from server.core.security import get_current_active_user
 from server.db.database import get_session
 from server.models.agent import Agent
-from server.models.area import Area
 from server.models.user import User
 
 router = APIRouter()
-
-
-async def _require_owned_area(session: AsyncSession, area_id, user: User) -> Area:
-    area = await session.get(Area, area_id)
-    if not area or area.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Area not found")
-    return area
 
 
 async def _require_owned_agent(session: AsyncSession, agent_id: str, user: User) -> Agent:
     agent = await session.get(Agent, agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
-    await _require_owned_area(session, agent.area_id, user)
+    await require_owned_area(session, agent.area_id, user)
     return agent
 
 
@@ -59,7 +52,7 @@ async def list_agents(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    await _require_owned_area(session, area_id, current_user)
+    await require_owned_area(session, area_id, current_user)
     result = await session.execute(
         select(Agent).where(Agent.area_id == area_id).order_by(Agent.created_at.asc())
     )
@@ -72,7 +65,7 @@ async def create_agent(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    await _require_owned_area(session, request.area_id, current_user)
+    await require_owned_area(session, request.area_id, current_user)
     agent = Agent(**request.model_dump())
     session.add(agent)
     await session.commit()

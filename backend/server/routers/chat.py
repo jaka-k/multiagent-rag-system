@@ -11,7 +11,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from server.controller.chat_controller import ChatController
 from server.core.exceptions import AppError
 from server.core.logger import app_logger
-from server.core.security import get_current_active_user
+from server.core.authz import require_owned_area, require_owned_session
+from server.core.security import get_current_active_user, user_id_from_token
 from server.core.ws_protocol import WsEvent, ws_frame
 from server.service.ws_manager import ws_manager
 from server.db.database import get_session
@@ -45,8 +46,10 @@ async def get_all_chats(
 @router.get("/chat/{chat_id}", response_model=SessionDTO)
 async def chat_endpoint(
         chat_id: uuid.UUID,
+        current_user: User = Depends(get_current_active_user),
         db: AsyncSession = Depends(get_session),
 ):
+    await require_owned_session(db, chat_id, current_user)
     result = await db.execute(
         select(Session)
         .options(selectinload(Session.messages))  # type: ignore
@@ -67,6 +70,7 @@ async def create_chat(
         current_user: User = Depends(get_current_active_user),
 ):
     body = request.model_dump()
+    await require_owned_area(db, body["area_id"], current_user)
     new_session = Session(
         user_id=current_user.id,
         title=body["title"],
@@ -93,11 +97,18 @@ async def websocket_endpoint(
 ):
     await websocket.accept()
 
+    # Browser WS can't send Authorization headers; the httpOnly token cookie
+    # rides the handshake instead.
+    user_id = user_id_from_token(websocket.cookies.get("token"))
+    if user_id is None:
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+
     stmt = select(Session).options(selectinload(Session.area)).where(Session.id == chat_id)
     result = await db.execute(stmt)
     chat = result.scalars().first()
 
-    if not chat:
+    if not chat or chat.user_id != user_id:
         await websocket.close(code=1008, reason="Chat session not found")
         return
 
@@ -116,6 +127,7 @@ async def websocket_endpoint(
 
             response_generator = chat_service.handle_chat(chat_input)
             response_content_collector = ""
+            metadata_collector = None
 
             context = []
 
@@ -142,7 +154,8 @@ async def websocket_endpoint(
 
             agent_message = await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.save_retrievals(agent_message.id, context)
-            await chat_controller.update_session_metadata(metadata_collector)
+            if metadata_collector is not None:
+                await chat_controller.update_session_metadata(metadata_collector)
             await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
 
     except WebSocketDisconnect:
@@ -203,10 +216,12 @@ async def _send_ws_error(
 
 @router.get("/chat/{chat_id}/retrievals")
 async def get_chat_retrievals(
-        chat_id: str,
+        chat_id: uuid.UUID,
+        current_user: User = Depends(get_current_active_user),
         db: AsyncSession = Depends(get_session),
 ):
     """Retrieved chapters per agent message, newest message first."""
+    await require_owned_session(db, chat_id, current_user)
     from server.models.document import Chapter
     from server.models.retrieval import MessageRetrieval
 

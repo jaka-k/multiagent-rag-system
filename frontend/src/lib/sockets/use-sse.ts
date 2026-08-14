@@ -31,6 +31,8 @@ export const useSSE = ({
     const connectSSE = async () => {
       await fetchEventSource(`${BACKEND_URL}/api/events/${chatId}`, {
         signal: controller.signal,
+        // the httpOnly token cookie is the credential (headers can't carry it)
+        credentials: 'include',
         async onopen(response) {
           if (
             response.ok &&

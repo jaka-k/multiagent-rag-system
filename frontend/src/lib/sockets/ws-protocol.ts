@@ -50,6 +50,7 @@ export function parseWsFrame(raw: string): WsFrame | null {
     if (
       data &&
       typeof data === 'object' &&
+      'payload' in data &&
       Object.values(WsEvent).includes(data.type)
     ) {
       return data as WsFrame

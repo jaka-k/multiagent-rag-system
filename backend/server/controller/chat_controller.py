@@ -51,12 +51,13 @@ class ChatController:
         rows = []
         for rank, doc in enumerate(context):
             meta = getattr(doc, "metadata", None) or {}
-            chapter_id = meta.get("chapter_id")
-            if not chapter_id:
-                continue
+            try:
+                chapter_id = uuid.UUID(str(meta.get("chapter_id")))
+            except (ValueError, TypeError):
+                continue  # one bad metadata entry must not abort the turn
             rows.append(MessageRetrieval(
                 message_id=message_id,
-                chapter_id=uuid.UUID(chapter_id),
+                chapter_id=chapter_id,
                 relevance_score=float(meta.get("rerank_score") or 0.0),
                 rank=rank,
             ))
