@@ -1,76 +1,66 @@
+"""Deck-scoped operations on top of AnkiConnectClient.
+
+Construction has no side effects — `ensure_deck()` is the explicit call
+that creates (or idempotently re-creates) the deck in Anki. Adds are
+batched: all notes in one `addNotes`, then a single AnkiWeb `sync()`,
+instead of the old per-note sync round-trip.
+"""
 import logging
-from typing import Dict, Any, Optional
+from typing import List, Optional, Tuple
 
-from pydantic import BaseModel
-
-from .config import invoke
-from .errors import (
-    AnkiDeckCreationError,
-    AnkiNoteAdditionError,
-    AnkiServiceError,
-    AnkiSyncError,
-)
+from server.service.anki.client import AnkiConnectClient
+from server.service.anki.errors import AnkiNoteAdditionError, AnkiSyncError, AnkiServiceError
 
 logger = logging.getLogger(__name__)
 
 
-class AnkiResponse(BaseModel):
-    result: Any
-    error: Optional[str]
-
-
 class AnkiService:
-    def __init__(self, deck_name: str):
+    def __init__(self, deck_name: str, client: Optional[AnkiConnectClient] = None):
         self.deck_name = f"RAG::{deck_name}"
-        self.deck_id = self.create_deck()
+        self.client = client or AnkiConnectClient()
 
-    def create_deck(self) -> str:
-        response_data = invoke("createDeck", deck=self.deck_name)
-        response = AnkiResponse(**response_data)
-        if response.error:
-            raise AnkiDeckCreationError(
-                f"Failed to create deck '{self.deck_name}': {response.error}",
-                error=response.error,
+    async def ensure_deck(self) -> str:
+        """Create the deck if missing (createDeck is idempotent) and return its id."""
+        try:
+            return await self.client.create_deck(self.deck_name)
+        except AnkiServiceError:
+            raise
+        except Exception as exc:
+            raise AnkiServiceError(f"Failed to ensure deck '{self.deck_name}': {exc}") from exc
+
+    async def add_flashcards(self, cards: List[Tuple[str, str]]) -> List[Optional[str]]:
+        """Batch-add (front, back) pairs, then one AnkiWeb sync.
+
+        Returns note ids aligned with the input; None marks a rejected note
+        (duplicate). A sync failure is logged but does not fail the add —
+        the notes are already in the local collection and the next sync
+        picks them up.
+        """
+        if not cards:
+            return []
+        try:
+            note_ids = await self.client.add_notes(
+                self.deck_name, [{"front": f, "back": b} for f, b in cards]
             )
-        return str(response.result)
-
-    def get_deck_id(self) -> str:
-        return self.deck_id
-
-    def sync(self) -> bool:
-        response_data = invoke("sync")
-        response = AnkiResponse(**response_data)
-        if response.error:
-            raise AnkiSyncError(
-                f"Failed to sync collection: {response.error}",
-                error=response.error,
-            )
-        return True
-
-    def get_deck_names_and_ids(self) -> Dict[str, str]:
-        response_data = invoke("deckNamesAndIds")
-        response = AnkiResponse(**response_data)
-        if response.error:
-            raise AnkiServiceError(
-                f"Failed to retrieve deck names and IDs: {response.error}",
-                error=response.error,
-            )
-        return response.result
-
-    def add_flashcard(self, front: str, back: str) -> str:
-        note = {
-            "deckName": self.deck_name,
-            ## Todo: can it be done with "deck_id"
-            "modelName": "mrag-minimal",
-            "fields": {"Front": front, "Back": back},
-            "options": {"allowDuplicate": False},
-            "tags": [],
-        }
-        response_data = invoke("addNote", note=note)
-        response = AnkiResponse(**response_data)
-        if response.error:
+        except AnkiServiceError as exc:
             raise AnkiNoteAdditionError(
-                f"Failed to add flashcard to deck '{self.deck_name}': {response.error}",
-                error=response.error,
+                f"Failed to add {len(cards)} note(s) to '{self.deck_name}': {exc}",
+                error=exc.error,
+            ) from exc
+
+        try:
+            await self.client.sync()
+        except AnkiServiceError as exc:
+            logger.warning(
+                "AnkiWeb sync failed after adding %d note(s) to %s; "
+                "notes are in the local collection and will sync later: %s",
+                len(cards), self.deck_name, exc,
             )
-        return str(response.result)
+        return note_ids
+
+    async def sync(self) -> bool:
+        try:
+            await self.client.sync()
+            return True
+        except AnkiServiceError as exc:
+            raise AnkiSyncError(f"Failed to sync collection: {exc}", error=exc.error) from exc

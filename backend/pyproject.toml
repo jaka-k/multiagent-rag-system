@@ -19,6 +19,7 @@ opentelemetry-sdk = "^1.44.0"
 opentelemetry-exporter-otlp-proto-grpc = "^1.44.0"
 bcrypt = "^5.0.0"
 tiktoken = "^0.13.0"
+httpx = ">=0.28"
 
 [tool.isort]
 profile = "black"
