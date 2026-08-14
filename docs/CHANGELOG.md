@@ -42,6 +42,9 @@ flagged.
   replacement caught and fixed.
 - Decisions locked 2026-08-14: queues stay 1:1 with sessions; agents are
   per-area; Iris accent + charcoal shell.
+- **websockets 13 → 16.1** (doc 01 Tier 3): 17 capped by google-genai
+  (<17); verified with a two-client broadcast roundtrip through uvicorn's
+  websockets transport.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild
