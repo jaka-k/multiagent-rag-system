@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.responses import StreamingResponse
 
-from server.core.authz import user_id_from_token
+from server.core.security import user_id_from_token
 from server.db.database import get_session
 from server.db.pubsub import session_manager
 from server.models.session import Session
