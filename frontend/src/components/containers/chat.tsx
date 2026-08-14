@@ -1,10 +1,8 @@
 'use client'
 
-import useRetrievalStore, {
-  RetrievedChapter
-} from '@context/retrieval-store.tsx'
-import { logger } from '@lib/logger.ts'
-import { connectionStatusMapping } from '@lib/utils'
+import useRetrievalStore from '@context/retrieval-store.tsx'
+import { WsContextChapter, WsErrorPayload } from '@lib/ws/protocol.ts'
+import { useChatSocket } from '@lib/ws/use-chat-socket.ts'
 import { ChatData, Message } from '@mytypes/types'
 import CreateChat from '@ui/create-chat/create-chat.tsx'
 import { ArrowLeft, Plus, Send } from 'lucide-react'
@@ -12,20 +10,9 @@ import Link from 'next/link'
 import * as React from 'react'
 import { useEffect, useRef } from 'react'
 import Markdown from 'react-markdown'
-import useWebSocket from 'react-use-websocket'
 import rehypeHighlight from 'rehype-highlight'
 
-export const BACKEND_DOMAIN =
-  process.env.NEXT_PUBLIC_BACKEND_DOMAIN || 'localhost:8080'
-
-export const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
-
-const isProd = process.env.NODE_ENV === 'production'
-const wsProtocol = isProd ? 'wss' : 'ws'
-
 export function Chat({ chatData }: { chatData: ChatData }) {
-  const socketUrl = `${wsProtocol}://${BACKEND_DOMAIN}/api/ws/${chatData.id}`
   const [open, setOpen] = React.useState(false)
   const { setRetrieved } = useRetrievalStore()
 
@@ -46,7 +33,23 @@ export function Chat({ chatData }: { chatData: ChatData }) {
   // Launcher on ChatHome stashes the first prompt before navigating here
   const sentDraft = useRef(false)
 
-  const replaceLastAgentMessage = (content: string) => {
+  const appendToLastAgentMessage = React.useCallback((newContent: string) => {
+    setMessages((prev) => {
+      const last = prev[prev.length - 1]
+
+      if (last?.role === 'agent') {
+        return [
+          ...prev.slice(0, -1),
+          { ...last, content: last.content + newContent }
+        ]
+      }
+
+      // Frame from a turn started by another client on this session
+      return [...prev, { role: 'agent', content: newContent }]
+    })
+  }, [])
+
+  const replaceLastAgentMessage = React.useCallback((content: string) => {
     setMessages((prev) => {
       const last = prev[prev.length - 1]
 
@@ -56,63 +59,39 @@ export function Chat({ chatData }: { chatData: ChatData }) {
 
       return [...prev, { role: 'agent' as const, content }]
     })
-  }
+  }, [])
 
-  const appendToLastAgentMessage = (newContent: string) => {
-    setMessages((prevMessages) => {
-      const lastMessage = prevMessages[prevMessages.length - 1]
-
-      if (lastMessage.role === 'agent') {
-        return [
-          ...prevMessages.slice(0, prevMessages.length - 1),
-          {
-            ...lastMessage,
-            content: lastMessage.content + newContent
-          }
-        ]
-      }
-
-      return prevMessages
-    })
-  }
-
-  const { sendMessage, readyState } = useWebSocket(socketUrl, {
-    onMessage(event) {
-      try {
-        const messageData = JSON.parse(event.data)
-
-        if (messageData.content) {
-          appendToLastAgentMessage(messageData.content)
-        } else if (messageData.error) {
-          replaceLastAgentMessage(
-            `⚠️ ${messageData.error.detail ?? 'Something went wrong.'}${
-              messageData.error.code ? ` (code ${messageData.error.code})` : ''
-            }`
-          )
-        } else if (messageData.context) {
-          setRetrieved(
-            chatData.id,
-            messageData.context.map(
-              (c: Record<string, unknown>): RetrievedChapter => ({
-                chapterId: String(c.chapter_id ?? ''),
-                chapterTag: String(c.chapter_tag ?? ''),
-                chapter: String(c.chapter ?? ''),
-                subchapter: String(c.subchapter ?? ''),
-                title: c.title ? String(c.title) : undefined,
-                rerankScore: Number(c.rerank_score ?? 0)
-              })
-            )
-          )
-        }
-      } catch (error) {
-        logger.error({ err: error }, 'Error parsing WebSocket message')
-      }
+  const onContext = React.useCallback(
+    (chapters: WsContextChapter[]) => {
+      setRetrieved(
+        chatData.id,
+        chapters.map((c) => ({
+          chapterId: c.chapter_id,
+          chapterTag: c.chapter_tag,
+          chapter: c.chapter,
+          subchapter: c.subchapter,
+          title: c.title,
+          rerankScore: c.rerank_score
+        }))
+      )
     },
-    onClose: () => {},
-    shouldReconnect: () => true
+    [chatData.id, setRetrieved]
+  )
+
+  const onError = React.useCallback(
+    (error: WsErrorPayload) => {
+      replaceLastAgentMessage(
+        `⚠️ ${error.detail ?? 'Something went wrong.'} (code ${error.code})`
+      )
+    },
+    [replaceLastAgentMessage]
+  )
+
+  const { send, connected } = useChatSocket(chatData.id, {
+    onContent: appendToLastAgentMessage,
+    onContext,
+    onError
   })
-  const connectionStatus = connectionStatusMapping(readyState)
-  const connected = connectionStatus === 'Open'
 
   const submit = React.useCallback(
     (text: string) => {
@@ -121,9 +100,9 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         { role: 'user', content: text },
         { role: 'agent', content: '' }
       ])
-      sendMessage(text)
+      send(text)
     },
-    [sendMessage]
+    [send]
   )
 
   useEffect(() => {

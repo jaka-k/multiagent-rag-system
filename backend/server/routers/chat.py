@@ -12,6 +12,8 @@ from server.controller.chat_controller import ChatController
 from server.core.exceptions import AppError
 from server.core.logger import app_logger
 from server.core.security import get_current_active_user
+from server.core.ws_protocol import WsEvent, ws_frame
+from server.service.ws_manager import ws_manager
 from server.db.database import get_session
 from server.db.dtos.session_dto import SessionDTO
 from server.models.session import Session, FlashcardQueue, ChapterQueue, Message
@@ -104,6 +106,7 @@ async def websocket_endpoint(
 
     flashcard_queue = await chat_service.get_flashcard_queue()
     supervisor_service = SupervisorServerService(db, chat_id, flashcard_queue.id)
+    await ws_manager.register(chat_id, websocket)
     try:
         while True:
             data = await websocket.receive_text()
@@ -120,22 +123,22 @@ async def websocket_endpoint(
                 async for content in chat_output_dto.stream_messages():
                     if isinstance(content, MetaDataDTO):
                         metadata_collector = content
-                        await websocket.send_text(
-                            json.dumps({"metadata": content.model_dump()})
+                        await ws_manager.broadcast(
+                            chat_id, ws_frame(WsEvent.METADATA, content.model_dump())
                         )
                     elif isinstance(content, dict) and "result" in content:
                         message_text = content["result"]
                         response_content_collector += message_text
-                        await websocket.send_text(json.dumps({"content": message_text}))
+                        await ws_manager.broadcast(
+                            chat_id, ws_frame(WsEvent.CONTENT, message_text)
+                        )
                     elif isinstance(content, dict) and "context" in content:
                         context = content["context"]
-                        await websocket.send_text(json.dumps({
-                            "context": [
-                                {k: doc.metadata.get(k) for k in
-                                 ("chapter_id", "chapter_tag", "chapter", "subchapter", "title", "rerank_score")}
-                                for doc in context
-                            ]
-                        }))
+                        await ws_manager.broadcast(chat_id, ws_frame(WsEvent.CONTEXT, [
+                            {k: doc.metadata.get(k) for k in
+                             ("chapter_id", "chapter_tag", "chapter", "subchapter", "title", "rerank_score")}
+                            for doc in context
+                        ]))
 
             agent_message = await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.save_retrievals(agent_message.id, context)
@@ -147,6 +150,7 @@ async def websocket_endpoint(
             "WebSocket connection was closed",
             extra={"chat_id": str(chat_id)},
         )
+        await ws_manager.unregister(chat_id, websocket)
     except AppError as exc:
         error_id = str(uuid.uuid4())
         app_logger.error(
@@ -161,7 +165,7 @@ async def websocket_endpoint(
             },
         )
         await _send_ws_error(
-            websocket, error_id, exc.step, str(exc) or "Pipeline error", code=exc.code
+            chat_id, websocket, error_id, exc.step, str(exc) or "Pipeline error", code=exc.code
         )
     except Exception as exc:
         error_id = str(uuid.uuid4())
@@ -175,19 +179,22 @@ async def websocket_endpoint(
                 "chat_id": str(chat_id),
             },
         )
-        await _send_ws_error(websocket, error_id, "chat.websocket", "Internal server error")
+        await _send_ws_error(chat_id, websocket, error_id, "chat.websocket", "Internal server error")
 
 
 async def _send_ws_error(
-    websocket: WebSocket, error_id: str, step: str, detail: str, code: int = 50000
+    chat_id: uuid.UUID, websocket: WebSocket, error_id: str, step: str, detail: str, code: int = 50000
 ) -> None:
-    """Deliver a structured error frame and close 1011, tolerating an already-closed socket."""
+    """Broadcast a structured error frame to every session listener, then close
+    the socket whose turn failed (1011), tolerating an already-closed socket."""
     try:
-        await websocket.send_text(
-            json.dumps({"error": {"detail": detail, "error_id": error_id, "step": step, "code": code}})
+        await ws_manager.broadcast(
+            chat_id,
+            ws_frame(WsEvent.ERROR, {"detail": detail, "error_id": error_id, "step": step, "code": code}),
         )
     except Exception:
         pass
+    await ws_manager.unregister(chat_id, websocket)
     try:
         await websocket.close(code=1011, reason="Internal error")
     except Exception:

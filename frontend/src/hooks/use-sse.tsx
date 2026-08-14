@@ -1,9 +1,11 @@
 'use client'
 
-import { BACKEND_URL } from '@containers/chat.tsx'
 import { logger } from '@lib/logger.ts'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useEffect, useState } from 'react'
+
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 interface SSEOptions {
   chatId: string
