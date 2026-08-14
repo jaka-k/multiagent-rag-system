@@ -41,8 +41,10 @@ real drift.
 
 (websockets, firebase-admin, pgvector client, markdownify, black/pytest)
 
-- [ ] **websockets 13 → 17** (four majors). Exercise the chat WebSocket
-      path end-to-end afterwards.
+- [x] **websockets 13 → 16.1** (2026-08-14). 17 is unreachable: google-genai
+      (the Gemini SDK, via langchain-google-genai) caps websockets <17.
+      Verified: two-client broadcast roundtrip through uvicorn's websockets
+      transport on 16.1.1. Revisit 17 when google-genai lifts the cap.
 - [ ] **firebase-admin 6 → 7**. Touches auth and the EPUB file downloader.
       Not forced by 3.14 (6.9 imports fine there with newer google-cloud-*),
       so it can wait.
