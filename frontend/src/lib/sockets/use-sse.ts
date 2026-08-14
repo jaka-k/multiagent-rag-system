@@ -1,6 +1,11 @@
 'use client'
 
 import { logger } from '@lib/logger.ts'
+import {
+  parseSseEvent,
+  SseEvent,
+  SsePayload
+} from '@lib/sockets/sse-protocol.ts'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useEffect, useState } from 'react'
 
@@ -9,8 +14,8 @@ const BACKEND_URL =
 
 interface SSEOptions {
   chatId: string
-  onFlashcardUpdate: (flashcardIds: string[]) => Promise<void>
-  onDocumentUpdate: (documentIds: string[]) => Promise<void>
+  onFlashcardUpdate: (flashcardIds: SsePayload) => Promise<void>
+  onDocumentUpdate: (documentIds: SsePayload) => Promise<void>
 }
 
 export const useSSE = ({
@@ -43,10 +48,24 @@ export const useSSE = ({
           }
         },
         async onmessage(event) {
-          console.log('Received message', event)
-          const data = JSON.parse(event.data)
-          if (event.event === 'flashcard') await onFlashcardUpdate(data)
-          if (event.event === 'documents') await onDocumentUpdate(data)
+          const parsed = parseSseEvent(event.event, event.data)
+
+          if (!parsed) {
+            logger.error(`Unrecognized SSE event: ${event.event}`)
+
+            return
+          }
+
+          switch (parsed.event) {
+            case SseEvent.Flashcard:
+              await onFlashcardUpdate(parsed.ids)
+              break
+            case SseEvent.Documents:
+              await onDocumentUpdate(parsed.ids)
+              break
+            default:
+              break
+          }
         },
         onclose() {
           setIsConnected(false)

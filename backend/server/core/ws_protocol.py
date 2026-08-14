@@ -1,7 +1,7 @@
 """Chat WebSocket wire protocol.
 
 Every frame is {"type": WsEvent, "payload": ...}. The event enum is
-mirrored in frontend/src/lib/ws/protocol.ts — keep the two in sync.
+mirrored in frontend/src/lib/sockets/ws-protocol.ts — keep the two in sync.
 """
 import json
 from enum import Enum

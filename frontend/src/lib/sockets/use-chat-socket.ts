@@ -7,7 +7,7 @@ import {
   WsErrorPayload,
   WsEvent,
   WsMetadataPayload
-} from '@lib/ws/protocol.ts'
+} from '@lib/sockets/ws-protocol.ts'
 import { useCallback } from 'react'
 import useWebSocket from 'react-use-websocket'
 

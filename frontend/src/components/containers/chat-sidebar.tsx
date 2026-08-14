@@ -7,6 +7,7 @@ import useRetrievalStore, {
 } from '@context/retrieval-store.tsx'
 import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
+import SSEPill from '@ui/console/sse-pill'
 import FeatureOverlay from '@ui/feature-overlay.tsx'
 import FlashcardCreator from '@ui/flashcard-creator/flashcard-creator'
 import FlashcardList from '@ui/flashcards/flashcard-list'
@@ -161,6 +162,9 @@ const ChatSidebar = ({
 
   return (
     <aside className="sidebar">
+      <div className="side-pad" style={{ paddingBottom: 0 }}>
+        <SSEPill chatId={chatId} />
+      </div>
       <div className="side-tabs">
         {TABS.map((t) => (
           <button

@@ -1,8 +1,8 @@
 'use client'
 
 import useRetrievalStore from '@context/retrieval-store.tsx'
-import { WsContextChapter, WsErrorPayload } from '@lib/ws/protocol.ts'
-import { useChatSocket } from '@lib/ws/use-chat-socket.ts'
+import { useChatSocket } from '@lib/sockets/use-chat-socket.ts'
+import { WsContextChapter, WsErrorPayload } from '@lib/sockets/ws-protocol.ts'
 import { ChatData, Message } from '@mytypes/types'
 import CreateChat from '@ui/create-chat/create-chat.tsx'
 import { ArrowLeft, Plus, Send } from 'lucide-react'
