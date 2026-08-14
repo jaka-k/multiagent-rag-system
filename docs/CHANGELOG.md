@@ -60,6 +60,13 @@ flagged.
   the area-flashcards and all agent endpoints (401/404 verified live);
   agent.variables NOT NULL with [] default; DST-safe session day-grouping;
   stale-error reset on area switch; Space-key activation on agent cards.
+- **Endpoint authorization sweep** (per the new CLAUDE.md rule): every
+  data endpoint now derives identity from the token and verifies resource
+  ownership (404 on foreign ids) — areas, chats, retrievals, flashcards,
+  queues, documents, chapters, chapter-queues, anki sync. WebSocket and
+  SSE authenticate via the httpOnly token cookie (WS closes 1008
+  unauthenticated; SSE 401/404). Shared server/core/authz.py helpers.
+  Also fixed a latent missing-raise on the area-documents ownership check.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild

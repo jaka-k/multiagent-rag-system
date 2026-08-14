@@ -10,6 +10,7 @@ from sqlmodel import select, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.embedding_controller import background_embedding_process
+from server.core.authz import require_owned_chapter, require_owned_document, require_owned_session
 from server.core.security import get_current_active_user
 from server.db.database import get_session
 from server.models.document import Document, EmbeddingStatus, Chapter
@@ -117,13 +118,12 @@ async def embedding_status(document_id: str,
 
 
 @router.get("/document/{document_id}")
-async def get_document(document_id: str, session: AsyncSession = Depends(get_session)):
-    stmt = select(Document).where(Document.id == document_id)
-    result = await session.execute(stmt)
-
-    document = result.scalar_one_or_none()
-    if not document:
-        raise HTTPException(status_code=404, detail="Document not found")
+async def get_document(
+        document_id: str,
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
+    document = await require_owned_document(session, document_id, current_user)
     if document.embedding_status != EmbeddingStatus.COMPLETED:
         raise HTTPException(status_code=500, detail="Document embedding is not finished")
 
@@ -131,19 +131,29 @@ async def get_document(document_id: str, session: AsyncSession = Depends(get_ses
 
 
 @router.get("/chapter")
-async def get_chapter(chapter_tag: str = Query(...), session: AsyncSession = Depends(get_session)):
+async def get_chapter(
+        chapter_tag: str = Query(...),
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
     stmt = select(Chapter).where(Chapter.chapter_tag == chapter_tag)
     result = await session.execute(stmt)
 
     chapter = result.scalar_one_or_none()
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
+    await require_owned_chapter(session, chapter, current_user)
 
     return {"chapter": chapter}
 
 
 @router.get("/chapter-queue/{chat_id}", response_model=ChapterQueueRead)
-async def get_all_documents(chat_id: str, session: AsyncSession = Depends(get_session)):
+async def get_all_documents(
+        chat_id: str,
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
+    await require_owned_session(session, chat_id, current_user)
     stmt = select(ChapterQueue).options(selectinload(ChapterQueue.chapters)).where(ChapterQueue.session_id == chat_id)
     result = await session.execute(stmt)
 

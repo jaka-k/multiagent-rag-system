@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from server.core.authz import require_owned_area
 from server.core.logger import app_logger
 from server.core.security import get_current_active_user
 from server.db.database import get_session
@@ -25,11 +26,12 @@ class AreaCreateRequest(BaseModel):
 
 
 @router.get("/area/{area_id}")
-async def get_area(area_id: str, session: AsyncSession = Depends(get_session)):
-    area = await session.get(Area, area_id)
-    if not area:
-        raise HTTPException(status_code=400, detail="Area not found")
-    return area
+async def get_area(
+        area_id: str,
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
+    return await require_owned_area(session, area_id, current_user)
 
 
 @router.post("/area")
@@ -75,7 +77,7 @@ async def get_areas_documents(
     result = await session.execute(stmt)
     area = result.scalars().one()
 
-    if not area.user_id == current_user.id:
-        HTTPException(403, f"Insufficient permissions")
+    if area.user_id != current_user.id:
+        raise HTTPException(404, "Not found")
 
     return area.documents
