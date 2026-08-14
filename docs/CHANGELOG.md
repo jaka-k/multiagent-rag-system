@@ -45,6 +45,12 @@ flagged.
 - **websockets 13 → 16.1** (doc 01 Tier 3): 17 capped by google-genai
   (<17); verified with a two-client broadcast roundtrip through uvicorn's
   websockets transport.
+- **markdownify 0.14 → 1.2.3** (doc 01 Tier 3): verified on two real
+  EPUBs — heading/code-fence chunk separators byte-identical; <dl> now
+  renders as Markdown definition lists (improvement).
+- **pgvector client bump: blocked upstream** — all langchain-postgres
+  releases cap pgvector <0.4; 0.3.6 already maximal. Recheck with future
+  langchain-postgres versions.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild
