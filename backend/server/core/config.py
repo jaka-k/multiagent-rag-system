@@ -54,6 +54,14 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://mrag.krajnc.cc",
+    "https://api.mrag.krajnc.cc",
+]
+
 # gemini-2.5-* are retired for keys created after mid-2026, and pro-class
 # models have free-tier quota 0 — flash-latest is the strongest model the
 # current key can serve. Restore a pro alias here once billing is enabled.

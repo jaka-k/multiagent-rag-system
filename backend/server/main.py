@@ -69,14 +69,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         content={"detail": "Internal server error", "error_id": error_id},
     )
 
-# CORS settings
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://mrag.krajnc.cc",
-    "https://api.mrag.krajnc.cc",
-]
+from server.core.config import ALLOWED_ORIGINS as origins  # noqa: E402
 
 app.add_middleware(
     CORSMiddleware,

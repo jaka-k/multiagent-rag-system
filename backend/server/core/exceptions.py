@@ -12,7 +12,9 @@ derives the response status from the code (`code // 100`), so a new 400xx/
 part of the API surface — never renumber existing ones, only append.
 
     400xx  bad input          40001 EmbeddingParseError
-    404xx  missing resource   40401 EmbeddingDownloadError
+    401xx  authentication     40101 UnauthorizedError
+    404xx  missing resource   40401 EmbeddingDownloadError, 40402 ResourceNotFoundError
+    409xx  conflict           40901 ConflictError
     500xx  server-side        50000-50007 (below)
 """
 
@@ -88,3 +90,27 @@ class EmbeddingDownloadError(EmbeddingPipelineError):
 
     step = "embedding.download"
     code = 40401
+
+
+# ── authn / authz / request errors ──────────────────────────────────────────
+
+
+class UnauthorizedError(AppError):
+    """Missing or invalid credentials on a transport without the oauth2 dep."""
+
+    step = "auth.credentials"
+    code = 40101
+
+
+class ResourceNotFoundError(AppError):
+    """Resource missing or not owned by the caller (ownership leaks as 404)."""
+
+    step = "authz.ownership"
+    code = 40402
+
+
+class ConflictError(AppError):
+    """The request is valid but conflicts with existing state (e.g. duplicate)."""
+
+    step = "request.conflict"
+    code = 40901

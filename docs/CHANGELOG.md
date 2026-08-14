@@ -76,6 +76,14 @@ flagged.
 - Planned (doc 07, 2026-08-14): chapter HTML stored as a lazy 1:1 blob
   (base64-inlined images) for a real book reader; design requested from
   the MRAG design project.
+- **Error handling centralized** (review feedback): new typed client
+  errors (UnauthorizedError 40101, ResourceNotFoundError 40402,
+  ConflictError 40901); all routers raise through the AppError hierarchy
+  instead of ad-hoc HTTPExceptions — every error response now carries
+  error_id/step/code. Rule added to CLAUDE.md.
+- **WS Origin allowlist** (Copilot on #27): cross-site WebSocket
+  hijacking defense — non-allowlisted Origins rejected at the handshake;
+  also fixed a 500 on unknown area ids in the area-documents endpoint.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild

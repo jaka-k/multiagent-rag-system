@@ -4,8 +4,7 @@ Token handling lives in security.py; this module only answers "is it yours"."""
 import uuid
 from typing import Union
 
-from fastapi import HTTPException
-
+from server.core.exceptions import ResourceNotFoundError
 from server.models.area import Area
 from server.models.document import Chapter, Document
 from server.models.flashcard import Deck, Flashcard
@@ -13,8 +12,8 @@ from server.models.session import FlashcardQueue, Session
 from server.models.user import User
 
 
-def _not_found() -> HTTPException:
-    return HTTPException(status_code=404, detail="Not found")
+def _not_found() -> ResourceNotFoundError:
+    return ResourceNotFoundError("Not found")
 
 
 async def require_owned_area(db, area_id: Union[str, uuid.UUID], user: User) -> Area:
