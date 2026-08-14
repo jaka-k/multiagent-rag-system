@@ -127,6 +127,7 @@ async def websocket_endpoint(
 
             response_generator = chat_service.handle_chat(chat_input)
             response_content_collector = ""
+            metadata_collector = None
 
             context = []
 
@@ -153,7 +154,8 @@ async def websocket_endpoint(
 
             agent_message = await chat_controller.save_agent_message(response_content_collector)
             await chat_controller.save_retrievals(agent_message.id, context)
-            await chat_controller.update_session_metadata(metadata_collector)
+            if metadata_collector is not None:
+                await chat_controller.update_session_metadata(metadata_collector)
             await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
 
     except WebSocketDisconnect:
@@ -214,7 +216,7 @@ async def _send_ws_error(
 
 @router.get("/chat/{chat_id}/retrievals")
 async def get_chat_retrievals(
-        chat_id: str,
+        chat_id: uuid.UUID,
         current_user: User = Depends(get_current_active_user),
         db: AsyncSession = Depends(get_session),
 ):
