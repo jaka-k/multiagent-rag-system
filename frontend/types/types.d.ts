@@ -162,3 +162,18 @@ export interface AreaFlashcards {
   queues: AreaFlashcardQueue[]
   loose: AreaFlashcard[]
 }
+
+export interface RetrievedChapterRef {
+  chapterId: string
+  chapterTag: string
+  chapter: string
+  subchapter: string
+  relevanceScore: number
+  rank: number
+}
+
+export interface RetrievalGroup {
+  messageId: string
+  createdAt: string
+  chapters: RetrievedChapterRef[]
+}
