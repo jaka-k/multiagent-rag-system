@@ -48,8 +48,11 @@ real drift.
 - [ ] **firebase-admin 6 → 7**. Touches auth and the EPUB file downloader.
       Not forced by 3.14 (6.9 imports fine there with newer google-cloud-*),
       so it can wait.
-- [ ] **pgvector client 0.3.6 → 0.5.0**. Check langchain-postgres's
-      constraint first; it may cap it.
+- [x] **pgvector client 0.3.6 → 0.5.0** — **blocked upstream** (checked
+      2026-08-14): every langchain-postgres release (≤0.0.17, the latest)
+      caps pgvector <0.4, and 0.3.6 is the last 0.3.x. Nothing to bump
+      until langchain-postgres lifts the cap; recheck alongside any future
+      langchain-postgres upgrade.
 - [x] **markdownify 0.14 → 1.2.3** (2026-08-14). Diffed parser output on
       two real EPUBs: all heading/code-fence chunk separators byte-identical;
       only paragraph-break density shifted (1.x renders <dl> as Markdown
