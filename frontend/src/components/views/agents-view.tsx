@@ -16,6 +16,7 @@ interface AgentDto {
   variables: string[]
   isActive: boolean
   difficulty: string | null
+  model: string | null
 }
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -142,8 +143,11 @@ export default function AgentsView() {
                 </div>
                 <div className="agent-meta">
                   <span className="tagk">{agent.cardType}</span>
+                  <span className="tagk">{agent.model ?? 'default model'}</span>
                   {agent.difficulty && (
-                    <span className="tagk">{agent.difficulty}</span>
+                    <span className="tagk" style={{ marginLeft: 'auto' }}>
+                      {agent.difficulty}
+                    </span>
                   )}
                 </div>
               </div>
@@ -162,15 +166,59 @@ export default function AgentsView() {
             </div>
             <div className="editor-body">
               <div className="field">
-                <div className="flbl">System prompt</div>
+                <div className="flbl">
+                  Instructions <span className="hint">system prompt</span>
+                </div>
                 <textarea
-                  className="ta"
+                  className="ta mono"
                   rows={8}
                   value={prompt}
                   disabled={!selected}
                   onChange={(e) => setPrompt(e.target.value)}
                 />
               </div>
+              {selected && (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 14
+                  }}
+                >
+                  <div className="field">
+                    <div className="flbl">Card format</div>
+                    <select
+                      className="sel"
+                      value={selected.cardType}
+                      onChange={(e) =>
+                        patchAgent(selected.id, { cardType: e.target.value })
+                      }
+                    >
+                      {['def', 'code', 'concept', 'cloze'].map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <div className="flbl">Difficulty</div>
+                    <select
+                      className="sel"
+                      value={selected.difficulty ?? 'Standard'}
+                      onChange={(e) =>
+                        patchAgent(selected.id, { difficulty: e.target.value })
+                      }
+                    >
+                      {['Standard', 'Hard'].map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
               {selected && selected.variables.length > 0 && (
                 <div className="field">
                   <div className="flbl">Variables</div>
@@ -188,6 +236,7 @@ export default function AgentsView() {
               <button
                 type="button"
                 className="btn btn-pri"
+                style={{ flex: 1, justifyContent: 'center' }}
                 disabled={!selected || saving}
                 onClick={async () => {
                   if (!selected) return

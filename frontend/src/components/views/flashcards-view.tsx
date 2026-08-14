@@ -3,7 +3,8 @@
 import { coverGradient } from '@components/shell/book-cover'
 import useAreaStore from '@context/area-store.tsx'
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
-import { Inbox } from 'lucide-react'
+import { CheckCircle2, Grid2x2, Inbox, Target } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React from 'react'
 
 interface CardDto {
@@ -64,8 +65,12 @@ function Card({ card }: { card: CardDto }) {
   )
 }
 
+type QueueFilter = 'all' | 'progress' | 'done'
+
 export default function FlashcardsView() {
+  const router = useRouter()
   const { activeArea } = useAreaStore()
+  const [filter, setFilter] = React.useState<QueueFilter>('all')
   const [data, setData] = React.useState<AreaCards | null>(null)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -105,6 +110,16 @@ export default function FlashcardsView() {
                 Not in a queue yet — clipped or imported cards land here first
               </p>
             </div>
+            <span
+              className="qbadge"
+              style={{
+                marginLeft: 'auto',
+                background: 'var(--blue-wash)',
+                color: 'var(--blue-ink)'
+              }}
+            >
+              {loose.length} loose
+            </span>
           </div>
           {loose.length > 0 ? (
             <div className="loose-grid">
@@ -117,8 +132,33 @@ export default function FlashcardsView() {
           )}
         </div>
 
+        <div className="filterbar">
+          {(
+            [
+              ['all', 'All queues', <Grid2x2 key="g" size={15} />],
+              ['progress', 'In progress', <Target key="t" size={15} />],
+              ['done', 'Mastered', <CheckCircle2 key="c" size={15} />]
+            ] as [QueueFilter, string, React.ReactNode][]
+          ).map(([id, label, icon]) => (
+            <button
+              key={id}
+              type="button"
+              className={filter === id ? 'fchip on' : 'fchip'}
+              onClick={() => setFilter(id)}
+              title={
+                id === 'all'
+                  ? undefined
+                  : 'Review progress arrives with the Anki pull-sync'
+              }
+            >
+              <span className="ic">{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="queues">
-          {queues.map((queue) => (
+          {(filter === 'all' ? queues : []).map((queue) => (
             <div key={queue.sessionId} className="queue">
               <div className="queue-top">
                 <div
@@ -151,7 +191,13 @@ export default function FlashcardsView() {
                     Review progress arrives with the Anki pull-sync
                   </div>
                 </div>
-                <span className="qbadge">{queue.cards.length}</span>
+                <button
+                  type="button"
+                  className="qbadge"
+                  onClick={() => router.push(`/chat/${queue.sessionId}`)}
+                >
+                  Open · {queue.cards.length}
+                </button>
               </div>
             </div>
           ))}

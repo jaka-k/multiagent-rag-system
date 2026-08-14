@@ -363,3 +363,15 @@
 .varrow{ display:flex; flex-wrap:wrap; gap:6px; }
 .var{ font-family:var(--mono); font-size:11px; color:#6A38C7; background:var(--purple-wash); border-radius:7px; padding:3px 8px; }
 .editor-foot{ padding:13px 16px; border-top:1px solid var(--hair); display:flex; gap:9px; background:var(--subtle); }
+
+/* ── filter chips + selects (fidelity pass) ──────────────── */
+.filterbar{ display:flex; align-items:center; gap:8px; margin-bottom:20px; }
+.fchip{ display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border-radius:10px; font-size:12.5px; font-weight:560; color:var(--ink-3); border:1px solid var(--hair-2); background:var(--paper); white-space:nowrap; }
+.fchip:hover{ background:var(--subtle); }
+.fchip.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.fchip.on .ic{ color:#fff; }
+.sel{ display:flex; align-items:center; gap:8px; border:1px solid var(--hair-2); border-radius:10px; background:var(--paper); padding:9px 11px; font-size:12.8px; font-weight:560; color:var(--ink-2); white-space:nowrap; width:100%; }
+.sel:hover{ background:var(--subtle); }
+select.sel{ appearance:none; outline:none; cursor:pointer; }
+.ta.mono{ font-family:var(--mono); font-size:11.8px; }
+.field .flbl .hint{ font-weight:500; letter-spacing:0; text-transform:none; color:var(--ink-4); margin-left:auto; }
