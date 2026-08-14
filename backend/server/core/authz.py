@@ -1,12 +1,11 @@
 """Resource-ownership checks (see CLAUDE.md: identity comes from the token,
-everything else derives from it; foreign resources 404, never 403)."""
+everything else derives from it; foreign resources 404, never 403).
+Token handling lives in security.py; this module only answers "is it yours"."""
 import uuid
-from typing import Optional, Union
+from typing import Union
 
-import jwt
 from fastapi import HTTPException
 
-from server.core.config import settings
 from server.models.area import Area
 from server.models.document import Chapter, Document
 from server.models.flashcard import Deck, Flashcard
@@ -16,22 +15,6 @@ from server.models.user import User
 
 def _not_found() -> HTTPException:
     return HTTPException(status_code=404, detail="Not found")
-
-
-def user_id_from_token(token: Optional[str]) -> Optional[uuid.UUID]:
-    """Decode a JWT to a user id; None on any failure. For transports that
-    can't use the oauth2 header dependency (WebSocket / SSE cookies)."""
-    if not token:
-        return None
-    try:
-        payload = jwt.decode(
-            token, settings.hashing_secret_key,
-            algorithms=[settings.hashing_algorithm],
-            options={"require": ["exp", "sub"]},
-        )
-        return uuid.UUID(payload["sub"])
-    except (jwt.PyJWTError, KeyError, ValueError):
-        return None
 
 
 async def require_owned_area(db, area_id: Union[str, uuid.UUID], user: User) -> Area:
