@@ -112,7 +112,12 @@ export default function AgentsView() {
                 key={agent.id}
                 className={agent.id === selectedId ? 'agent on' : 'agent'}
                 onClick={() => setSelectedId(agent.id)}
-                onKeyDown={(e) => e.key === 'Enter' && setSelectedId(agent.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setSelectedId(agent.id)
+                  }
+                }}
                 role="button"
                 tabIndex={0}
               >
@@ -219,11 +224,11 @@ export default function AgentsView() {
                   </div>
                 </div>
               )}
-              {selected && selected.variables.length > 0 && (
+              {selected && (selected.variables ?? []).length > 0 && (
                 <div className="field">
                   <div className="flbl">Variables</div>
                   <div className="varrow">
-                    {selected.variables.map((v) => (
+                    {(selected.variables ?? []).map((v) => (
                       <span key={v} className="var">
                         {v}
                       </span>

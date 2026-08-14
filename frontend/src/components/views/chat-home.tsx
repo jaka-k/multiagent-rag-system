@@ -17,7 +17,8 @@ function groupLabel(iso?: string): string {
   const now = new Date()
   const startOfDay = (d: Date) =>
     new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-  const dayDiff = (startOfDay(now) - startOfDay(then)) / 86_400_000
+  // rounded: DST transitions make calendar days 23h/25h long
+  const dayDiff = Math.round((startOfDay(now) - startOfDay(then)) / 86_400_000)
 
   if (dayDiff <= 0) return 'Today'
 

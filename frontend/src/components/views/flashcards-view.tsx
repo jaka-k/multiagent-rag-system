@@ -84,6 +84,8 @@ export default function FlashcardsView() {
 
   React.useEffect(() => {
     if (!activeArea) return
+    setData(null)
+    setError(null)
     fetchWithAuth<AreaCards>(`/api/area/${activeArea.id}/flashcards`, {
       method: 'GET'
     })
