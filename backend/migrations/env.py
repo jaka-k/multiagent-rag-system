@@ -24,6 +24,7 @@ import server.models.area  # noqa: F401 — Area, Instruction
 import server.models.user  # noqa: F401 — User, Token
 import server.models.anki_sync  # noqa: F401 — AnkiCardState, AnkiSyncRun
 import server.models.agent  # noqa: F401 — Agent
+import server.models.retrieval  # noqa: F401 — MessageRetrieval
 
 # ---------------------------------------------------------------------------
 # Alembic Config object — gives access to values in alembic.ini.

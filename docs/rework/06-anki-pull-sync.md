@@ -5,8 +5,10 @@
 > optional loop. E2E-verified against the live container; AnkiWeb
 > credentials confirmed working. Bonus fix: the mrag-minimal template
 > deck-override was sending every pushed card to Default — cards are now
-> moved to the intended deck explicitly. Remaining: step 5 (UI consumers)
-> lands with the redesign; step 6 (agent prompt variables) later.
+> moved to the intended deck explicitly. Step 5 (UI consumers) done 2026-08-14:
+> queue progress bars, mastered badges, and live In-progress/Mastered
+> filters, verified end-to-end with answerCards-simulated reviews.
+> Remaining: step 6 (agent prompt variables) later.
 
 Today the Anki integration is **push-only**: area → `createDeck`
 (`RAG::{label}`), card → `addNote` + `sync()`, and the returned note id is

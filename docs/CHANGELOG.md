@@ -11,12 +11,41 @@ flagged.
 
 ---
 
-## [Unreleased / in flight]
+## [Unreleased / in flight] — Redesign wave (PRs #21, #22)
 
-- **Frontend redesign** (docs/rework/04): chat-first app shell modeled on
-  the claude.ai/design MRAG project — in progress.
-- Remaining: doc 01 Tier 3 majors, docker-image rebuild verification on
-  3.14, otel-collector handshake check, doc 05 schema decisions.
+- **Chat-first app shell** (PR #21): mrag.css design system ported from the
+  claude.ai/design MRAG project (Iris accent, charcoal shell); dark-frame
+  shell with Rail (area switcher, book library, EPUB upload) + TopNav;
+  ChatHome (hero launcher + day-grouped sessions) replaces the chat table;
+  Flashcards tab (loose-cards band + per-session queues via new
+  GET /api/area/{id}/flashcards); Agent Instructions tab backed by a new
+  **per-area Agent model** + CRUD (replaces the per-session instruction
+  string concept).
+- **Conversation + sidebar redesign** (PR #22): thread/composer in design
+  tokens; ChatSidebar (Chapters/Flashcards/Creator) replaces Console; new
+  **MessageRetrieval** table persists per-answer retrieval results (backs
+  the Chapters tab and future citations); WS error frames now render in
+  the thread instead of hanging on "Thinking…".
+- **Typed realtime protocols** (PR #22): WS frames are {type, payload}
+  envelopes with a WsEvent enum mirrored Python/TS; SSE events get the
+  same treatment (SseEvent enum); client logic consolidated in
+  frontend/src/lib/sockets/; **SessionConnectionManager broadcasts every
+  frame to all clients on a session** (multi-tab/device).
+- **Review-state UI** (PR #22, doc 06 step 5): queue progress bars,
+  mastered badges, live In-progress/Mastered filters fed by the
+  AnkiCardState mirror. Verified with AnkiConnect answerCards-simulated
+  reviews.
+- **Fixes**: exporting a card to Anki no longer removes it from its
+  session queue (export = sync, not move); ankisyncrun.latest_review_id
+  widened to BIGINT (review ids are epoch-ms — first real review would
+  have crashed the pull-sync); SSE connection regression from the Console
+  replacement caught and fixed.
+- Decisions locked 2026-08-14: queues stay 1:1 with sessions; agents are
+  per-area; Iris accent + charcoal shell.
+- Remaining: citations (phase 6), GenBot draft loop, agents wired into
+  generation (all gated on a working GOOGLE_API_KEY — current one is
+  rejected by Google); doc 01 Tier 3 majors; docker-image rebuild
+  verification on 3.14; otel-collector handshake check.
 
 ## Phase 6 — Platform wave (2026-08-08 → 08-09, PRs #14–#19)
 

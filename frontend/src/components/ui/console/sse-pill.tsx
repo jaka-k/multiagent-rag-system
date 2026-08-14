@@ -1,9 +1,9 @@
 'use client'
 
 import useConsoleStore from '@context/console-store.tsx'
-import { useSSE } from '@hooks/use-sse.tsx'
 import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { getSingleFlashcard } from '@lib/fetchers/fetch-flashcards.ts'
+import { useSSE } from '@lib/sockets/use-sse.ts'
 import { Flashcard } from '@mytypes/types'
 import { StatusIndicator } from '@ui/status-indicator.tsx'
 import { useCallback } from 'react'

@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import BigInteger, Column
 from sqlmodel import Field, SQLModel
 
 
@@ -33,7 +34,8 @@ class AnkiSyncRun(SQLModel, table=True):
     deck_id: uuid.UUID = Field(foreign_key="deck.id", index=True)
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = Field(default=None, nullable=True)
-    latest_review_id: int = Field(default=0)  # getLatestReviewID watermark
+    # getLatestReviewID watermark — epoch-ms scale, needs 64 bits
+    latest_review_id: int = Field(default=0, sa_column=Column(BigInteger))
     cards_updated: int = Field(default=0)
     status: str = Field(default="ok")  # ok | skipped | partial | failed
     error: Optional[str] = Field(default=None, nullable=True)

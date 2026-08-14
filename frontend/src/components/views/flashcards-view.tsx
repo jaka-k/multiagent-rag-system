@@ -13,6 +13,8 @@ interface CardDto {
   back: string
   tag: string
   ankiId: string | null
+  reps: number
+  isMastered: boolean
 }
 
 interface QueueDto {
@@ -20,6 +22,8 @@ interface QueueDto {
   sessionTitle: string
   updatedAt: string
   cards: CardDto[]
+  studied: number
+  mastered: number
 }
 
 interface AreaCards {
@@ -56,7 +60,11 @@ function Card({ card }: { card: CardDto }) {
       <div className="fcard-in">
         <div className="tagrow">
           <span className={tagClass(card.tag)}>{card.tag || 'card'}</span>
-          {card.ankiId && <span className="ftag ghost">in Anki</span>}
+          {card.isMastered ? (
+            <span className="ftag cloze">mastered</span>
+          ) : (
+            card.ankiId && <span className="ftag ghost">in Anki</span>
+          )}
         </div>
         <div className="q">{stripHtml(card.front).slice(0, 140)}</div>
         <div className="a divider">{stripHtml(card.back).slice(0, 180)}</div>
@@ -145,11 +153,6 @@ export default function FlashcardsView() {
               type="button"
               className={filter === id ? 'fchip on' : 'fchip'}
               onClick={() => setFilter(id)}
-              title={
-                id === 'all'
-                  ? undefined
-                  : 'Review progress arrives with the Anki pull-sync'
-              }
             >
               <span className="ic">{icon}</span>
               {label}
@@ -158,49 +161,69 @@ export default function FlashcardsView() {
         </div>
 
         <div className="queues">
-          {(filter === 'all' ? queues : []).map((queue) => (
-            <div key={queue.sessionId} className="queue">
-              <div className="queue-top">
-                <div
-                  className="qcover"
-                  style={{ background: coverGradient(queue.sessionTitle) }}
-                />
-                <div>
-                  <h3>{queue.sessionTitle}</h3>
-                  <div className="qsub">
-                    <span className="b">{queue.cards.length} cards</span>
-                    <span className="dotsep" />
-                    <span>from this session</span>
+          {queues
+            .filter((q) => {
+              if (filter === 'progress') return q.studied < q.cards.length
+
+              if (filter === 'done')
+                return q.cards.length > 0 && q.studied === q.cards.length
+
+              return true
+            })
+            .map((queue) => (
+              <div key={queue.sessionId} className="queue">
+                <div className="queue-top">
+                  <div
+                    className="qcover"
+                    style={{ background: coverGradient(queue.sessionTitle) }}
+                  />
+                  <div>
+                    <h3>{queue.sessionTitle}</h3>
+                    <div className="qsub">
+                      <span className="b">{queue.cards.length} cards</span>
+                      <span className="dotsep" />
+                      <span>from this session</span>
+                    </div>
                   </div>
+                </div>
+                {queue.cards[0] && (
+                  <div className="qpreview">
+                    <div className="ql">Next card</div>
+                    <div className="qq">
+                      {stripHtml(queue.cards[0].front).slice(0, 120)}
+                    </div>
+                  </div>
+                )}
+                <div className="queue-foot">
+                  <div className="qprog">
+                    <div className="bar">
+                      <i
+                        style={{
+                          width: `${
+                            queue.cards.length
+                              ? Math.round(
+                                  (queue.studied / queue.cards.length) * 100
+                                )
+                              : 0
+                          }%`
+                        }}
+                      />
+                    </div>
+                    <div className="pl">
+                      {queue.studied} / {queue.cards.length} reviewed
+                      {queue.mastered > 0 && ` · ${queue.mastered} mastered`}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="qbadge"
+                    onClick={() => router.push(`/chat/${queue.sessionId}`)}
+                  >
+                    Open · {queue.cards.length}
+                  </button>
                 </div>
               </div>
-              {queue.cards[0] && (
-                <div className="qpreview">
-                  <div className="ql">Next card</div>
-                  <div className="qq">
-                    {stripHtml(queue.cards[0].front).slice(0, 120)}
-                  </div>
-                </div>
-              )}
-              <div className="queue-foot">
-                <div className="qprog">
-                  <div className="bar">
-                    <i style={{ width: '0%' }} />
-                  </div>
-                  <div className="pl">
-                    Review progress arrives with the Anki pull-sync
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="qbadge"
-                  onClick={() => router.push(`/chat/${queue.sessionId}`)}
-                >
-                  Open · {queue.cards.length}
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {queues.length === 0 && loose.length === 0 && (

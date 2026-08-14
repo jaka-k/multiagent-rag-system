@@ -2,6 +2,7 @@ import uuid
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from server.models.retrieval import MessageRetrieval
 from server.models.session import Message, Session
 
 from statemachine.dtos.chat_dto import ChatInputDTO, MetaDataDTO
@@ -38,11 +39,35 @@ class ChatController:
             self.db_session.add(agent_message)
             await self.db_session.commit()
             await self.db_session.refresh(agent_message)
+            return agent_message
         except Exception as e:
             await self.db_session.rollback()
             # TODO: Log
             print(f"Error saving agent message: {e}")
             raise e
+
+    async def save_retrievals(self, message_id: uuid.UUID, context: list):
+        """Persist which chapters the RAG pipeline retrieved for this answer."""
+        rows = []
+        for rank, doc in enumerate(context):
+            meta = getattr(doc, "metadata", None) or {}
+            chapter_id = meta.get("chapter_id")
+            if not chapter_id:
+                continue
+            rows.append(MessageRetrieval(
+                message_id=message_id,
+                chapter_id=uuid.UUID(chapter_id),
+                relevance_score=float(meta.get("rerank_score") or 0.0),
+                rank=rank,
+            ))
+        if not rows:
+            return
+        try:
+            self.db_session.add_all(rows)
+            await self.db_session.commit()
+        except Exception as e:
+            await self.db_session.rollback()
+            print(f"Error saving retrievals: {e}")
 
     async def update_session_metadata(self, metadata: MetaDataDTO):
         try:

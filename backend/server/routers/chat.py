@@ -12,9 +12,11 @@ from server.controller.chat_controller import ChatController
 from server.core.exceptions import AppError
 from server.core.logger import app_logger
 from server.core.security import get_current_active_user
+from server.core.ws_protocol import WsEvent, ws_frame
+from server.service.ws_manager import ws_manager
 from server.db.database import get_session
 from server.db.dtos.session_dto import SessionDTO
-from server.models.session import Session, FlashcardQueue, ChapterQueue
+from server.models.session import Session, FlashcardQueue, ChapterQueue, Message
 from server.models.user import User
 from server.service.supervisor_server_service import SupervisorServerService
 from statemachine.dtos.chat_dto import ChatInputDTO, MetaDataDTO
@@ -104,6 +106,7 @@ async def websocket_endpoint(
 
     flashcard_queue = await chat_service.get_flashcard_queue()
     supervisor_service = SupervisorServerService(db, chat_id, flashcard_queue.id)
+    await ws_manager.register(chat_id, websocket)
     try:
         while True:
             data = await websocket.receive_text()
@@ -120,17 +123,25 @@ async def websocket_endpoint(
                 async for content in chat_output_dto.stream_messages():
                     if isinstance(content, MetaDataDTO):
                         metadata_collector = content
-                        await websocket.send_text(
-                            json.dumps({"metadata": content.model_dump()})
+                        await ws_manager.broadcast(
+                            chat_id, ws_frame(WsEvent.METADATA, content.model_dump())
                         )
                     elif isinstance(content, dict) and "result" in content:
                         message_text = content["result"]
                         response_content_collector += message_text
-                        await websocket.send_text(json.dumps({"content": message_text}))
+                        await ws_manager.broadcast(
+                            chat_id, ws_frame(WsEvent.CONTENT, message_text)
+                        )
                     elif isinstance(content, dict) and "context" in content:
                         context = content["context"]
+                        await ws_manager.broadcast(chat_id, ws_frame(WsEvent.CONTEXT, [
+                            {k: doc.metadata.get(k) for k in
+                             ("chapter_id", "chapter_tag", "chapter", "subchapter", "title", "rerank_score")}
+                            for doc in context
+                        ]))
 
-            await chat_controller.save_agent_message(response_content_collector)
+            agent_message = await chat_controller.save_agent_message(response_content_collector)
+            await chat_controller.save_retrievals(agent_message.id, context)
             await chat_controller.update_session_metadata(metadata_collector)
             await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
 
@@ -139,6 +150,7 @@ async def websocket_endpoint(
             "WebSocket connection was closed",
             extra={"chat_id": str(chat_id)},
         )
+        await ws_manager.unregister(chat_id, websocket)
     except AppError as exc:
         error_id = str(uuid.uuid4())
         app_logger.error(
@@ -153,7 +165,7 @@ async def websocket_endpoint(
             },
         )
         await _send_ws_error(
-            websocket, error_id, exc.step, str(exc) or "Pipeline error", code=exc.code
+            chat_id, websocket, error_id, exc.step, str(exc) or "Pipeline error", code=exc.code
         )
     except Exception as exc:
         error_id = str(uuid.uuid4())
@@ -167,20 +179,58 @@ async def websocket_endpoint(
                 "chat_id": str(chat_id),
             },
         )
-        await _send_ws_error(websocket, error_id, "chat.websocket", "Internal server error")
+        await _send_ws_error(chat_id, websocket, error_id, "chat.websocket", "Internal server error")
 
 
 async def _send_ws_error(
-    websocket: WebSocket, error_id: str, step: str, detail: str, code: int = 50000
+    chat_id: uuid.UUID, websocket: WebSocket, error_id: str, step: str, detail: str, code: int = 50000
 ) -> None:
-    """Deliver a structured error frame and close 1011, tolerating an already-closed socket."""
+    """Broadcast a structured error frame to every session listener, then close
+    the socket whose turn failed (1011), tolerating an already-closed socket."""
     try:
-        await websocket.send_text(
-            json.dumps({"error": {"detail": detail, "error_id": error_id, "step": step, "code": code}})
+        await ws_manager.broadcast(
+            chat_id,
+            ws_frame(WsEvent.ERROR, {"detail": detail, "error_id": error_id, "step": step, "code": code}),
         )
     except Exception:
         pass
+    await ws_manager.unregister(chat_id, websocket)
     try:
         await websocket.close(code=1011, reason="Internal error")
     except Exception:
         pass
+
+
+@router.get("/chat/{chat_id}/retrievals")
+async def get_chat_retrievals(
+        chat_id: str,
+        db: AsyncSession = Depends(get_session),
+):
+    """Retrieved chapters per agent message, newest message first."""
+    from server.models.document import Chapter
+    from server.models.retrieval import MessageRetrieval
+
+    rows = (await db.execute(
+        select(Message, MessageRetrieval, Chapter)
+        .join(MessageRetrieval, MessageRetrieval.message_id == Message.id)
+        .join(Chapter, Chapter.id == MessageRetrieval.chapter_id)
+        .where(Message.session_id == chat_id)
+        .order_by(Message.created_at.desc(), MessageRetrieval.rank.asc())
+    )).all()
+
+    grouped: dict = {}
+    for message, retrieval, chapter in rows:
+        entry = grouped.setdefault(str(message.id), {
+            "message_id": str(message.id),
+            "created_at": message.created_at,
+            "chapters": [],
+        })
+        entry["chapters"].append({
+            "chapter_id": str(chapter.id),
+            "chapter_tag": chapter.chapter_tag,
+            "chapter": chapter.parent_label,
+            "subchapter": chapter.label,
+            "relevance_score": retrieval.relevance_score,
+            "rank": retrieval.rank,
+        })
+    return list(grouped.values())

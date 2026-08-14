@@ -8,6 +8,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.logger import app_logger
+from server.core.sse_protocol import SseEvent
 from server.db.pubsub import SSE_NOTIFY_CHANNEL
 from server.models.flashcard import Flashcard
 from server.models.document import Chapter
@@ -92,7 +93,7 @@ class SupervisorServerService:
 
         payload = {
             "session_id": str(self.session_id),
-            "event_type": "documents",
+            "event_type": SseEvent.DOCUMENTS.value,
             "data": doc_chunks_ids
         }
         data = json.dumps(payload)
@@ -105,7 +106,7 @@ class SupervisorServerService:
     async def notify_flashcards_queue(self, flashcard_ids: list[str]):
         payload = {
             "session_id": str(self.session_id),
-            "event_type": "flashcard",
+            "event_type": SseEvent.FLASHCARD.value,
             "data": flashcard_ids
         }
         data = json.dumps(payload)
