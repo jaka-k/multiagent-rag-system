@@ -67,6 +67,12 @@ flagged.
   SSE authenticate via the httpOnly token cookie (WS closes 1008
   unauthenticated; SSE 401/404). Shared server/core/authz.py helpers.
   Also fixed a latent missing-raise on the area-documents ownership check.
+- **Frontend composition refactor** (review feedback): views compose
+  instead of implement — API access moved to lib/fetchers (fetch-agents,
+  getAreaFlashcards), shared types to types.d.ts, time helpers to
+  lib/utils; new reusable components (agents/agent-card+editor,
+  chat-home/launcher+session-list, flashcards/area-flashcard-card+
+  queue-card). View files roughly halved. Rule added to CLAUDE.md.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild

@@ -1,91 +1,51 @@
 'use client'
 
 import useAreaStore from '@context/area-store.tsx'
-import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth.ts'
-import { Bot, Braces, FileQuestion, Lightbulb, Plus } from 'lucide-react'
+import {
+  createAgent,
+  deleteAgent,
+  getAgents,
+  updateAgent
+} from '@lib/fetchers/fetch-agents.ts'
+import { Agent } from '@mytypes/types'
+import AgentCard from '@ui/agents/agent-card'
+import AgentEditor from '@ui/agents/agent-editor'
+import { Plus } from 'lucide-react'
 import React from 'react'
-
-interface AgentDto {
-  id: string
-  areaId: string
-  name: string
-  description: string
-  icon: string
-  cardType: string
-  systemPrompt: string
-  variables: string[]
-  isActive: boolean
-  difficulty: string | null
-  model: string | null
-}
-
-const TYPE_ICONS: Record<string, React.ReactNode> = {
-  def: <FileQuestion size={18} />,
-  code: <Braces size={18} />,
-  concept: <Lightbulb size={18} />,
-  cloze: <Bot size={18} />
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  def: 'var(--cb-blue-wash)',
-  code: 'var(--purple-wash)',
-  concept: 'var(--amber-wash)',
-  cloze: 'var(--green-wash)'
-}
 
 export default function AgentsView() {
   const { activeArea } = useAreaStore()
-  const [agentList, setAgentList] = React.useState<AgentDto[]>([])
+  const [agents, setAgents] = React.useState<Agent[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
-  const [prompt, setPrompt] = React.useState('')
-  const [saving, setSaving] = React.useState(false)
 
-  const selected = agentList.find((a) => a.id === selectedId) ?? null
+  const selected = agents.find((a) => a.id === selectedId) ?? null
 
   const load = React.useCallback(async () => {
-    if (!activeArea) return
-    const r = await fetchWithAuth<AgentDto[]>(
-      `/api/area/${activeArea.id}/agents`,
-      { method: 'GET' }
-    )
-
-    if (r.ok) setAgentList(r.data)
+    if (activeArea) setAgents(await getAgents(activeArea.id))
   }, [activeArea])
 
   React.useEffect(() => {
     load()
   }, [load])
 
-  React.useEffect(() => {
-    setPrompt(selected?.systemPrompt ?? '')
-  }, [selected])
-
-  async function createAgent() {
+  async function handleCreate() {
     if (!activeArea) return
-    const r = await fetchWithAuth<AgentDto>('/api/agents', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: {
-        areaId: activeArea.id,
-        name: `New agent ${agentList.length + 1}`,
-        description: 'Describe what this agent cards',
-        cardType: 'def',
-        variables: ['{{chapter}}', '{{selection}}']
-      }
-    })
+    const agent = await createAgent(
+      activeArea.id,
+      `New agent ${agents.length + 1}`
+    )
 
-    if (r.ok) {
+    if (agent) {
       await load()
-      setSelectedId(r.data.id)
+      setSelectedId(agent.id)
     }
   }
 
-  async function patchAgent(id: string, body: Record<string, unknown>) {
-    await fetchWithAuth(`/api/agents/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body
-    })
+  async function handlePatch(
+    id: string,
+    patch: Parameters<typeof updateAgent>[1]
+  ) {
+    await updateAgent(id, patch)
     await load()
   }
 
@@ -98,7 +58,11 @@ export default function AgentsView() {
             Card-generation agents for {activeArea?.name ?? '—'}
           </span>
           <div className="right">
-            <button type="button" className="btn btn-pri" onClick={createAgent}>
+            <button
+              type="button"
+              className="btn btn-pri"
+              onClick={handleCreate}
+            >
               <Plus size={15} />
               New agent
             </button>
@@ -107,168 +71,37 @@ export default function AgentsView() {
 
         <div className="agents-layout">
           <div className="agrid">
-            {agentList.map((agent) => (
-              <div
+            {agents.map((agent) => (
+              <AgentCard
                 key={agent.id}
-                className={agent.id === selectedId ? 'agent on' : 'agent'}
-                onClick={() => setSelectedId(agent.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    setSelectedId(agent.id)
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="agent-top">
-                  <div
-                    className="agent-ico"
-                    style={{
-                      background: TYPE_COLORS[agent.cardType] ?? 'var(--subtle)'
-                    }}
-                  >
-                    {TYPE_ICONS[agent.cardType] ?? <Bot size={18} />}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <h3>{agent.name}</h3>
-                    <div className="ad">{agent.description}</div>
-                  </div>
-                  <button
-                    type="button"
-                    className={agent.isActive ? 'tog on' : 'tog'}
-                    aria-label="Toggle agent"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      patchAgent(agent.id, { isActive: !agent.isActive })
-                    }}
-                  >
-                    <i />
-                  </button>
-                </div>
-                <div className="agent-meta">
-                  <span className="tagk">{agent.cardType}</span>
-                  <span className="tagk">{agent.model ?? 'default model'}</span>
-                  {agent.difficulty && (
-                    <span className="tagk" style={{ marginLeft: 'auto' }}>
-                      {agent.difficulty}
-                    </span>
-                  )}
-                </div>
-              </div>
+                agent={agent}
+                selected={agent.id === selectedId}
+                onSelect={() => setSelectedId(agent.id)}
+                onToggle={() =>
+                  handlePatch(agent.id, { isActive: !agent.isActive })
+                }
+              />
             ))}
-            {agentList.length === 0 && (
+            {agents.length === 0 && (
               <div className="empty-hint" style={{ gridColumn: '1 / -1' }}>
                 No agents in this area yet — create one to start routing cards.
               </div>
             )}
           </div>
 
-          <div className="editor">
-            <div className="editor-head">
-              <h3>{selected ? selected.name : 'Select an agent'}</h3>
-              {selected && <span className="es">{selected.cardType}</span>}
-            </div>
-            <div className="editor-body">
-              <div className="field">
-                <div className="flbl">
-                  Instructions <span className="hint">system prompt</span>
-                </div>
-                <textarea
-                  className="ta mono"
-                  rows={8}
-                  value={prompt}
-                  disabled={!selected}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-              </div>
-              {selected && (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: 14
-                  }}
-                >
-                  <div className="field">
-                    <div className="flbl">Card format</div>
-                    <select
-                      className="sel"
-                      value={selected.cardType}
-                      onChange={(e) =>
-                        patchAgent(selected.id, { cardType: e.target.value })
-                      }
-                    >
-                      {['def', 'code', 'concept', 'cloze'].map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <div className="flbl">Difficulty</div>
-                    <select
-                      className="sel"
-                      value={selected.difficulty ?? 'Standard'}
-                      onChange={(e) =>
-                        patchAgent(selected.id, { difficulty: e.target.value })
-                      }
-                    >
-                      {['Standard', 'Hard'].map((d) => (
-                        <option key={d} value={d}>
-                          {d}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-              {selected && (selected.variables ?? []).length > 0 && (
-                <div className="field">
-                  <div className="flbl">Variables</div>
-                  <div className="varrow">
-                    {(selected.variables ?? []).map((v) => (
-                      <span key={v} className="var">
-                        {v}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="editor-foot">
-              <button
-                type="button"
-                className="btn btn-pri"
-                style={{ flex: 1, justifyContent: 'center' }}
-                disabled={!selected || saving}
-                onClick={async () => {
-                  if (!selected) return
-                  setSaving(true)
-                  await patchAgent(selected.id, { systemPrompt: prompt })
-                  setSaving(false)
-                }}
-              >
-                Save
-              </button>
-              {selected && (
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={async () => {
-                    await fetchWithAuth(`/api/agents/${selected.id}`, {
-                      method: 'DELETE'
-                    })
-                    setSelectedId(null)
-                    await load()
-                  }}
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          </div>
+          <AgentEditor
+            agent={selected}
+            onSave={async (systemPrompt) => {
+              if (selected) await handlePatch(selected.id, { systemPrompt })
+            }}
+            onPatch={(patch) => selected && handlePatch(selected.id, patch)}
+            onDelete={async () => {
+              if (!selected) return
+              await deleteAgent(selected.id)
+              setSelectedId(null)
+              await load()
+            }}
+          />
         </div>
       </div>
     </div>

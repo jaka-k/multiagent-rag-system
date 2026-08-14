@@ -3,6 +3,7 @@
 import { fetchWithAuth } from '@lib/fetchers/fetch-with-auth'
 import { logger } from '@lib/logger.ts'
 import type {
+  AreaFlashcards,
   Flashcard,
   FlashcardHandler,
   FlashcardQueue
@@ -58,6 +59,21 @@ export const deleteFlashcard = async (id: string) => {
 
   if (!response.ok) {
     logger.error('Failed to delete flashcard')
+  }
+
+  return response.data
+}
+
+export const getAreaFlashcards = async (areaId: string) => {
+  const response = await fetchWithAuth<AreaFlashcards>(
+    `/api/area/${areaId}/flashcards`,
+    { method: 'GET' }
+  )
+
+  if (!response.ok) {
+    logger.error(`Failed to fetch flashcards for area: ${areaId}`)
+
+    return null
   }
 
   return response.data

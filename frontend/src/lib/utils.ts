@@ -19,6 +19,33 @@ export function connectionStatusMapping(readyState: ReadyState) {
   }[readyState]
 }
 
+export function relativeTime(iso?: string): string {
+  if (!iso) return ''
+  const mins = Math.max(1, Math.round((Date.now() - +new Date(iso)) / 60_000))
+
+  if (mins < 60) return `${mins}m ago`
+
+  if (mins < 1440) return `${Math.round(mins / 60)}h ago`
+
+  return `${Math.round(mins / 1440)}d ago`
+}
+
+export function dayGroupLabel(iso?: string): string {
+  if (!iso) return 'Earlier'
+  const then = new Date(iso)
+  const now = new Date()
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  // rounded: DST transitions make calendar days 23h/25h long
+  const dayDiff = Math.round((startOfDay(now) - startOfDay(then)) / 86_400_000)
+
+  if (dayDiff <= 0) return 'Today'
+
+  if (dayDiff === 1) return 'Yesterday'
+
+  return 'Earlier'
+}
+
 export function estimateTokensAndCost(fileSize: number): {
   tokens: number
   cost: number
