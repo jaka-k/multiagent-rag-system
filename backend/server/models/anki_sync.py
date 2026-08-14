@@ -1,9 +1,5 @@
-"""Local mirror of Anki review/scheduling state (docs/rework/06).
-
-Ownership rule: MRAG owns card content, Anki owns scheduling. These rows
-are written only by the pull-sync — never by request handlers — and read
-by the UI (queue progress, mastered filters) and, later, generation agents.
-"""
+"""Local mirror of Anki review state, written only by the pull-sync.
+MRAG owns card content, Anki owns scheduling (docs/rework/06)."""
 import uuid
 from datetime import datetime, timezone
 from typing import Optional

@@ -32,9 +32,7 @@ class Settings(BaseSettings):
     langchain_tracing_v2: Optional[str] = None
 
     anki_url: Optional[str] = None
-    # Pull-sync loop interval (docs/rework/06). 0 disables the background
-    # loop; the manual POST /api/anki/sync/{area_id} trigger always works.
-    anki_pull_interval_seconds: int = 0
+    anki_pull_interval_seconds: int = 0  # 0 disables the pull-sync loop
 
     next_public_firebase_api_key: Optional[str] = None
     next_public_firebase_project_id: Optional[str] = None

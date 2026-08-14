@@ -1,11 +1,8 @@
-"""Pull Anki review/scheduling state into the local mirror (docs/rework/06).
+"""Pull Anki review state into AnkiCardState (docs/rework/06).
 
-Every pull is: AnkiWeb sync() first (the container's Anki is NOT where the
-user studies — reviews land in AnkiWeb from phone/desktop), then read via
-AnkiConnect, then upsert AnkiCardState. A getLatestReviewID watermark per
-deck makes the frequent check one HTTP call; full pulls only happen when
-reviews actually occurred.
-"""
+Order matters: AnkiWeb sync() first — reviews happen on phone/desktop, not
+in the container — then read, then upsert. A per-deck watermark skips
+unchanged decks."""
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -27,8 +24,7 @@ async def sync_deck(db_session, deck: Deck, force: bool = False) -> AnkiSyncRun:
     deck_name = f"RAG::{deck.name}"
     run = AnkiSyncRun(deck_id=deck.id)
 
-    # AnkiWeb → container first, else we only see container-local reviews
-    # (nearly none). Tolerated failure: read whatever local state exists.
+    # AnkiWeb -> container first; on failure read whatever local state exists.
     try:
         await client.sync()
     except AnkiServiceError as exc:
@@ -51,7 +47,6 @@ async def sync_deck(db_session, deck: Deck, force: bool = False) -> AnkiSyncRun:
         await db_session.commit()
         return run
 
-    # One cardsInfo covers scheduling AND the note→card mapping.
     card_ids = await client.find_cards(f'deck:"{deck_name}"')
     infos = await client.cards_info(card_ids)
     by_note = {str(i["note"]): i for i in infos}

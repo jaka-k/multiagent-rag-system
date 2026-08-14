@@ -14,11 +14,7 @@ from server.db.pubsub import start_all_listeners
 
 
 async def _anki_pull_loop(interval: int) -> None:
-    """Periodic pull of Anki review state for every deck (docs/rework/06).
-
-    The watermark check inside sync_deck makes idle iterations one HTTP
-    call per deck, so a small interval stays cheap.
-    """
+    """Periodic pull of Anki review state; idle iterations cost one watermark call per deck."""
     from server.db.database import get_single_session
     from server.models.flashcard import Deck
     from server.service.anki.pull_sync import sync_deck

@@ -1,10 +1,5 @@
-"""Deck-scoped operations on top of AnkiConnectClient.
-
-Construction has no side effects — `ensure_deck()` is the explicit call
-that creates (or idempotently re-creates) the deck in Anki. Adds are
-batched: all notes in one `addNotes`, then a single AnkiWeb `sync()`,
-instead of the old per-note sync round-trip.
-"""
+"""Deck-scoped operations. Deck creation is explicit (ensure_deck), adds are
+batched with a single AnkiWeb sync per batch."""
 import logging
 from typing import List, Optional, Tuple
 
@@ -31,10 +26,7 @@ class AnkiService:
     async def add_flashcards(self, cards: List[Tuple[str, str]]) -> List[Optional[str]]:
         """Batch-add (front, back) pairs, then one AnkiWeb sync.
 
-        Returns note ids aligned with the input; None marks a rejected note
-        (duplicate). A sync failure is logged but does not fail the add —
-        the notes are already in the local collection and the next sync
-        picks them up.
+        Returns note ids aligned with the input; None marks a rejected duplicate.
         """
         if not cards:
             return []
@@ -48,9 +40,7 @@ class AnkiService:
                 error=exc.error,
             ) from exc
 
-        # The note type's template may carry a deck override that ignores
-        # addNote's deckName (observed live: cards landing in Default).
-        # Move the generated cards to the intended deck explicitly.
+        # mrag-minimal's template deck-override sends cards to Default; move them.
         added = [nid for nid in note_ids if nid is not None]
         if added:
             card_ids = await self.client.find_cards("nid:" + ",".join(added))
