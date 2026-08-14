@@ -1,11 +1,12 @@
 'use client'
 
-import { Button } from '@components/ui/button'
+import useRetrievalStore, {
+  RetrievedChapter
+} from '@context/retrieval-store.tsx'
 import { logger } from '@lib/logger.ts'
-import { cn, connectionStatusMapping } from '@lib/utils'
+import { connectionStatusMapping } from '@lib/utils'
 import { ChatData, Message } from '@mytypes/types'
 import CreateChat from '@ui/create-chat/create-chat.tsx'
-import { Textarea } from '@ui/textarea'
 import { ArrowLeft, Plus, Send } from 'lucide-react'
 import Link from 'next/link'
 import * as React from 'react'
@@ -26,6 +27,7 @@ const wsProtocol = isProd ? 'wss' : 'ws'
 export function Chat({ chatData }: { chatData: ChatData }) {
   const socketUrl = `${wsProtocol}://${BACKEND_DOMAIN}/api/ws/${chatData.id}`
   const [open, setOpen] = React.useState(false)
+  const { setRetrieved } = useRetrievalStore()
 
   const [messages, setMessages] = React.useState<Message[]>(
     chatData.messages ?? []
@@ -33,7 +35,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
   const [input, setInput] = React.useState('')
   const inputLength = input.trim().length
 
-  // auto-scroll ref
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -41,6 +42,21 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         scrollContainerRef.current.scrollHeight
     }
   }, [messages])
+
+  // Launcher on ChatHome stashes the first prompt before navigating here
+  const sentDraft = useRef(false)
+
+  const replaceLastAgentMessage = (content: string) => {
+    setMessages((prev) => {
+      const last = prev[prev.length - 1]
+
+      if (last?.role === 'agent' && last.content.length === 0) {
+        return [...prev.slice(0, -1), { ...last, content }]
+      }
+
+      return [...prev, { role: 'agent' as const, content }]
+    })
+  }
 
   const appendToLastAgentMessage = (newContent: string) => {
     setMessages((prevMessages) => {
@@ -56,26 +72,6 @@ export function Chat({ chatData }: { chatData: ChatData }) {
         ]
       }
 
-      // if last message not from agent, return as is (unlikely, but safe)
-      return prevMessages
-    })
-  }
-
-  // TODO: Combine both the appendFuncs
-  const appendMetadataMessage = (metadata: string) => {
-    setMessages((prevMessages) => {
-      const lastMessage = prevMessages[prevMessages.length - 1]
-
-      if (lastMessage.role === 'agent') {
-        return [
-          ...prevMessages.slice(0, prevMessages.length - 1),
-          {
-            ...lastMessage,
-            metadata: JSON.stringify(metadata)
-          }
-        ]
-      }
-
       return prevMessages
     })
   }
@@ -87,8 +83,26 @@ export function Chat({ chatData }: { chatData: ChatData }) {
 
         if (messageData.content) {
           appendToLastAgentMessage(messageData.content)
-        } else if (messageData.metadata) {
-          appendMetadataMessage(messageData.metadata)
+        } else if (messageData.error) {
+          replaceLastAgentMessage(
+            `⚠️ ${messageData.error.detail ?? 'Something went wrong.'}${
+              messageData.error.code ? ` (code ${messageData.error.code})` : ''
+            }`
+          )
+        } else if (messageData.context) {
+          setRetrieved(
+            chatData.id,
+            messageData.context.map(
+              (c: Record<string, unknown>): RetrievedChapter => ({
+                chapterId: String(c.chapter_id ?? ''),
+                chapterTag: String(c.chapter_tag ?? ''),
+                chapter: String(c.chapter ?? ''),
+                subchapter: String(c.subchapter ?? ''),
+                title: c.title ? String(c.title) : undefined,
+                rerankScore: Number(c.rerank_score ?? 0)
+              })
+            )
+          )
         }
       } catch (error) {
         logger.error({ err: error }, 'Error parsing WebSocket message')
@@ -98,99 +112,134 @@ export function Chat({ chatData }: { chatData: ChatData }) {
     shouldReconnect: () => true
   })
   const connectionStatus = connectionStatusMapping(readyState)
+  const connected = connectionStatus === 'Open'
+
+  const submit = React.useCallback(
+    (text: string) => {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: text },
+        { role: 'agent', content: '' }
+      ])
+      sendMessage(text)
+    },
+    [sendMessage]
+  )
+
+  useEffect(() => {
+    if (!connected || sentDraft.current) return
+    const draft = sessionStorage.getItem(`draft-${chatData.id}`)
+
+    if (draft && (chatData.messages ?? []).length === 0) {
+      sessionStorage.removeItem(`draft-${chatData.id}`)
+      sentDraft.current = true
+      submit(draft)
+    }
+  }, [connected, chatData.id, chatData.messages, submit])
 
   const handleSendMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (inputLength === 0) return
-    setMessages([
-      ...messages,
-      {
-        role: 'user',
-        content: input
-      },
-      {
-        role: 'agent',
-        content: ''
-      }
-    ])
-    sendMessage(input)
+    submit(input)
     setInput('')
   }
 
   return (
-    <div className="w-full h-full p-4 overflow-hidden">
-      <div className="relative flex flex-col w-full h-full bg-white rounded-lg shadow-lg">
-        <header className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <Link href="/">
-              <Button variant="outline" size="icon">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
+    <>
+      <div className="topbar">
+        <Link href="/">
+          <span className="backbtn">
+            <ArrowLeft size={16} />
+          </span>
+        </Link>
+        <div className="crumb">
+          <span className="ti">{chatData.title}</span>
+        </div>
+        <span className="pill model">
+          <span
+            className="dot"
+            style={{ background: connected ? 'var(--green)' : 'var(--rose)' }}
+          />
+          {connected ? 'Connected' : 'Disconnected'}
+        </span>
+        <div className="top-actions">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setOpen(true)}
+            aria-label="New chat"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      </div>
 
-            <div className="text-sm font-semibold">{chatData.title}</div>
-            <span
-              className={cn(
-                'text-xs font-medium px-2 py-0.5 rounded-md',
-                connectionStatus === 'Open'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
-              )}
-            >
-              {connectionStatus === 'Open' ? 'Connected' : 'Disconnected'}
-            </span>
-          </div>
-          <Button variant="outline" size="icon" onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </header>
-
-        <div
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
-        >
+      <div ref={scrollContainerRef} className="thread scroll">
+        <div className="thread-inner">
           {messages.map((msg, idx) =>
             msg.content.length === 0 ? (
-              <div key={idx} className="flex justify-center">
-                <span className="text-sm text-gray-400 animate-pulse">
-                  Agent is thinking...
-                </span>
+              // eslint-disable-next-line react/no-array-index-key
+              <div key={idx} className="thinking">
+                Thinking…
               </div>
             ) : (
-              <Markdown
+              // eslint-disable-next-line react/no-array-index-key
+              <div
                 key={idx}
-                rehypePlugins={[rehypeHighlight]}
-                className={cn(
-                  'chat-code w-fit max-w-[70%] px-3 py-2 rounded-lg text-sm whitespace-pre-wrap shadow-sm',
-                  msg.role === 'user'
-                    ? 'ml-auto bg-cyan-800 text-white'
-                    : 'bg-gray-100 text-gray-800'
-                )}
+                className={`msg ${msg.role === 'user' ? 'user' : 'bot'}`}
               >
-                {msg.content}
-              </Markdown>
+                <div className="who">{msg.role === 'user' ? 'You' : 'AI'}</div>
+                <div className="body">
+                  {msg.role === 'user' ? (
+                    <div className="bubble-user">{msg.content}</div>
+                  ) : (
+                    <Markdown
+                      rehypePlugins={[rehypeHighlight]}
+                      className="prose chat-code"
+                    >
+                      {msg.content}
+                    </Markdown>
+                  )}
+                </div>
+              </div>
             )
           )}
         </div>
+      </div>
 
-        <div className="p-4 border-t border-gray-200">
-          <form
-            onSubmit={handleSendMessage}
-            className="flex items-center space-x-2"
-          >
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
-            />
-            <Button type="submit" size="icon" disabled={!input.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
-        </div>
+      <div className="composer-wrap">
+        <form onSubmit={handleSendMessage}>
+          <div className="composer">
+            <div className="row1">
+              <textarea
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about your books…"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+
+                    if (input.trim()) {
+                      submit(input)
+                      setInput('')
+                    }
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                className="send"
+                disabled={!input.trim()}
+                aria-label="Send"
+              >
+                <Send size={15} />
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
       <CreateChat open={open} setOpen={setOpen} />
-    </div>
+    </>
   )
 }
