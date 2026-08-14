@@ -73,6 +73,9 @@ flagged.
   lib/utils; new reusable components (agents/agent-card+editor,
   chat-home/launcher+session-list, flashcards/area-flashcard-card+
   queue-card). View files roughly halved. Rule added to CLAUDE.md.
+- Planned (doc 07, 2026-08-14): chapter HTML stored as a lazy 1:1 blob
+  (base64-inlined images) for a real book reader; design requested from
+  the MRAG design project.
 - Remaining: citations (phase 6), GenBot draft loop, agents wired into
   generation (all gated on a working GOOGLE_API_KEY — current one is
   rejected by Google); doc 01 Tier 3 majors; docker-image rebuild
