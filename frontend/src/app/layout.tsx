@@ -1,4 +1,5 @@
 import './globals.css'
+import './mrag.css'
 // TODO: handle locally
 // eslint-disable-next-line import/no-unresolved
 import 'highlight.js/styles/nnfx-light.css'

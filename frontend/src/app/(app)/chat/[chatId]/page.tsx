@@ -17,12 +17,17 @@ const ChatPage = async ({
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gray-100">
-      <div className="flex-1 flex flex-col">
-        <Chat chatData={response.data} />
-      </div>
-      <div className="w-[350px] md:w-[470px] h-full flex-shrink-0">
-        <Console chatId={chatId} areaId={response.data.areaId} />
+    <div className="main">
+      <div className="viewbody">
+        <div className="content" style={{ background: 'var(--panel)' }}>
+          <Chat chatData={response.data} />
+        </div>
+        <div
+          className="w-[350px] md:w-[440px] h-full flex-shrink-0"
+          style={{ borderLeft: '1px solid var(--hair)' }}
+        >
+          <Console chatId={chatId} areaId={response.data.areaId} />
+        </div>
       </div>
     </div>
   )

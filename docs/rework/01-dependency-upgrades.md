@@ -13,7 +13,7 @@ real drift.
   **google-api-core 1.34 → 2.30**. Imports are clean but no live Gemini call
   has exercised the new protobuf yet. **Watch the first embedding run.**
 
-## Tier 1 — cheap batch (one PR)
+## Tier 1 — cheap batch — **done** (backend: PR #15; frontend: PR #18)
 
 - [ ] `poetry update aiohttp` — locked 3.11.13 is **yanked** upstream
       (regression, aio-libs/aiohttp#10617).
@@ -24,7 +24,7 @@ real drift.
 - [ ] Frontend `pnpm update` (radix patches, react 19.2.x, zustand, postcss).
 - Verify: app boots, `next build` passes.
 
-## Tier 2 — OpenTelemetry lockstep (folded into the Python bump)
+## Tier 2 — OpenTelemetry lockstep — **done** (folded into PR #14)
 
 - [ ] Bump the whole family together: sdk + exporter 1.29.0 → 1.44.x,
       the three `opentelemetry-instrumentation-*` 0.50b0 → 0.65bx.
@@ -37,7 +37,9 @@ real drift.
 - Verify: boot with the monitoring stack (`make monitor`), confirm traces
   and logs land in Tempo/Loki.
 
-## Tier 3 — majors, one PR each, with a functional check
+## Tier 3 — majors, one PR each, with a functional check — **still open**
+
+(websockets, firebase-admin, pgvector client, markdownify, black/pytest)
 
 - [ ] **websockets 13 → 17** (four majors). Exercise the chat WebSocket
       path end-to-end afterwards.

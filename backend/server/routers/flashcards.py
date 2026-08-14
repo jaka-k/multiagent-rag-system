@@ -102,3 +102,54 @@ async def delete_flashcard(
     await session.delete(flashcard)
     await session.commit()
     return {"detail": "Flashcard deleted successfully", "id": flashcard_id}
+
+
+@router.get("/area/{area_id}/flashcards")
+async def get_area_flashcards(
+        area_id: str,
+        session: AsyncSession = Depends(get_session),
+):
+    """Area-wide card overview: one group per chat session plus loose cards.
+
+    Queues stay 1:1 with sessions (2026-08 decision); area scope comes from
+    flashcard.queue -> session.area_id.
+    """
+    from sqlalchemy.orm import selectinload as sload
+
+    from server.models.session import Session
+
+    sessions = (await session.execute(
+        select(Session)
+        .options(sload(Session.flashcard_queue).selectinload(FlashcardQueue.flashcards))
+        .where(Session.area_id == area_id)
+        .order_by(Session.updated_at.desc())
+    )).scalars().all()
+
+    def card_dto(fc: Flashcard) -> dict:
+        return {
+            "id": str(fc.id),
+            "front": fc.front,
+            "back": fc.back,
+            "tag": fc.tag,
+            "anki_id": fc.anki_id,
+            "created_at": fc.created_at,
+        }
+
+    queues = [
+        {
+            "session_id": str(s.id),
+            "session_title": s.title,
+            "updated_at": s.updated_at,
+            "cards": [card_dto(fc) for fc in s.flashcard_queue.flashcards],
+        }
+        for s in sessions
+        if s.flashcard_queue and s.flashcard_queue.flashcards
+    ]
+
+    loose = (await session.execute(
+        select(Flashcard)
+        .where(Flashcard.queue_id.is_(None), Flashcard.deck_id.is_(None))
+        .order_by(Flashcard.created_at.desc())
+    )).scalars().all()
+
+    return {"queues": queues, "loose": [card_dto(fc) for fc in loose]}
