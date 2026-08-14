@@ -1,5 +1,10 @@
 # Embedding export/import scripts (per book or area)
 
+> **Implemented 2026-08-08** (`feat/embedding-export-import`, stacked PR).
+> Roundtrip-verified in dev: export → truncate → import with identical
+> similarity neighbors, idempotent re-import, --remap-area, and the
+> manifest guard rejecting a dim-mismatched file.
+
 Depends on the `book_embeddings` table from PR #12 (PGVectorStore v2).
 
 ## Why

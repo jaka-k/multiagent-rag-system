@@ -8,7 +8,12 @@ packages = [
     { include = "server" },
     { include = "statemachine" },
     { include = "tools" },
+    { include = "scripts" },
 ]
+
+[tool.poetry.scripts]
+export-embeddings = "scripts.export_embeddings:main"
+import-embeddings = "scripts.import_embeddings:main"
 
 [tool.poetry.dependencies]
 python = "^3.14"
