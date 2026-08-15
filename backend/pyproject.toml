@@ -15,6 +15,7 @@ packages = [
 export-embeddings = "scripts.export_embeddings:main"
 import-embeddings = "scripts.import_embeddings:main"
 create-invite = "scripts.create_invite:main"
+backfill-chapter-html = "scripts.backfill_chapter_html:main"
 
 [tool.poetry.dependencies]
 python = "^3.14"
@@ -26,6 +27,7 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.44.0"
 bcrypt = "^5.0.0"
 tiktoken = "^0.13.0"
 httpx = ">=0.28"
+nh3 = "^0.3.6"
 
 [tool.isort]
 profile = "black"

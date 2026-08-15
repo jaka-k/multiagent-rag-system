@@ -53,9 +53,22 @@ flagged.
   `/api/embedding/{id}` and `/api/embedding-status/{id}` use
   `require_owned_document` (typed 404 instead of ad-hoc 403); the status
   endpoint no longer 500s on idle documents.
+- **Chapter HTML reader blobs — backend** (doc 07): the parser now
+  captures each chapter's HTML alongside the Markdown (same fragment
+  boundaries, so they stay aligned), sanitizes it with **nh3** (scripts/
+  handlers stripped; data: URIs allowed) and inlines images as base64
+  resolved *exactly* against the EPUB archive (the fuzzy TOC matcher
+  would resolve dead refs to similarly-named images — exact-only for
+  images). New `ChapterHtml` 1:1 blob table (relationship-free so eager
+  chapter loads never drag the blob), written/upserted in the chapter
+  transaction with size telemetry; `GET /api/chapter/html?chapter_tag=`
+  (ownership-gated, never embedded in lists);
+  `poetry run backfill-chapter-html` re-parses stored EPUBs. Migration
+  `20260815_0002`. Reader UI (designer's ReaderModal) is the next PR.
 - Still planned (docs/rework/08): citations, GenBot, agents wired into
-  generation, doc-05 leftover schema, reader (doc 07) — gated on a working
-  GOOGLE_API_KEY (last rotation rejected by Google).
+  generation, doc-05 leftover schema — gated on a working
+  GOOGLE_API_KEY (last rotation rejected by Google); reader frontend
+  (doc 07, backend shipped).
 
 ## Phase 7 — Redesign wave (merged 2026-08-14, PRs #21–#28)
 

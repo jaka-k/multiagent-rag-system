@@ -8,6 +8,7 @@ from tools.epub_parser.utils.file import (
     read_file_with_error_handling,
     resolve_relative_path,
 )
+from tools.epub_parser.utils.html_blob import build_chapter_html
 from tools.epub_parser.utils.inspector import find_toc_file
 from tools.epub_parser.utils.logging import logger
 from tools.epub_parser.utils.toc import parse_toc_ncx
@@ -99,12 +100,15 @@ def extract_chapters(file_path):
                         )
                         if file_content:
                             chapter_soup = BeautifulSoup(file_content, "html.parser")
-                            chapter_text = extract_text_from_fragment(
+                            chapter_text, html_parts = extract_text_from_fragment(
                                 chapter_soup, fragment_id, next_fragment_id
                             )
                             chapters.append(
                                 {
                                     "content": chapter_text,
+                                    "html": build_chapter_html(
+                                        html_parts, zip_ref, matched_file
+                                    ),
                                     "label": entry["label"],
                                     "parent_label": entry["parent_label"],
                                     "play_order": entry["playOrder"],
@@ -124,9 +128,15 @@ def extract_chapters(file_path):
                     if file_content:
                         soup = BeautifulSoup(file_content, "html.parser")
                         chapter_text = _md.convert_soup(soup)
+                        body = soup.find("body")
                         chapters.append(
                             {
                                 "content": chapter_text,
+                                "html": build_chapter_html(
+                                    [body.decode_contents() if body else str(soup)],
+                                    zip_ref,
+                                    file_name,
+                                ),
                                 "label": file_name,
                                 "parent_label": "",
                                 "play_order": -1,
@@ -137,7 +147,9 @@ def extract_chapters(file_path):
 
 
 def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
-    """Render the slice of `soup` between fragment_id and next_fragment_id as Markdown.
+    """Render the slice of `soup` between fragment_id and next_fragment_id as
+    (markdown, raw_html_blocks) — the same block elements feed both outputs so
+    the stored HTML stays aligned with the embedded Markdown per chapter.
 
     fragment_id is typically a heading anchor (O'Reilly, Manning, Packt all use this
     idiom — one XHTML file containing multiple TOC entries separated by ID anchors).
@@ -145,9 +157,10 @@ def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
     """
     start_tag = soup.find(id=fragment_id) if fragment_id else soup
     if not start_tag:
-        return ""
+        return "", []
 
     parts = []
+    html_parts = []
     processed = set()
 
     for element in start_tag.next_elements:
@@ -161,12 +174,14 @@ def extract_text_from_fragment(soup, fragment_id, next_fragment_id):
             # convert(html_string) treats the tag as a block (emitting ## etc.);
             # convert_soup(tag) on a bare Tag inlines its contents and loses
             # heading prefixes.
-            rendered = _md.convert(str(element)).strip()
+            raw = str(element)
+            rendered = _md.convert(raw).strip()
             if rendered:
                 parts.append(rendered)
+                html_parts.append(raw)
             processed.add(element)
 
-    return "\n\n".join(parts)
+    return "\n\n".join(parts), html_parts
 
 
 def is_descendant_of_processed(element, processed_elements):
