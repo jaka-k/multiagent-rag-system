@@ -5,10 +5,10 @@ import { NextResponse } from 'next/server'
 export async function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value
   const { pathname } = req.nextUrl
-  const publicRoutes = ['/login']
+  const publicRoutes = ['/login', '/register', '/terms']
 
   if (publicRoutes.includes(pathname)) {
-    if (refreshToken && pathname === '/login') {
+    if (refreshToken && (pathname === '/login' || pathname === '/register')) {
       return NextResponse.redirect(new URL('/', req.url))
     }
 

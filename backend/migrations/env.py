@@ -25,6 +25,7 @@ import server.models.user  # noqa: F401 — User, Token
 import server.models.anki_sync  # noqa: F401 — AnkiCardState, AnkiSyncRun
 import server.models.agent  # noqa: F401 — Agent
 import server.models.retrieval  # noqa: F401 — MessageRetrieval
+import server.models.invite  # noqa: F401 — InviteCode
 
 # ---------------------------------------------------------------------------
 # Alembic Config object — gives access to values in alembic.ini.

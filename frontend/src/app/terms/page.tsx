@@ -1,115 +1,62 @@
-const TermsPage = () => {
-  return (
-    <div className="font-light container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-xl uppercase mb-4">Privacy Policy</h1>
-      <p className="text-sm text-gray-600 mb-8">
-        Last updated: 25th of October 2024
-      </p>
+import { AuthCard } from '@components/ui/auth/auth-card'
+import { Metadata } from 'next'
+import Link from 'next/link'
 
-      <section className="mb-6">
-        <h2 className="text-xl  mb-2">1. Introduction</h2>
-        <p className="mb-4">
-          Welcome to <strong>Anki Tutor</strong>. We are committed to protecting
-          your personal information and your right to privacy. This Privacy
-          Policy explains how we collect, use, disclose, and safeguard your
-          information when you use our application.
-        </p>
-      </section>
-
-      <section className="mb-6">
-        <h2 className="text-xl mb-2">2. Information We Collect</h2>
-        <ul className="list-item list-inside mb-4">
-          <li>
-            <strong>Authentication Tokens:</strong> We store authentication
-            tokens in cookies to keep you securely logged in and to ensure the
-            smooth functioning of the app.
-          </li>
-        </ul>
-      </section>
-
-      <section className="mb-6">
-        <h2 className=" text-xl  mb-2">3. Cookies</h2>
-        <p className="mb-4">
-          Cookies are small text files stored on your device (computer or mobile
-          device) when you visit a website or use an application.
-        </p>
-        <h3 className="text-xl  mb-2">Essential Cookies</h3>
-        <p className="mb-4">
-          These cookies are necessary for the app to function and cannot be
-          switched off in our systems. They are usually only set in response to
-          actions made by you, such as logging in or filling in forms.
-        </p>
-        <h3 className="text-xl mb-2">Your Choices Regarding Cookies</h3>
-        <p className="mb-4">
-          Since we only use essential cookies for authentication purposes,
-          disabling them may affect the functionality of the app.
-        </p>
-      </section>
-
-      <section className="mb-6">
-        <h2 className="text-xl  mb-2">4. How We Use Your Information</h2>
-        <ul className="list-disc list-inside mb-4">
-          <li>Keep you logged into your account.</li>
-          <li>Ensure the security and integrity of our services.</li>
-          <li>Improve user experience by maintaining session information.</li>
-        </ul>
-      </section>
-
-      <section className="mb-6">
-        <h2 className=" text-xl  mb-2">5. Data Security</h2>
-        <p className="mb-4">
-          We implement reasonable security measures to protect your personal
-          information. However, please be aware that no security measures are
-          perfect or impenetrable.
-        </p>
-      </section>
-
-      <section className="mb-6">
-        <h2 className=" text-xl  mb-2">6. Your Rights</h2>
-        <ul className="list-item list-inside mb-4">
-          <li>
-            <strong>Access:</strong> You have the right to access the personal
-            data we hold about you.
-          </li>
-          <li>
-            <strong>Request Correction:</strong> You can request correction of
-            any inaccuracies in your personal data.
-          </li>
-          <li>
-            <strong>Request Deletion:</strong> You can request deletion of your
-            personal data under certain circumstances.
-          </li>
-        </ul>
-      </section>
-
-      <section className="mb-6">
-        <h2 className=" text-xl mb-2">7. Contact Us</h2>
-        <p className="mb-4">
-          If you have any questions or concerns about this Privacy Policy,
-          please contact us at:
-        </p>
-        <ul className="list-item list-inside mb-4">
-          <li>
-            <strong>Email:</strong>{' '}
-            <a
-              href="mailto:info@krajnc.cc"
-              className="text-blue-600 hover:underline"
-            >
-              info@krajnc.cc
-            </a>
-          </li>
-        </ul>
-      </section>
-      <section className="mb-6">
-        <h2 className="text-xl mb-2">8. Changes to This Privacy Policy</h2>
-        <p className="mb-4">
-          We may update our Privacy Policy from time to time. We will notify you
-          of any changes by updating the &quot;Last updated&quot; date at the
-          top of this Privacy Policy.
-        </p>
-      </section>
-    </div>
-  )
+export const metadata: Metadata = {
+  title: 'MRAG — Terms of Service',
+  description: 'The short, readable version.'
 }
 
-export default TermsPage
+export default function TermsPage() {
+  return (
+    <main className="desk auth-desk">
+      <AuthCard
+        title="Terms of Service"
+        sub="The short, readable version — last updated August 2026."
+        wide
+      >
+        <div className="terms-body scroll">
+          <h4>1. Your content</h4>
+          <p>
+            Books you upload are stored for your account only and are never
+            shared, resold, or used to train models. Delete a book and its
+            chapters, embeddings and derived cards are removed with it.
+          </p>
+          <h4>2. Fair use of sources</h4>
+          <p>
+            You confirm you have the right to upload the EPUBs you index. MRAG
+            quotes retrieved passages back to you for personal study;
+            redistribution of book content is not permitted.
+          </p>
+          <h4>3. Generated answers</h4>
+          <p>
+            Answers and flashcards are machine-generated from your sources and
+            can be wrong. Always verify against the cited chapter before relying
+            on them.
+          </p>
+          <h4>4. Sync with Anki</h4>
+          <p>
+            If you connect Anki, review state is mirrored both ways for your
+            decks only. Disconnecting stops the sync and leaves your Anki
+            collection untouched.
+          </p>
+          <h4>5. Account &amp; data</h4>
+          <p>
+            You can export your cards at any time. To delete your account, email{' '}
+            <a href="mailto:info@krajnc.cc">info@krajnc.cc</a> — deletion is
+            irreversible and completes within 30 days.
+          </p>
+          <h4>6. Cookies</h4>
+          <p>
+            MRAG only sets essential cookies that keep you securely signed in.
+            There is no tracking or analytics; disabling them breaks login.
+          </p>
+        </div>
+        <div className="auth-alt">
+          <Link href="/register">Create an account</Link> ·{' '}
+          <Link href="/login">Back to sign in</Link>
+        </div>
+      </AuthCard>
+    </main>
+  )
+}

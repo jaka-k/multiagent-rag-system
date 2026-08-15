@@ -14,6 +14,7 @@ packages = [
 [tool.poetry.scripts]
 export-embeddings = "scripts.export_embeddings:main"
 import-embeddings = "scripts.import_embeddings:main"
+create-invite = "scripts.create_invite:main"
 
 [tool.poetry.dependencies]
 python = "^3.14"

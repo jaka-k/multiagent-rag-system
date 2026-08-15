@@ -1,7 +1,7 @@
 /* ============================================================
    MRAG design system — ported from the claude.ai/design project
    Accent: Iris · Shell: Charcoal (baked in; no runtime theming)
-   Scoped under .desk so login/terms keep the old styling.
+   Scoped under .desk (auth screens wrap in .desk.auth-desk).
    ============================================================ */
 :root{
   --ink:        #0B0E1F;
@@ -433,3 +433,76 @@ select.sel{ appearance:none; outline:none; cursor:pointer; }
 .reader pre{ background:var(--ink); color:#E7EAF2; border-radius:10px; padding:12px 13px; overflow-x:auto; font-family:var(--mono); font-size:11.5px; line-height:1.6; margin:0 0 13px; }
 .reader pre code{ background:none; padding:0; }
 .side-pad{ padding:14px; }
+
+/* ------------------------------------------------------------
+   Modal system (overlay + card) — new-area / upload dialogs
+   ------------------------------------------------------------ */
+.overlay{ position:fixed; inset:0; z-index:80; background:rgba(12,14,22,.44); backdrop-filter:blur(3px); display:grid; place-items:center; animation:fadein .15s ease; }
+@keyframes fadein{ from{ opacity:0 } }
+.modal{ width:420px; max-width:92vw; background:var(--paper); border-radius:18px; box-shadow:0 24px 70px -18px rgba(10,14,30,.45); overflow:hidden; animation:pop .18s ease; }
+.modal.wide{ width:520px; }
+@keyframes pop{ from{ opacity:0; transform:translateY(8px) scale(.98) } }
+.m-head{ display:flex; align-items:flex-start; gap:12px; padding:18px 18px 4px; }
+.m-ico{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center; flex:0 0 auto; }
+.m-head h3{ font-size:15.5px; font-weight:720; letter-spacing:-.01em; margin:0 0 3px; }
+.m-head p{ font-size:12px; line-height:1.5; color:var(--ink-3); margin:0; }
+.m-head .icon-btn{ margin-left:auto; flex:0 0 auto; }
+.m-body{ padding:14px 18px 4px; display:flex; flex-direction:column; gap:14px; }
+.m-foot{ display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:14px 18px 18px; }
+.m-note{ margin-right:auto; font-size:10.5px; font-family:var(--mono); color:var(--ink-4); }
+.ta.one{ width:100%; height:38px; min-height:38px; resize:none; border:1px solid var(--hair-2); border-radius:10px; padding:0 12px; font-size:13px; background:var(--subtle); outline:none; color:var(--ink); }
+.ta.one:focus{ border-color:var(--accent); background:var(--paper); box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent); }
+.ta.one:disabled{ background:var(--subtle-2); color:var(--ink-4); cursor:not-allowed; }
+.swrow{ display:flex; gap:8px; }
+.sw{ width:26px; height:26px; border-radius:50%; border:2px solid transparent; box-shadow:inset 0 0 0 2px rgba(255,255,255,.6); }
+.sw.on{ border-color:var(--ink); }
+.m-preview{ display:flex; align-items:center; gap:8px; white-space:nowrap; padding:10px 12px; border:1px solid var(--hair); border-radius:11px; background:var(--subtle); font-size:13px; font-weight:620; }
+.m-preview .adot{ width:9px; height:9px; border-radius:50%; }
+.m-preview .mp-count{ margin-left:auto; font-size:11px; font-weight:500; color:var(--ink-4); flex:0 0 auto; }
+.m-preview > span:nth-child(2){ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+
+/* ------------------------------------------------------------
+   Auth screens (login / register / terms) — auth-card on the desk
+   ------------------------------------------------------------ */
+.auth-desk{ position:fixed; inset:0; display:grid; place-items:center; padding:34px 16px; overflow:auto; background:linear-gradient(180deg,#1B1F2A,#12151D); }
+.auth-card{ width:400px; max-width:94vw; background:var(--paper); border-radius:20px; box-shadow:0 30px 80px -24px rgba(10,14,30,.5); padding:30px 30px 26px; }
+.auth-card.wide{ width:480px; }
+.auth-brand{ display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+.auth-brand .brand-mark{ width:34px; height:34px; border-radius:10px; background:var(--accent); color:#fff; display:grid; place-items:center; }
+.auth-brand .brand-name{ font-size:17px; font-weight:640; letter-spacing:-.02em; color:var(--ink); }
+.auth-brand .brand-name b{ font-weight:800; color:var(--ink); }
+.auth-card h1{ font-size:21px; font-weight:740; letter-spacing:-.02em; margin:0 0 5px; }
+.auth-card .sub{ font-size:13px; color:var(--ink-3); margin:0 0 20px; line-height:1.5; }
+.auth-f{ display:flex; flex-direction:column; gap:12px; }
+.auth-f .flbl{ font-size:11.5px; font-weight:680; color:var(--ink-2); margin-bottom:5px; }
+.auth-cta{ width:100%; justify-content:center; height:42px; font-size:14px; margin-top:6px; }
+.auth-alt{ text-align:center; font-size:12.5px; color:var(--ink-3); margin-top:16px; }
+.auth-alt a, .auth-alt button.lnk{ color:var(--accent); font-weight:640; }
+.auth-check{ display:flex; gap:9px; align-items:flex-start; font-size:12px; color:var(--ink-3); line-height:1.5; }
+.auth-check input{ margin-top:2px; accent-color:var(--accent); }
+.auth-check a{ color:var(--accent); font-weight:640; }
+.auth-err{ font-size:12px; color:var(--rose); text-align:center; margin-top:10px; }
+.terms-body{ max-height:300px; overflow-y:auto; border:1px solid var(--hair); border-radius:12px; padding:16px; background:var(--subtle); margin-bottom:14px; }
+.terms-body h4{ font-size:12px; font-weight:720; margin:0 0 6px; }
+.terms-body h4:not(:first-child){ margin-top:14px; }
+.terms-body p{ font-size:12px; line-height:1.6; color:var(--ink-3); margin:0 0 8px; }
+
+/* 8-digit beta invite gate on the register card */
+.pingate{ border:1px solid var(--hair-2); border-radius:14px; background:var(--subtle); padding:14px; margin-bottom:16px; transition:border-color .2s, background .2s; }
+.pingate.ok{ border-color:color-mix(in oklab, var(--green) 40%, var(--hair)); background:color-mix(in oklab, var(--green) 6%, var(--paper)); }
+.pingate.bad{ border-color:color-mix(in oklab, var(--rose) 45%, var(--hair)); animation:shake .38s ease; }
+@keyframes shake{ 25%{ transform:translateX(-5px) } 50%{ transform:translateX(5px) } 75%{ transform:translateX(-3px) } }
+.pg-head{ display:flex; align-items:flex-start; gap:10px; }
+.pg-ico{ width:28px; height:28px; border-radius:9px; flex:0 0 auto; display:grid; place-items:center; background:var(--subtle-2); color:var(--ink-3); }
+.pingate.ok .pg-ico{ background:var(--green-wash); color:var(--green); }
+.pg-t{ font-size:12.5px; font-weight:700; letter-spacing:-.01em; }
+.pg-s{ font-size:11.5px; color:var(--ink-3); line-height:1.45; margin-top:2px; }
+.pinrow{ display:flex; align-items:center; gap:6px; margin-top:13px; }
+.pin{ flex:1 1 0; min-width:0; height:44px; text-align:center; font-family:var(--mono); font-size:17px; font-weight:700; color:var(--ink); border:1px solid var(--hair-2); border-radius:10px; background:var(--paper); outline:none; transition:border-color .15s, box-shadow .15s; }
+.pin.filled{ border-color:var(--accent); }
+.pin:focus{ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent); }
+.pin-sep{ width:9px; height:2px; border-radius:2px; background:var(--hair-2); flex:0 0 auto; }
+.pg-msg{ font-size:11.5px; color:var(--rose); margin-top:9px; opacity:0; height:0; overflow:hidden; transition:opacity .15s; }
+.pg-msg.show{ opacity:1; height:auto; }
+.auth-f.gated{ opacity:.4; filter:saturate(.5); pointer-events:none; transition:opacity .25s ease, filter .25s ease; }
+.auth-f.gated.on{ opacity:1; filter:none; pointer-events:auto; }

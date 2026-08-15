@@ -10,6 +10,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.core.config import settings
+from server.core.exceptions import ConflictError, InviteCodeError
 from server.core.logger import app_logger
 from server.core.security import (
     RefreshTokenSchema,
@@ -23,6 +24,7 @@ from server.core.security import (
 )
 from server.db.database import get_session
 from server.models.area import Area
+from server.models.invite import InviteCode
 from server.models.user import User, Token
 
 
@@ -44,6 +46,15 @@ class UserCreationRequest(BaseModel):
     mail: str
     user: str
     password: str
+    invite_code: str
+
+
+class InviteValidationRequest(BaseModel):
+    invite_code: str
+
+
+class InviteValidationResponse(BaseModel):
+    valid: bool
 
 
 class UserResponse(BaseModel):
@@ -58,21 +69,38 @@ router = APIRouter()
 
 # --- Auth lifecycle ---
 
+async def _usable_invite(session: AsyncSession, code: str) -> InviteCode:
+    result = await session.exec(select(InviteCode).where(InviteCode.code == code.strip()))
+    invite = result.one_or_none()
+    if not invite or invite.use_count >= invite.max_uses:
+        raise InviteCodeError("Invite code is unknown or already used up.")
+    return invite
+
+
+@router.post("/invite/validate", response_model=InviteValidationResponse)
+async def validate_invite_code(
+        request: InviteValidationRequest,
+        session: AsyncSession = Depends(get_session),
+):
+    """Pre-registration check so the register form only unlocks on a real code."""
+    await _usable_invite(session, request.invite_code)
+    return InviteValidationResponse(valid=True)
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(
         request: UserCreationRequest,
         session: AsyncSession = Depends(get_session),
 ):
+    invite = await _usable_invite(session, request.invite_code)
+
     existing = await session.exec(
         select(User).where(
             (User.email == request.mail) | (User.username == request.user)
         )
     )
     if existing.one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A user with that email or username already exists.",
-        )
+        raise ConflictError("A user with that email or username already exists.")
 
     new_user = User(
         email=request.mail,
@@ -83,6 +111,12 @@ async def register_user(
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
+
+    invite.use_count += 1
+    invite.redeemed_by = new_user.id
+    invite.redeemed_at = datetime.now(timezone.utc)
+    session.add(invite)
+    await session.commit()
 
     app_logger.info(f"New user registered: {new_user.username}")
     return UserResponse(
