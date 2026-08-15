@@ -1,4 +1,5 @@
 import re
+import uuid
 from typing import List, Optional
 
 from fastapi import APIRouter
@@ -13,7 +14,7 @@ from server.core.exceptions import ResourceNotFoundError
 from server.core.logger import app_logger
 from server.core.security import get_current_active_user
 from server.db.database import get_session
-from server.models.area import Area
+from server.models.area import Area, color_for
 from server.models.document import Document
 from server.models.flashcard import Deck
 from server.models.user import User
@@ -50,8 +51,13 @@ async def create_area(
         session: AsyncSession = Depends(get_session),
 ):
     label = request.label or _label_from_name(request.name)
+    area_id = uuid.uuid4()
     area = Area(
-        name=request.name, label=label, color=request.color, user_id=current_user.id
+        id=area_id,
+        name=request.name,
+        label=label,
+        color=request.color or color_for(area_id),
+        user_id=current_user.id,
     )
     session.add(area)
     await session.commit()

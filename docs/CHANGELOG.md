@@ -27,8 +27,12 @@ flagged.
 - **New-area dialog** (doc 08 B): design-system modal (overlay/modal/m-*
   CSS block ported) with name field, six-swatch **label color** picker and
   live area-chip preview, opened from the rail's area menu ("New area"
-  foot entry). `Area.color` column added (nullable; rail dots use it with
-  the old hash fallback); area `label` is now derived server-side from the
+  foot entry). `Area.color` column added NOT NULL — the backend owns the
+  palette (`server/models/area.py`, mirrored in the dialog) and assigns a
+  deterministic md5-of-id pick when none is chosen; existing areas
+  backfilled with the same function, so every surface (rail dots, session
+  covers, launcher) renders one stable color per area and the frontend
+  id-hash is gone. Area `label` is now derived server-side from the
   name (slug) — the ChromaDB-era naming-rules dialog is gone. Dead
   pre-redesign components removed (top-menu, area-selector, dashboard,
   sidebar, user-auth-form).

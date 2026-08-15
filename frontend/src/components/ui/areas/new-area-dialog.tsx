@@ -3,6 +3,8 @@
 import { Layers, LoaderCircle, Plus, X } from 'lucide-react'
 import React from 'react'
 
+/* Mirrored in backend server/models/area.py — the backend assigns a
+   deterministic pick from this palette when no color is chosen. */
 export const AREA_COLORS = [
   '#0085FF',
   '#9360FF',

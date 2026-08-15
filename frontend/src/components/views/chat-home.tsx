@@ -53,6 +53,7 @@ export default function ChatHome() {
 
         <SessionList
           chats={areaChats}
+          areaColor={activeArea?.color}
           onOpen={(chatId) => router.push(`/chat/${chatId}`)}
         />
       </div>

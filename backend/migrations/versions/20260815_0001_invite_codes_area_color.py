@@ -27,7 +27,19 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
     )
     op.create_index("ix_invitecode_code", "invitecode", ["code"], unique=True)
+
     op.add_column("area", sa.Column("color", sa.String(), nullable=True))
+    # Backfill = server.models.area.color_for: first 8 md5 hex chars of the
+    # uuid string pick a palette index, so colors are stable per area.
+    op.execute(
+        """
+        UPDATE area SET color = (ARRAY[
+            '#0085FF', '#9360FF', '#16B27A', '#F2576B', '#F2A33C', '#2FA7C7'
+        ])[(('x' || substr(md5(id::text), 1, 8))::bit(32)::bigint % 6)::int + 1]
+        WHERE color IS NULL
+        """
+    )
+    op.alter_column("area", "color", nullable=False)
 
 
 def downgrade() -> None:

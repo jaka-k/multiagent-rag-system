@@ -6,7 +6,6 @@ import useDocumentStore from '@context/document-store.tsx'
 import { useToast } from '@hooks/use-toast'
 import { createArea } from '@lib/fetchers/fetch-areas.ts'
 import { signOut } from '@lib/session/auth.ts'
-import type { Area } from '@mytypes/types.d.ts'
 import { NewAreaDialog } from '@ui/areas/new-area-dialog'
 import { FileUpload } from '@ui/dashboard/file-upload'
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@ui/dialog'
@@ -20,20 +19,6 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
-
-const AREA_DOT_COLORS = ['#9A80FF', '#33A1FF', '#1CC07E', '#FF8038', '#F2576B']
-
-/** Areas created before the color picker existed fall back to a stable hash. */
-export function areaDotColor(area: Pick<Area, 'id' | 'color'>): string {
-  if (area.color) return area.color
-
-  let h = 0
-
-  for (let i = 0; i < area.id.length; i += 1)
-    h = (h * 31 + area.id.charCodeAt(i)) % 1_000_000_007
-
-  return AREA_DOT_COLORS[h % AREA_DOT_COLORS.length]
-}
 
 export default function Rail() {
   const router = useRouter()
@@ -101,8 +86,8 @@ export default function Rail() {
             className="adot"
             style={{
               borderRadius: '50%',
-              background: activeArea ? areaDotColor(activeArea) : '#666',
-              color: activeArea ? areaDotColor(activeArea) : '#666'
+              background: activeArea?.color ?? '#666',
+              color: activeArea?.color ?? '#666'
             }}
           />
           <span className="as-name">{activeArea?.name ?? 'No area'}</span>
@@ -130,7 +115,7 @@ export default function Rail() {
                   className="adot"
                   style={{
                     borderRadius: '50%',
-                    background: areaDotColor(area)
+                    background: area.color
                   }}
                 />
                 <span className="nm">{area.name}</span>

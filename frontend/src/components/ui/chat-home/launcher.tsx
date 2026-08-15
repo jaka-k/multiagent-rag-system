@@ -1,6 +1,5 @@
 'use client'
 
-import { areaDotColor } from '@components/shell/rail'
 import { Area } from '@mytypes/types'
 import { Send } from 'lucide-react'
 import React from 'react'
@@ -55,7 +54,7 @@ export default function Launcher({
         <span className="scope-pick">
           <span
             className="adot"
-            style={{ background: area ? areaDotColor(area) : '#666' }}
+            style={{ background: area?.color ?? '#666' }}
           />
           {area?.name ?? 'No area selected'}
         </span>
