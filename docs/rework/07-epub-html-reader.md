@@ -1,10 +1,17 @@
 # EPUB chapter HTML for the frontend reader
 
-First raised 2026-08-14 (decisions below locked the same day). Today the
-parser converts chapter HTML → Markdown at upload and **discards the
-HTML**; `Chapter.content` (Markdown) feeds both embeddings and the sidebar
-reader. The original EPUB survives in Firebase Storage, so all of this is
-recoverable for already-uploaded books by re-parsing.
+First raised 2026-08-14 (decisions below locked the same day).
+
+**Status 2026-08-15: backend built** (ChapterHtml blob at ingest, nh3
+sanitizer, base64-inlined images, `GET /api/chapter/html?chapter_tag=`,
+`poetry run backfill-chapter-html`). Remaining: the reader frontend —
+the designer's ReaderModal (rm-* in styles v2 + app/chat.jsx) answers
+the open reading-view brief; port it plus the sidebar reader upgrade.
+
+Originally the parser converted chapter HTML → Markdown at upload and
+**discarded the HTML**; `Chapter.content` (Markdown) feeds both
+embeddings and the sidebar reader. The original EPUB survives in
+Firebase Storage, so it's all recoverable by re-parsing.
 
 ## Decisions (2026-08-14)
 
@@ -75,9 +82,10 @@ embedded in any list endpoint, ever.
 
 ## Open items
 
-- [ ] Designer input on the reading view (requested in the design project)
-- [ ] Sanitizer choice (bleach vs nh3) — nh3 (ammonia bindings) is the
-      faster, maintained option
-- [ ] Backfill script for existing documents
-- [ ] Size telemetry: log ChapterHtml sizes at ingest so the base64
-      decision can be revisited with data
+- [x] Designer input on the reading view — answered: ReaderModal in
+      styles v2 / app/chat.jsx (TOC + retrieved dots, text-size seg,
+      wide measure, keyboard chapter nav, scroll-spy)
+- [x] Sanitizer: nh3 0.3.6 (data: scheme allowed for the inlined images)
+- [x] Backfill script (`poetry run backfill-chapter-html [--document id]`)
+- [x] Size telemetry: per-document blob count + MB logged at ingest
+- [ ] Frontend: sidebar reader upgrade + ReaderModal port (next PR)

@@ -17,7 +17,8 @@ class EpubParser(ABC):
                 label=chapter_info["label"],
                 parent_label=chapter_info["parent_label"],
                 content=chapter_info["content"],
-                play_order=chapter_info["play_order"]
+                play_order=chapter_info["play_order"],
+                html=chapter_info.get("html")
             )
             for chapter_info in parsed_chapters
         ]

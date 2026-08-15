@@ -19,6 +19,7 @@ from server.core.authz import (
 from server.core.exceptions import ConflictError, ResourceNotFoundError
 from server.core.security import get_current_active_user
 from server.db.database import get_session
+from server.models.chapter_html import ChapterHtml
 from server.models.document import Document, EmbeddingStatus, Chapter
 from server.models.session import ChapterQueue
 from server.models.user import User
@@ -122,6 +123,31 @@ async def get_chapter(
     await require_owned_chapter(session, chapter, current_user)
 
     return {"chapter": chapter}
+
+
+@router.get("/chapter/html")
+async def get_chapter_html(
+        chapter_tag: str = Query(...),
+        current_user: User = Depends(get_current_active_user),
+        session: AsyncSession = Depends(get_session),
+):
+    """Reader blob only — never embedded in list endpoints (docs/rework/07)."""
+    stmt = select(Chapter).where(Chapter.chapter_tag == chapter_tag)
+    result = await session.execute(stmt)
+
+    chapter = result.scalar_one_or_none()
+    if not chapter:
+        raise ResourceNotFoundError("Chapter not found")
+    await require_owned_chapter(session, chapter, current_user)
+
+    blob_result = await session.execute(
+        select(ChapterHtml).where(ChapterHtml.chapter_id == chapter.id)
+    )
+    blob = blob_result.scalar_one_or_none()
+    if not blob:
+        raise ResourceNotFoundError("No reader HTML stored for this chapter")
+
+    return {"html": blob.html}
 
 
 @router.get("/chapter-queue/{chat_id}", response_model=ChapterQueueRead)
