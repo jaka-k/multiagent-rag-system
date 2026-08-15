@@ -12,7 +12,7 @@ derives the response status from the code (`code // 100`), so a new 400xx/
 part of the API surface — never renumber existing ones, only append.
 
     400xx  bad input          40001 EmbeddingParseError
-    401xx  authentication     40101 UnauthorizedError
+    401xx  authentication     40101 UnauthorizedError, 40102 InviteCodeError
     404xx  missing resource   40401 EmbeddingDownloadError, 40402 ResourceNotFoundError
     409xx  conflict           40901 ConflictError
     500xx  server-side        50000-50007 (below)
@@ -100,6 +100,13 @@ class UnauthorizedError(AppError):
 
     step = "auth.credentials"
     code = 40101
+
+
+class InviteCodeError(AppError):
+    """The beta invite code is missing, unknown, or already used up."""
+
+    step = "auth.invite"
+    code = 40102
 
 
 class ResourceNotFoundError(AppError):

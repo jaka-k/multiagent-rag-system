@@ -38,9 +38,11 @@ def get_password_hash(password: str) -> bytes:
     return hashed_password
 
 
-async def get_user(session: AsyncSession, username: str) -> Optional[User]:
-    """Retrieve a user by username."""
-    statement = select(User).where(User.username == username)
+async def get_user(session: AsyncSession, identifier: str) -> Optional[User]:
+    """Retrieve a user by username or email (login accepts either)."""
+    statement = select(User).where(
+        (User.username == identifier) | (User.email == identifier)
+    )
     result = await session.execute(statement)
     return result.scalar_one_or_none()
 

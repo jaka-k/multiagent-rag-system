@@ -37,13 +37,16 @@ const useAreaStore = create(
             error: null
           })
 
-          const state = get()
+          // Re-resolve the persisted activeArea against the fresh payload so
+          // it never carries a stale shape from an older cache.
+          const current = get().activeArea
 
-          if (!state.activeArea && areas.length > 0) {
-            set({
-              activeArea: areas[0]
-            })
-          }
+          set({
+            activeArea:
+              (current && areas.find((a) => a.id === current.id)) ||
+              areas[0] ||
+              null
+          })
         } catch (error) {
           set({
             error:

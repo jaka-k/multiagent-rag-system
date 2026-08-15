@@ -1,6 +1,5 @@
 'use client'
 
-import { areaDotColor } from '@components/shell/rail'
 import { dayGroupLabel, relativeTime } from '@lib/utils'
 import { Chat } from '@mytypes/types'
 import { ChevronRight, Layers } from 'lucide-react'
@@ -23,9 +22,11 @@ function groupByDay(chats: ChatWithTime[]): [string, ChatWithTime[]][] {
 
 export default function SessionList({
   chats,
+  areaColor,
   onOpen
 }: {
   chats: ChatWithTime[]
+  areaColor?: string
   onOpen: (chatId: string) => void
 }) {
   return (
@@ -48,7 +49,7 @@ export default function SessionList({
               <div
                 className="scover"
                 style={{
-                  background: `linear-gradient(150deg, ${areaDotColor(chat.areaId)}, var(--ink-2))`
+                  background: `linear-gradient(150deg, ${areaColor ?? '#666'}, var(--ink-2))`
                 }}
               />
               <div className="sess-mid">

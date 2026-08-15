@@ -43,6 +43,44 @@ export async function signIn(formData: { username: string; password: string }) {
   }
 }
 
+export async function validateInviteCode(code: string): Promise<boolean> {
+  const response = await fetch(`${BACKEND_URL}/auth/invite/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    // eslint-disable-next-line camelcase
+    body: JSON.stringify({ invite_code: code })
+  })
+
+  return response.ok
+}
+
+export async function registerAccount(formData: {
+  name: string
+  email: string
+  password: string
+  inviteCode: string
+}) {
+  const response = await fetch(`${BACKEND_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mail: formData.email,
+      user: formData.name,
+      password: formData.password,
+      // eslint-disable-next-line camelcase
+      invite_code: formData.inviteCode
+    })
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+
+    throw new Error(data?.detail ?? 'Registration failed. Please try again.')
+  }
+
+  await signIn({ username: formData.email, password: formData.password })
+}
+
 // eslint-disable-next-line consistent-return
 export async function refreshAccessToken() {
   const cookieStore = await cookies()

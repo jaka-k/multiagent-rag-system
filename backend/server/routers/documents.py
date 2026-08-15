@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, BackgroundTasks, Query
 from fastapi.params import Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
@@ -10,7 +10,12 @@ from sqlmodel import select, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from server.controller.embedding_controller import background_embedding_process
-from server.core.authz import require_owned_chapter, require_owned_document, require_owned_session
+from server.core.authz import (
+    require_owned_area,
+    require_owned_chapter,
+    require_owned_document,
+    require_owned_session,
+)
 from server.core.exceptions import ConflictError, ResourceNotFoundError
 from server.core.security import get_current_active_user
 from server.db.database import get_session
@@ -52,29 +57,19 @@ class ChapterQueueRead(SQLModel):
 async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = Depends(get_current_active_user),
                               session: AsyncSession = Depends(get_session)):
     body = request.model_dump()
-    try:
-        doc = Document(title=body["title"],
-                       area_id=body["area_id"],
-                       user_id=current_user.id,
-                       description=body["description"],
-                       file_path=body["file_path"],
-                       file_size=body["file_size"],
-                       cover_image=body["cover_image"],
-                       author=body.get("author"))
-        ## TODO: Handle all endpoints like this
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=423, detail={"ok": False, "message": f"Could not create document, {e}"})
+    await require_owned_area(session, body["area_id"], current_user)
 
-    try:
-        session.add(doc)
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=424, detail={"ok": False, "message": f"Could not add document, {e}"})
-
+    doc = Document(title=body["title"],
+                   area_id=body["area_id"],
+                   user_id=current_user.id,
+                   description=body["description"],
+                   file_path=body["file_path"],
+                   file_size=body["file_size"],
+                   cover_image=body["cover_image"],
+                   author=body.get("author"))
+    session.add(doc)
     await session.commit()
     await session.refresh(doc)
-
 
     return {"ok": True, "message": "Document created successfully", "id": doc.id}
 
@@ -83,15 +78,7 @@ async def parse_uploaded_epub(request: EpubUploadRequest, current_user: User = D
 async def embedd_epub(document_id: str, background_tasks: BackgroundTasks,
                       current_user: User = Depends(get_current_active_user),
                       session: AsyncSession = Depends(get_session)):
-    stmt = select(Document).where(Document.id == document_id)
-    result = await session.execute(stmt)
-    document = result.scalar_one_or_none()
-
-    if not document:
-        raise ResourceNotFoundError("Document not found")
-
-    if document.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorised to embed this document")
+    await require_owned_document(session, document_id, current_user)
 
     background_tasks.add_task(background_embedding_process, document_id, session)
 
@@ -102,18 +89,7 @@ async def embedd_epub(document_id: str, background_tasks: BackgroundTasks,
 async def embedding_status(document_id: str,
                            current_user: User = Depends(get_current_active_user),
                            session: AsyncSession = Depends(get_session)):
-    stmt = select(Document).where(Document.id == document_id)
-    result = await session.execute(stmt)
-    document = result.scalar_one_or_none()
-
-    if not document:
-        raise ResourceNotFoundError("Document not found")
-
-    if document.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorised to view this document")
-
-    if document.embedding_status == EmbeddingStatus.IDLE:
-        raise HTTPException(status_code=500, detail="Document embedding stopped abruptly")
+    document = await require_owned_document(session, document_id, current_user)
 
     return {"status": document.embedding_status}
 

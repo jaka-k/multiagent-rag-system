@@ -13,11 +13,49 @@ flagged.
 
 ## [Unreleased / in flight] — Redesign phase 2
 
-- Planned (docs/rework/08): auth screens from the new design (login,
-  PIN-gated beta registration — needs backend invite codes, terms),
-  citations, GenBot, agents wired into generation, doc-05 leftover
-  schema (structured card fields, clipper provenance), reader (doc 07).
-- Gated on a working GOOGLE_API_KEY (last rotation rejected by Google).
+- **Auth screens + invite-gated beta registration** (doc 08 A): /login,
+  /register and /terms rebuilt in the design system (auth-card on the dark
+  desk); registration is locked behind an **8-digit invite PIN** validated
+  server-side (PinGate with paste/backspace/arrow UX and error shake). New
+  **InviteCode** table (max_uses/use_count, redeemed_by/at watermark) +
+  `POST /auth/invite/validate` + invite redemption inside /auth/register;
+  `poetry run create-invite` mints codes. Login now accepts **email or
+  username**; register/conflict paths converted to typed errors (new
+  40102 InviteCodeError, ConflictError instead of ad-hoc 409). Terms page
+  carries the designed five-section copy, with §5 softened to email-based
+  account deletion (no settings surface yet — designer ask stays open).
+- **New-area dialog** (doc 08 B): design-system modal (overlay/modal/m-*
+  CSS block ported) with name field, six-swatch **label color** picker and
+  live area-chip preview, opened from the rail's area menu ("New area"
+  foot entry). `Area.color` column added NOT NULL — the backend owns the
+  palette (`server/models/area.py`, mirrored in the dialog) and assigns a
+  deterministic md5-of-id pick when none is chosen; existing areas
+  backfilled with the same function, so every surface (rail dots, session
+  covers, launcher) renders one stable color per area and the frontend
+  id-hash is gone. Area `label` is now derived server-side from the
+  name (slug) — the ChromaDB-era naming-rules dialog is gone. Dead
+  pre-redesign components removed (top-menu, area-selector, dashboard,
+  sidebar, user-auth-form).
+- Migration `20260815_0001`: invitecode table + area.color.
+- **Designed UploadDialog + live shelf lifecycle** (doc 08 B follow-up):
+  the Radix upload dialog (Cards/Table UI) is replaced by the designer's
+  modal — dropzone (drag + browse, multi-EPUB queue), per-file rows
+  through the real lifecycle (uploading % from Firebase → parsing →
+  embedding → indexed/failed with retry), sequential client pipeline via
+  a new promise-based `extractEpubMetadata` (worker wrapper). Rail book
+  rows now show live indexing states (busy/failed dots, stage label,
+  failed → Retry re-fires `POST /api/embedding/{id}`), with store polling
+  while anything is in flight (SSE is session-scoped, not usable in the
+  rail). Old FileUpload/EpubElement deleted.
+- **Authz/error sweep on the upload endpoints** (missed in PR #27):
+  `/api/epub-upload` now verifies area ownership (a foreign area_id was
+  previously accepted!) and drops its ad-hoc 423/424 handlers;
+  `/api/embedding/{id}` and `/api/embedding-status/{id}` use
+  `require_owned_document` (typed 404 instead of ad-hoc 403); the status
+  endpoint no longer 500s on idle documents.
+- Still planned (docs/rework/08): citations, GenBot, agents wired into
+  generation, doc-05 leftover schema, reader (doc 07) — gated on a working
+  GOOGLE_API_KEY (last rotation rejected by Google).
 
 ## Phase 7 — Redesign wave (merged 2026-08-14, PRs #21–#28)
 
