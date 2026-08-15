@@ -55,7 +55,7 @@ export default function Launcher({
         <span className="scope-pick">
           <span
             className="adot"
-            style={{ background: area ? areaDotColor(area.id) : '#666' }}
+            style={{ background: area ? areaDotColor(area) : '#666' }}
           />
           {area?.name ?? 'No area selected'}
         </span>

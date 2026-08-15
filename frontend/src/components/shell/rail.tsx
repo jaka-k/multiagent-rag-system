@@ -3,7 +3,11 @@
 import { BookCover } from '@components/shell/book-cover'
 import useAreaStore from '@context/area-store.tsx'
 import useDocumentStore from '@context/document-store.tsx'
+import { useToast } from '@hooks/use-toast'
+import { createArea } from '@lib/fetchers/fetch-areas.ts'
 import { signOut } from '@lib/session/auth.ts'
+import type { Area } from '@mytypes/types.d.ts'
+import { NewAreaDialog } from '@ui/areas/new-area-dialog'
 import { FileUpload } from '@ui/dashboard/file-upload'
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@ui/dialog'
 import { Tabs } from '@ui/tabs'
@@ -19,20 +23,26 @@ import React from 'react'
 
 const AREA_DOT_COLORS = ['#9A80FF', '#33A1FF', '#1CC07E', '#FF8038', '#F2576B']
 
-export function areaDotColor(areaId: string): string {
+/** Areas created before the color picker existed fall back to a stable hash. */
+export function areaDotColor(area: Pick<Area, 'id' | 'color'>): string {
+  if (area.color) return area.color
+
   let h = 0
 
-  for (let i = 0; i < areaId.length; i += 1)
-    h = (h * 31 + areaId.charCodeAt(i)) % 1_000_000_007
+  for (let i = 0; i < area.id.length; i += 1)
+    h = (h * 31 + area.id.charCodeAt(i)) % 1_000_000_007
 
   return AREA_DOT_COLORS[h % AREA_DOT_COLORS.length]
 }
 
 export default function Rail() {
   const router = useRouter()
-  const { areas, activeArea, setActiveArea, fetchAreas } = useAreaStore()
+  const { toast } = useToast()
+  const { areas, activeArea, setActiveArea, fetchAreas, addArea } =
+    useAreaStore()
   const { documentsByArea, fetchDocumentsForArea } = useDocumentStore()
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const [areaDialogOpen, setAreaDialogOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -50,6 +60,22 @@ export default function Rail() {
   const documents = activeArea
     ? Object.values(documentsByArea[activeArea.id] ?? {})
     : []
+
+  const handleCreateArea = async (name: string, color: string) => {
+    const created = await createArea(name, color)
+
+    if (!created) {
+      toast({
+        title: 'Area not created ⛔️',
+        description: 'We encountered an internal error creating your area.'
+      })
+      return
+    }
+
+    addArea({ ...created, documents: [] })
+    setActiveArea(created.id)
+    setAreaDialogOpen(false)
+  }
 
   return (
     <nav className="rail">
@@ -75,8 +101,8 @@ export default function Rail() {
             className="adot"
             style={{
               borderRadius: '50%',
-              background: activeArea ? areaDotColor(activeArea.id) : '#666',
-              color: activeArea ? areaDotColor(activeArea.id) : '#666'
+              background: activeArea ? areaDotColor(activeArea) : '#666',
+              color: activeArea ? areaDotColor(activeArea) : '#666'
             }}
           />
           <span className="as-name">{activeArea?.name ?? 'No area'}</span>
@@ -104,12 +130,24 @@ export default function Rail() {
                   className="adot"
                   style={{
                     borderRadius: '50%',
-                    background: areaDotColor(area.id)
+                    background: areaDotColor(area)
                   }}
                 />
                 <span className="nm">{area.name}</span>
               </button>
             ))}
+            <div className="area-menu-foot">
+              <button
+                type="button"
+                className="area-new"
+                onClick={() => {
+                  setMenuOpen(false)
+                  setAreaDialogOpen(true)
+                }}
+              >
+                <Plus size={15} /> New area
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -174,6 +212,13 @@ export default function Rail() {
           </span>
         </button>
       </div>
+
+      {areaDialogOpen && (
+        <NewAreaDialog
+          onClose={() => setAreaDialogOpen(false)}
+          onCreate={handleCreateArea}
+        />
+      )}
     </nav>
   )
 }

@@ -3,6 +3,7 @@ export interface Area {
   created: Date
   name: string
   label: string
+  color?: string
   documents: Document[]
 }
 
@@ -123,6 +124,7 @@ export type CreateAreaResponse = {
   created: Date
   name: string
   label: string
+  color?: string
 }
 
 export interface Agent {

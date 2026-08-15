@@ -1,6 +1,7 @@
-from typing import List
+import re
+from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.params import Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
@@ -23,7 +24,14 @@ router = APIRouter()
 
 class AreaCreateRequest(BaseModel):
     name: str
-    label: str
+    label: Optional[str] = None
+    color: Optional[str] = None
+
+
+def _label_from_name(name: str) -> str:
+    """Slug used as the Anki deck name and pill tag."""
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return slug or "area"
 
 
 @router.get("/area/{area_id}")
@@ -41,16 +49,13 @@ async def create_area(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    body = request.model_dump()
-    label = body["label"]
-    area = Area(name=body["name"], label=label, user_id=current_user.id)
-    try:
-        session.add(area)
-        await session.commit()
-        await session.refresh(area)
-    except Exception as e:
-        app_logger.error(f"Area creation failed: {e}", exc_info=e)
-        raise HTTPException(status_code=500, detail=f"Could not create area: {e}")
+    label = request.label or _label_from_name(request.name)
+    area = Area(
+        name=request.name, label=label, color=request.color, user_id=current_user.id
+    )
+    session.add(area)
+    await session.commit()
+    await session.refresh(area)
 
     # Non-fatal: the area is already committed; a down AnkiConnect must not 500.
     try:

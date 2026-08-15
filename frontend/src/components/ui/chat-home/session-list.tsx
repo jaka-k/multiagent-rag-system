@@ -48,7 +48,7 @@ export default function SessionList({
               <div
                 className="scover"
                 style={{
-                  background: `linear-gradient(150deg, ${areaDotColor(chat.areaId)}, var(--ink-2))`
+                  background: `linear-gradient(150deg, ${areaDotColor({ id: chat.areaId })}, var(--ink-2))`
                 }}
               />
               <div className="sess-mid">
