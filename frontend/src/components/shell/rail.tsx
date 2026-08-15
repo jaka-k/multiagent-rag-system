@@ -1,15 +1,13 @@
 'use client'
 
-import { BookCover } from '@components/shell/book-cover'
+import { BookRow } from '@components/shell/book-row'
 import useAreaStore from '@context/area-store.tsx'
 import useDocumentStore from '@context/document-store.tsx'
 import { useToast } from '@hooks/use-toast'
 import { createArea } from '@lib/fetchers/fetch-areas.ts'
 import { signOut } from '@lib/session/auth.ts'
 import { NewAreaDialog } from '@ui/areas/new-area-dialog'
-import { FileUpload } from '@ui/dashboard/file-upload'
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@ui/dialog'
-import { Tabs } from '@ui/tabs'
+import { UploadDialog } from '@ui/upload/upload-dialog'
 import {
   BookOpen,
   ChevronsUpDown,
@@ -28,6 +26,7 @@ export default function Rail() {
   const { documentsByArea, fetchDocumentsForArea } = useDocumentStore()
   const [menuOpen, setMenuOpen] = React.useState(false)
   const [areaDialogOpen, setAreaDialogOpen] = React.useState(false)
+  const [uploadOpen, setUploadOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -38,6 +37,20 @@ export default function Rail() {
   React.useEffect(() => {
     if (activeArea) fetchDocumentsForArea(activeArea.id)
   }, [activeArea, fetchDocumentsForArea])
+
+  // Indexing runs server-side after upload; poll while any book is in flight
+  // so the shelf states stay live even with the dialog closed.
+  const anyIndexing = Object.values(
+    (activeArea && documentsByArea[activeArea.id]) || {}
+  ).some((d) => ['processing', 'embedding'].includes(d.embeddingStatus))
+
+  React.useEffect(() => {
+    if (!anyIndexing || !activeArea) return undefined
+
+    const timer = setInterval(() => fetchDocumentsForArea(activeArea.id), 2500)
+
+    return () => clearInterval(timer)
+  }, [anyIndexing, activeArea, fetchDocumentsForArea])
 
   // Zustand-persist state differs between SSR and the hydrated client
   if (!mounted) return <nav className="rail" />
@@ -139,42 +152,37 @@ export default function Rail() {
 
       <div className="rail-section">
         <h4>Library</h4>
+        <button
+          type="button"
+          className="add"
+          title="Add book"
+          onClick={() => setUploadOpen(true)}
+        >
+          <Plus size={14} />
+        </button>
       </div>
       <div className="shelf scroll" style={{ flex: 1 }}>
         {documents.map((doc) => (
-          <div key={doc.id} className="book">
-            <BookCover title={doc.title} />
-            <div className="book-meta">
-              <div className="t">{doc.title}</div>
-              <div className="a">{doc.author ?? '—'}</div>
-            </div>
-            {doc.embeddingStatus === 'completed' && (
-              <span className="book-dot" title="Indexed" />
-            )}
-          </div>
+          <BookRow
+            key={doc.id}
+            doc={doc}
+            onRetried={() => activeArea && fetchDocumentsForArea(activeArea.id)}
+          />
         ))}
         {documents.length === 0 && (
           <div className="empty-hint" style={{ color: 'var(--rail-fg-dim)' }}>
             No books yet
           </div>
         )}
+        <button
+          type="button"
+          className="upload"
+          onClick={() => setUploadOpen(true)}
+        >
+          <BookOpen size={15} />
+          Add a book (EPUB)
+        </button>
       </div>
-
-      <Dialog>
-        <DialogTrigger asChild>
-          <button type="button" className="upload">
-            <BookOpen size={15} />
-            Add a book (EPUB)
-          </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-3xl">
-          <DialogTitle>Add a book</DialogTitle>
-          {/* FileUpload renders its own TabsContent; give it a Tabs context */}
-          <Tabs defaultValue="File Upload">
-            <FileUpload />
-          </Tabs>
-        </DialogContent>
-      </Dialog>
 
       <div className="rail-foot">
         <button
@@ -203,6 +211,9 @@ export default function Rail() {
           onClose={() => setAreaDialogOpen(false)}
           onCreate={handleCreateArea}
         />
+      )}
+      {uploadOpen && activeArea && (
+        <UploadDialog area={activeArea} onClose={() => setUploadOpen(false)} />
       )}
     </nav>
   )

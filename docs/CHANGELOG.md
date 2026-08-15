@@ -37,6 +37,22 @@ flagged.
   pre-redesign components removed (top-menu, area-selector, dashboard,
   sidebar, user-auth-form).
 - Migration `20260815_0001`: invitecode table + area.color.
+- **Designed UploadDialog + live shelf lifecycle** (doc 08 B follow-up):
+  the Radix upload dialog (Cards/Table UI) is replaced by the designer's
+  modal — dropzone (drag + browse, multi-EPUB queue), per-file rows
+  through the real lifecycle (uploading % from Firebase → parsing →
+  embedding → indexed/failed with retry), sequential client pipeline via
+  a new promise-based `extractEpubMetadata` (worker wrapper). Rail book
+  rows now show live indexing states (busy/failed dots, stage label,
+  failed → Retry re-fires `POST /api/embedding/{id}`), with store polling
+  while anything is in flight (SSE is session-scoped, not usable in the
+  rail). Old FileUpload/EpubElement deleted.
+- **Authz/error sweep on the upload endpoints** (missed in PR #27):
+  `/api/epub-upload` now verifies area ownership (a foreign area_id was
+  previously accepted!) and drops its ad-hoc 423/424 handlers;
+  `/api/embedding/{id}` and `/api/embedding-status/{id}` use
+  `require_owned_document` (typed 404 instead of ad-hoc 403); the status
+  endpoint no longer 500s on idle documents.
 - Still planned (docs/rework/08): citations, GenBot, agents wired into
   generation, doc-05 leftover schema, reader (doc 07) — gated on a working
   GOOGLE_API_KEY (last rotation rejected by Google).

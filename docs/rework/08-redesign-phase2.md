@@ -37,13 +37,12 @@ modal with name + label-color swatches + live preview, wired into the
 rail's area menu. `Area.color` column added; `label` is derived
 server-side from the name (the ChromaDB naming-rules dialog is gone).
 
-**New designer work spotted while porting** (in app/main.jsx + styles v2,
-not yet built): a full **UploadDialog** modeling the real indexing
-lifecycle (idle → uploading → processing → embedding → completed/failed,
-per-file progress + retry), plus CSS for error bubbles (errbub), GenBot
-(gen-*), a reader modal (rm-*), and a study console (sc-*). The upload
-dialog should replace the Radix FileUpload dialog in the rail when the
-upload flow is next touched.
+**New designer work spotted while porting** (in app/main.jsx + styles v2):
+✅ the **UploadDialog** (real indexing lifecycle, per-file progress +
+retry) — built 2026-08-15 with live rail shelf states, replacing the
+Radix FileUpload dialog. Still unbuilt from styles v2: error bubbles
+(errbub), GenBot (gen-*), a reader modal (rm-*), and a study console
+(sc-*).
 
 ## C. Gated on a working GOOGLE_API_KEY
 
