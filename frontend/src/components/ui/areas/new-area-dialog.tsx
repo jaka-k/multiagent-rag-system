@@ -24,6 +24,16 @@ export function NewAreaDialog({ onClose, onCreate }: NewAreaDialogProps) {
   const [color, setColor] = React.useState(AREA_COLORS[4])
   const [pending, setPending] = React.useState(false)
 
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+
+    window.addEventListener('keydown', onKey)
+
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   const create = async () => {
     setPending(true)
 
@@ -36,14 +46,20 @@ export function NewAreaDialog({ onClose, onCreate }: NewAreaDialogProps) {
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-area-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="m-head">
           {/* 0x24 ≈ 14% alpha wash behind the icon, in the picked color */}
           <div className="m-ico" style={{ background: `${color}24`, color }}>
             <Layers size={18} />
           </div>
           <div>
-            <h3>New area</h3>
+            <h3 id="new-area-title">New area</h3>
             <p>An area groups books, chats and card sets around one subject.</p>
           </div>
           <button type="button" className="icon-btn" onClick={onClose}>

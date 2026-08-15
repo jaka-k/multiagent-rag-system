@@ -69,8 +69,15 @@ router = APIRouter()
 
 # --- Auth lifecycle ---
 
-async def _usable_invite(session: AsyncSession, code: str) -> InviteCode:
-    result = await session.exec(select(InviteCode).where(InviteCode.code == code.strip()))
+async def _usable_invite(
+        session: AsyncSession, code: str, for_update: bool = False
+) -> InviteCode:
+    statement = select(InviteCode).where(InviteCode.code == code.strip())
+    if for_update:
+        # Redemption must lock the row: two concurrent registrations may not
+        # both spend the last remaining use.
+        statement = statement.with_for_update()
+    result = await session.exec(statement)
     invite = result.one_or_none()
     if not invite or invite.use_count >= invite.max_uses:
         raise InviteCodeError("Invite code is unknown or already used up.")
@@ -92,7 +99,7 @@ async def register_user(
         request: UserCreationRequest,
         session: AsyncSession = Depends(get_session),
 ):
-    invite = await _usable_invite(session, request.invite_code)
+    invite = await _usable_invite(session, request.invite_code, for_update=True)
 
     existing = await session.exec(
         select(User).where(
@@ -103,20 +110,23 @@ async def register_user(
         raise ConflictError("A user with that email or username already exists.")
 
     new_user = User(
+        id=uuid.uuid4(),
         email=request.mail,
         username=request.user,
         hashed_password=get_password_hash(request.password),
         disabled=False,
     )
     session.add(new_user)
-    await session.commit()
-    await session.refresh(new_user)
+    # Flush so the user row exists before the redeemed_by FK update; the
+    # invite row stays locked until the single commit below.
+    await session.flush()
 
     invite.use_count += 1
     invite.redeemed_by = new_user.id
     invite.redeemed_at = datetime.now(timezone.utc)
     session.add(invite)
     await session.commit()
+    await session.refresh(new_user)
 
     app_logger.info(f"New user registered: {new_user.username}")
     return UserResponse(

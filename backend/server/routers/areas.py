@@ -35,6 +35,18 @@ def _label_from_name(name: str) -> str:
     return slug or "area"
 
 
+async def _unique_label(session: AsyncSession, user_id, base: str) -> str:
+    """Suffix the derived slug until it's free — colliding labels would also
+    collide as Anki deck names."""
+    result = await session.exec(select(Area.label).where(Area.user_id == user_id))
+    taken = set(result.all())
+    label, n = base, 2
+    while label in taken:
+        label = f"{base}-{n}"
+        n += 1
+    return label
+
+
 @router.get("/area/{area_id}")
 async def get_area(
         area_id: str,
@@ -50,7 +62,9 @@ async def create_area(
         current_user: User = Depends(get_current_active_user),
         session: AsyncSession = Depends(get_session),
 ):
-    label = request.label or _label_from_name(request.name)
+    label = request.label or await _unique_label(
+        session, current_user.id, _label_from_name(request.name)
+    )
     area_id = uuid.uuid4()
     area = Area(
         id=area_id,

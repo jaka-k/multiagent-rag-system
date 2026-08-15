@@ -32,9 +32,15 @@ export function PinGate({ unlocked, validate, onUnlock }: PinGateProps) {
     if (next.some((d) => d === '')) return
 
     setChecking(true)
-    const ok = await validate(next.join(''))
+    let ok = false
 
-    setChecking(false)
+    try {
+      ok = await validate(next.join(''))
+    } catch {
+      ok = false
+    } finally {
+      setChecking(false)
+    }
 
     if (ok) {
       onUnlock(next.join(''))
