@@ -11,7 +11,15 @@ flagged.
 
 ---
 
-## [Unreleased / in flight] — Redesign wave (PRs #21, #22)
+## [Unreleased / in flight] — Redesign phase 2
+
+- Planned (docs/rework/08): auth screens from the new design (login,
+  PIN-gated beta registration — needs backend invite codes, terms),
+  citations, GenBot, agents wired into generation, doc-05 leftover
+  schema (structured card fields, clipper provenance), reader (doc 07).
+- Gated on a working GOOGLE_API_KEY (last rotation rejected by Google).
+
+## Phase 7 — Redesign wave (merged 2026-08-14, PRs #21–#28)
 
 - **Chat-first app shell** (PR #21): mrag.css design system ported from the
   claude.ai/design MRAG project (Iris accent, charcoal shell); dark-frame
@@ -84,10 +92,9 @@ flagged.
 - **WS Origin allowlist** (Copilot on #27): cross-site WebSocket
   hijacking defense — non-allowlisted Origins rejected at the handshake;
   also fixed a 500 on unknown area ids in the area-documents endpoint.
-- Remaining: citations (phase 6), GenBot draft loop, agents wired into
-  generation (all gated on a working GOOGLE_API_KEY — current one is
-  rejected by Google); doc 01 Tier 3 majors; docker-image rebuild
-  verification on 3.14; otel-collector handshake check.
+- Carried forward to phase 2: citations, GenBot, agents into generation,
+  doc 01 leftovers (firebase-admin 7, tooling, docker-3.14 rebuild check,
+  otel-collector handshake), dependabot triage (117 → 69 during this wave).
 
 ## Phase 6 — Platform wave (2026-08-08 → 08-09, PRs #14–#19)
 
