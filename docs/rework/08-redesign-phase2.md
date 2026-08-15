@@ -6,7 +6,7 @@ covers what phase 1 deliberately deferred, plus the **new design work**
 that landed in the MRAG design project since (`Auth.html` + `app/auth.jsx`,
 new `dlg-area` shots).
 
-## A. Auth screens (new design, ready to build)
+## A. Auth screens — ✅ built 2026-08-15 (with B, one PR)
 
 The design project now contains complete login/register/terms screens in
 the shipped shell style (Iris/charcoal, `auth-card` on the desk).
@@ -30,12 +30,20 @@ Implementation notes from reading `app/auth.jsx`:
 - Register/terms flow: agree-checkbox → account creation; wire to the
   existing register endpoint + auto-login.
 
-## B. Area-creation dialog (new `dlg-area` shots)
+## B. Area-creation dialog — ✅ built 2026-08-15
 
-Redesigned create-area dialog. Port from the shots; replaces the old
-top-menu dialog (currently still the pre-redesign Radix dialog). Wire the
-"New area" affordance into the rail's area menu (`area-menu-foot` styles
-already shipped in mrag.css).
+Ported from the designer's `NewAreaDialog` (app/main.jsx): design-system
+modal with name + label-color swatches + live preview, wired into the
+rail's area menu. `Area.color` column added; `label` is derived
+server-side from the name (the ChromaDB naming-rules dialog is gone).
+
+**New designer work spotted while porting** (in app/main.jsx + styles v2,
+not yet built): a full **UploadDialog** modeling the real indexing
+lifecycle (idle → uploading → processing → embedding → completed/failed,
+per-file progress + retry), plus CSS for error bubbles (errbub), GenBot
+(gen-*), a reader modal (rm-*), and a study console (sc-*). The upload
+dialog should replace the Radix FileUpload dialog in the rail when the
+upload flow is next touched.
 
 ## C. Gated on a working GOOGLE_API_KEY
 
@@ -85,8 +93,8 @@ brief in `feedback/design-gaps.md`.
 
 ## Suggested order
 
-1. **A + B now** (no key needed): invite-code backend + auth screens +
-   area dialog — small, self-contained, ships the new design work.
+1. ~~A + B~~ — done (feat/redesign-phase2-auth, stacked on #29).
 2. **Key rotation** → C1 smoke, then C2–C4 as separate PRs (citations,
    GenBot, agents) with D's schema landing alongside C4.
-3. **E** whenever the designer responds (or sidebar-only first).
+3. **E** whenever the designer responds (or sidebar-only first);
+   the designed UploadDialog (see B) can ride along with any of these.

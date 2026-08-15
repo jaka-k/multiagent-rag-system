@@ -13,11 +13,29 @@ flagged.
 
 ## [Unreleased / in flight] — Redesign phase 2
 
-- Planned (docs/rework/08): auth screens from the new design (login,
-  PIN-gated beta registration — needs backend invite codes, terms),
-  citations, GenBot, agents wired into generation, doc-05 leftover
-  schema (structured card fields, clipper provenance), reader (doc 07).
-- Gated on a working GOOGLE_API_KEY (last rotation rejected by Google).
+- **Auth screens + invite-gated beta registration** (doc 08 A): /login,
+  /register and /terms rebuilt in the design system (auth-card on the dark
+  desk); registration is locked behind an **8-digit invite PIN** validated
+  server-side (PinGate with paste/backspace/arrow UX and error shake). New
+  **InviteCode** table (max_uses/use_count, redeemed_by/at watermark) +
+  `POST /auth/invite/validate` + invite redemption inside /auth/register;
+  `poetry run create-invite` mints codes. Login now accepts **email or
+  username**; register/conflict paths converted to typed errors (new
+  40102 InviteCodeError, ConflictError instead of ad-hoc 409). Terms page
+  carries the designed five-section copy, with §5 softened to email-based
+  account deletion (no settings surface yet — designer ask stays open).
+- **New-area dialog** (doc 08 B): design-system modal (overlay/modal/m-*
+  CSS block ported) with name field, six-swatch **label color** picker and
+  live area-chip preview, opened from the rail's area menu ("New area"
+  foot entry). `Area.color` column added (nullable; rail dots use it with
+  the old hash fallback); area `label` is now derived server-side from the
+  name (slug) — the ChromaDB-era naming-rules dialog is gone. Dead
+  pre-redesign components removed (top-menu, area-selector, dashboard,
+  sidebar, user-auth-form).
+- Migration `20260815_0001`: invitecode table + area.color.
+- Still planned (docs/rework/08): citations, GenBot, agents wired into
+  generation, doc-05 leftover schema, reader (doc 07) — gated on a working
+  GOOGLE_API_KEY (last rotation rejected by Google).
 
 ## Phase 7 — Redesign wave (merged 2026-08-14, PRs #21–#28)
 
