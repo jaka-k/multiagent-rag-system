@@ -26,11 +26,17 @@ export function extractEpubMetadata(file: File): Promise<EpubMetadata> {
       reject(new Error(e.message || 'EPUB worker crashed'))
     }
 
-    file.arrayBuffer().then((epubBuffer) => {
-      worker.postMessage({
-        type: 'extractCoverImage',
-        payload: { epubBuffer }
-      })
-    }, reject)
+    file.arrayBuffer().then(
+      (epubBuffer) => {
+        worker.postMessage({
+          type: 'extractCoverImage',
+          payload: { epubBuffer }
+        })
+      },
+      (err) => {
+        worker.terminate()
+        reject(err)
+      }
+    )
   })
 }

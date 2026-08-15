@@ -9,40 +9,18 @@ import {
 } from '@lib/fetchers/fetch-embedding.ts'
 import { logger } from '@lib/logger.ts'
 import { createPersistentDownloadUrl, noSpaceFilename } from '@lib/utils'
-import type { Area, EmbeddingStatus } from '@mytypes/types.d.ts'
-import { Book, Check, Layers, RefreshCw, Upload, X, Zap } from 'lucide-react'
+import type { Area } from '@mytypes/types.d.ts'
+import { Dropzone } from '@ui/upload/dropzone'
+import { RowStatus, STATUS_LABEL, UploadRow } from '@ui/upload/upload-row'
+import { Check, RefreshCw, Upload, X } from 'lucide-react'
 import React from 'react'
 
-type RowStatus = EmbeddingStatus | 'uploading'
-
-interface UploadRow {
+interface Row {
   key: string
   file: File
-  status: 'idle' | 'uploading' | 'failed'
+  status: 'idle' | 'uploading'
   docId?: string
   error?: string
-}
-
-const STATUS_ICON: Record<RowStatus, React.ComponentType<{ size?: number }>> = {
-  idle: Book,
-  uploading: Upload,
-  processing: RefreshCw,
-  embedding: Layers,
-  completed: Check,
-  failed: Zap
-}
-
-const STATUS_LABEL: Record<RowStatus, string> = {
-  idle: 'Ready to upload',
-  uploading: 'Uploading…',
-  processing: 'Parsing chapters…',
-  embedding: 'Embedding chapters…',
-  completed: 'Indexed',
-  failed: 'Failed'
-}
-
-function prettySize(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 interface UploadDialogProps {
@@ -53,20 +31,22 @@ interface UploadDialogProps {
 export function UploadDialog({ area, onClose }: UploadDialogProps) {
   const { documentsByArea, fetchDocumentsForArea } = useDocumentStore()
   const { uploadProgress, uploadFile, uploadCover } = useFirebaseUpload()
-  const [rows, setRows] = React.useState<UploadRow[]>([])
+  const [rows, setRows] = React.useState<Row[]>([])
   const [running, setRunning] = React.useState(false)
-  const [dragging, setDragging] = React.useState(false)
-  const inputRef = React.useRef<HTMLInputElement>(null)
 
   const docs = documentsByArea[area.id] ?? {}
 
-  const statusOf = (row: UploadRow): RowStatus => {
+  // A client-side error wins until retried; otherwise the handed-off
+  // document's store status is the truth.
+  const statusOf = (row: Row): RowStatus => {
+    if (row.error) return 'failed'
+
     if (row.docId && docs[row.docId]) return docs[row.docId].embeddingStatus
 
     return row.status
   }
 
-  const labelOf = (row: UploadRow): string => {
+  const labelOf = (row: Row): string => {
     const status = statusOf(row)
 
     if (status === 'failed')
@@ -75,25 +55,32 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
     return STATUS_LABEL[status]
   }
 
-  const patchRow = (key: string, fields: Partial<UploadRow>) =>
+  const patchRow = (key: string, fields: Partial<Row>) =>
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...fields } : r)))
 
-  const addFiles = (files: FileList | File[]) => {
-    const epubs = Array.from(files).filter((f) => f.name.endsWith('.epub'))
-
+  const addFiles = (files: File[]) =>
     setRows((rs) => [
       ...rs,
-      ...epubs.map((file) => ({
+      ...files.map((file) => ({
         key: `${file.name}-${Date.now()}-${Math.random()}`,
         file,
         status: 'idle' as const
       }))
     ])
+
+  const startEmbedding = async (key: string, docId: string) => {
+    const response = await createVectorEmbedding(docId)
+
+    patchRow(key, {
+      docId,
+      error: response.ok ? undefined : 'Indexing could not start — retry'
+    })
+    await fetchDocumentsForArea(area.id)
   }
 
   /** Client half of the pipeline: extract cover → Firebase → create + embed.
    *  From then on the row's status comes from the document store. */
-  const runRow = async (row: UploadRow) => {
+  const runRow = async (row: Row) => {
     patchRow(row.key, { status: 'uploading', error: undefined })
 
     try {
@@ -107,7 +94,7 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
       )
       const coverMeta = await uploadCover(row.file, meta.coverImage)
 
-      const response = await createDocument({
+      const created = await createDocument({
         title: meta.metadata.title ?? fileMeta.name,
         areaId: area.id,
         description: meta.metadata.description || meta.metadata.title || '',
@@ -117,13 +104,11 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
         author: meta.metadata.creator
       })
 
-      await createVectorEmbedding(response.id)
-      patchRow(row.key, { docId: response.id })
-      await fetchDocumentsForArea(area.id)
+      await startEmbedding(row.key, created.id)
     } catch (err) {
       logger.error({ err }, 'EPUB upload failed')
       patchRow(row.key, {
-        status: 'failed',
+        status: 'idle',
         error: err instanceof Error ? err.message : 'Upload failed'
       })
     }
@@ -133,7 +118,7 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
     setRunning(true)
 
     try {
-      const queued = rows.filter((r) => r.status === 'idle')
+      const queued = rows.filter((r) => r.status === 'idle' && !r.error)
 
       // Sequential on purpose: one Firebase upload + one worker at a time.
       // eslint-disable-next-line no-restricted-syntax
@@ -146,15 +131,8 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
     }
   }
 
-  const retry = async (row: UploadRow) => {
-    if (row.docId) {
-      // Backend pipeline failed — re-fire it for the existing document.
-      await createVectorEmbedding(row.docId)
-      await fetchDocumentsForArea(area.id)
-    } else {
-      await runRow(row)
-    }
-  }
+  const retry = (row: Row) =>
+    row.docId ? startEmbedding(row.key, row.docId) : runRow(row)
 
   // While any handed-off row is processing/embedding, keep the store fresh.
   const anyBackendBusy = rows.some((r) =>
@@ -179,7 +157,7 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const queuedCount = rows.filter((r) => r.status === 'idle').length
+  const queuedCount = rows.filter((r) => statusOf(r) === 'idle').length
   const anyBusy = running || anyBackendBusy
   const done =
     rows.length > 0 &&
@@ -213,94 +191,22 @@ export function UploadDialog({ area, onClose }: UploadDialogProps) {
           </button>
         </div>
         <div className="m-body">
-          <div
-            className={dragging ? 'dz drag' : 'dz'}
-            onClick={() => inputRef.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragging(true)
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault()
-              setDragging(false)
-              addFiles(e.dataTransfer.files)
-            }}
-          >
-            <Upload size={22} />
-            <div className="dz-t">Drop EPUB files here</div>
-            <div className="dz-s">
-              or <b>browse</b> — up to 50 MB each
-            </div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".epub"
-              multiple
-              hidden
-              onChange={(e) => {
-                if (e.target.files) addFiles(e.target.files)
-                e.target.value = ''
-              }}
-            />
-          </div>
+          <Dropzone onFiles={addFiles} />
           <div className="uplist">
-            {rows.map((row) => {
-              const status = statusOf(row)
-              const Icon = STATUS_ICON[status]
-
-              return (
-                <div className={`uprow ${status}`} key={row.key}>
-                  <div className="up-ico">
-                    <Icon size={15} />
-                  </div>
-                  <div className="up-mid">
-                    <div className="up-f">
-                      {row.file.name}
-                      <span className="up-size">
-                        {prettySize(row.file.size)}
-                      </span>
-                    </div>
-                    {status === 'uploading' && (
-                      <div className="bbar">
-                        <i style={{ width: `${uploadProgress}%` }} />
-                      </div>
-                    )}
-                    <div className="up-l">{labelOf(row)}</div>
-                  </div>
-                  {status === 'failed' && (
-                    <button
-                      type="button"
-                      className="btn btn-soft esm"
-                      onClick={() => retry(row)}
-                    >
-                      <RefreshCw size={13} /> Retry
-                    </button>
-                  )}
-                  {status === 'completed' && (
-                    <span className="up-pct done">
-                      <Check size={14} />
-                    </span>
-                  )}
-                  {status === 'uploading' && (
-                    <span className="up-pct">
-                      {Math.round(uploadProgress)}%
-                    </span>
-                  )}
-                  {status === 'idle' && (
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      onClick={() =>
-                        setRows((rs) => rs.filter((r) => r.key !== row.key))
-                      }
-                    >
-                      <X size={15} />
-                    </button>
-                  )}
-                </div>
-              )
-            })}
+            {rows.map((row) => (
+              <UploadRow
+                key={row.key}
+                fileName={row.file.name}
+                fileSize={row.file.size}
+                status={statusOf(row)}
+                label={labelOf(row)}
+                uploadPct={uploadProgress}
+                onRetry={() => retry(row)}
+                onRemove={() =>
+                  setRows((rs) => rs.filter((r) => r.key !== row.key))
+                }
+              />
+            ))}
             {rows.length === 0 && (
               <div className="up-none">No files selected yet.</div>
             )}

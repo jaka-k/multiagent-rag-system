@@ -23,12 +23,16 @@ export function BookRow({
   const busy = status === 'processing' || status === 'embedding'
 
   const retry = async () => {
-    try {
-      await createVectorEmbedding(doc.id)
-      onRetried()
-    } catch (err) {
-      logger.error({ err }, 'Failed to restart indexing')
+    // fetchWithAuth doesn't throw on non-2xx — check ok explicitly.
+    const response = await createVectorEmbedding(doc.id)
+
+    if (!response.ok) {
+      logger.error({ response: response.data }, 'Failed to restart indexing')
+
+      return
     }
+
+    onRetried()
   }
 
   return (
