@@ -4,7 +4,7 @@ import pino from 'pino'
 const logger = pino({
   name: 'mrag-client',
   base: {
-    service: 'mrag-client'
+    service: 'mrag.client'
   },
   level: process.env.LOG_LEVEL || 'info',
   timestamp: () => `,"ts":"${new Date().toISOString()}"`,
