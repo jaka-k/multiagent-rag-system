@@ -1,0 +1,23 @@
+name: Deploy to Ekko
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # for ghcrToken / workflow's GITHUB_TOKEN
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Deploy via Ekko Gitops Action
+        uses: jaka-k/ekko-gitops-action@v0
+        with:
+            ghToken: ${{ secrets.EKKO_GH_TOKEN }}
+
