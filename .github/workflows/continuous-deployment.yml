@@ -20,4 +20,8 @@ jobs:
         uses: jaka-k/ekko-gitops-action@v0
         with:
             ghToken: ${{ secrets.EKKO_GH_TOKEN }}
-
+      - name: Print registry
+        uses: jaka-k/ekko-gitops-action@v0
+        with:
+          command: 'dump-registry'
+          ghToken: ${{ secrets.EKKO_GH_TOKEN }}
