@@ -16,12 +16,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v7
 
+      - name: Get ekko app token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.EKKO_APP_ID }}
+          private-key: ${{ secrets.EKKO_APP_PRIVATE_KEY }}
+          owner: jaka-k
+          repositories: ekko
+
       - name: Deploy via Ekko Gitops Action
         uses: jaka-k/ekko-gitops-action@v0
         with:
-            ghToken: ${{ secrets.EKKO_GH_TOKEN }}
+          ghToken: ${{ steps.app-token.outputs.token }}
+
       - name: Print registry
         uses: jaka-k/ekko-gitops-action@v0
         with:
-          command: 'dump-registry'
-          ghToken: ${{ secrets.EKKO_GH_TOKEN }}
+          command: dump-registry
+          ghToken: ${{ steps.app-token.outputs.token }}
+          image: ghcr.io/fluxcd/source-controller:v1.7.0
