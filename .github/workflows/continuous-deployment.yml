@@ -1,0 +1,77 @@
+name: Deploy to Ekko
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: changes-${{ github.ref }}
+      cancel-in-progress: true
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}   # JSON array of matched filters
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+              - 'shared/**'
+
+  deploy:
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ github.ref }}-${{ matrix.service }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Get ekko app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.EKKO_APP_ID }}
+          private-key: ${{ secrets.EKKO_APP_PRIVATE_KEY }}
+          owner: jaka-k
+          repositories: ekko
+
+      - name: Generate image tags
+        id: tags
+        uses: jaka-k/ekko-gitops-action@v0
+        with:
+          command: generate-images
+          service: ${{ matrix.service }}
+          ghToken: ${{ steps.app-token.outputs.token }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ steps.tags.outputs.docker-image }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
