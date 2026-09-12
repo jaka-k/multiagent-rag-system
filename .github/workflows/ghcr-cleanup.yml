@@ -1,0 +1,19 @@
+name: Cleanup untagged GHCR versions
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # weekly
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ backend, frontend ]
+    steps:
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: multiagent-rag-system/${{ matrix.service }}
+          package-type: container
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: true
