@@ -1,5 +1,6 @@
 'use client'
 
+import { publicEnv } from '@lib/runtime-config/public-env'
 import { logger } from '@lib/logger.ts'
 import {
   parseSseEvent,
@@ -8,9 +9,6 @@ import {
 } from '@lib/sockets/sse-protocol.ts'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useEffect, useState } from 'react'
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 interface SSEOptions {
   chatId: string
@@ -29,7 +27,7 @@ export const useSSE = ({
     const controller = new AbortController()
 
     const connectSSE = async () => {
-      await fetchEventSource(`${BACKEND_URL}/api/events/${chatId}`, {
+      await fetchEventSource(`${publicEnv().backendUrl}/api/events/${chatId}`, {
         signal: controller.signal,
         // the httpOnly token cookie is the credential (headers can't carry it)
         credentials: 'include',
