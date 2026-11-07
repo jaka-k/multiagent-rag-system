@@ -1,7 +1,7 @@
 'use client'
 
-import { publicEnv } from '@lib/runtime-config/public-env'
 import { logger } from '@lib/logger.ts'
+import { publicEnv } from '@lib/runtime-config/public-env'
 import {
   parseWsFrame,
   WsContextChapter,
