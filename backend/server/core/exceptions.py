@@ -15,7 +15,7 @@ part of the API surface — never renumber existing ones, only append.
     401xx  authentication     40101 UnauthorizedError, 40102 InviteCodeError
     404xx  missing resource   40401 EmbeddingDownloadError, 40402 ResourceNotFoundError
     409xx  conflict           40901 ConflictError
-    500xx  server-side        50000-50007 (below)
+    500xx  server-side        50000-50008 (below)
 """
 
 
@@ -65,7 +65,7 @@ class EmbeddingPipelineError(AppError):
 
 
 class EmbeddingModelError(EmbeddingPipelineError):
-    """Wraps failures from the embedding-model API call (e.g. Gemini 404)."""
+    """Wraps failures from the embedding-model API call (e.g. provider 404)."""
 
     step = "embedding.model_call"
     code = 50006
@@ -121,3 +121,13 @@ class ConflictError(AppError):
 
     step = "request.conflict"
     code = 40901
+
+
+# ── configuration ───────────────────────────────────────────────────────────
+
+
+class LlmConfigError(AppError):
+    """The LLM provider is not configured (e.g. missing OPENROUTER_API_KEY)."""
+
+    step = "llm.config"
+    code = 50008

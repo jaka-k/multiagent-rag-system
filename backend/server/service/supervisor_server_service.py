@@ -29,32 +29,37 @@ class SupervisorServerService:
 
         pass
 
-    async def handle_supervisor_flow(self, question: str, response: str, retriever_context: list):
-        documents = retriever_context.get('context', [])
-        print("handle_supervisor_flow -> retriever_context: list", retriever_context)
+    async def handle_supervisor_flow(self, question: str, response: str, documents: list[Document]):
+        """Post-answer queue + flashcard work; failures are logged, never raised, so the chat socket survives."""
+        if len(documents) > 0:
+            await self._guarded("supervisor.doc_queue", self._queue_documents, documents)
+        await self._guarded("supervisor.flashcards", self._generate_flashcards, question, response, documents)
 
-        ## TODO: Catch all exceptions
-        try:
-            if len(documents) > 0:
-                await self.notify_doc_chunk_queue(documents)
-                await self.process_doc_chunks(documents)
-        except Exception as e:
-            app_logger.error(f"The thing broke: {e}")
+    async def _queue_documents(self, documents: list[Document]) -> None:
+        await self.notify_doc_chunk_queue(documents)
+        await self.process_doc_chunks(documents)
 
-
+    async def _generate_flashcards(self, question: str, response: str, documents: list[Document]) -> None:
         result = await self.supervisor_agent.invoke({
             "question": question,
             "llm_response": response,
             "documents": documents
         })
-
         if len(result.get('flashcards', [])) > 0:
             new_flashcard_ids = await self.process_flashcards(result['flashcards'])
             await self.notify_flashcards_queue(new_flashcard_ids)
 
-        pass
+    async def _guarded(self, step: str, fn, *args) -> None:
+        try:
+            await fn(*args)
+        except Exception as exc:
+            app_logger.error(
+                f"{step} failed",
+                exc_info=exc,
+                extra={"step": step, "error_type": type(exc).__name__, "session_id": str(self.session_id)},
+            )
 
-    async def process_doc_chunks(self, documents: list[str]) -> None:
+    async def process_doc_chunks(self, documents: list[Document]) -> None:
         stmt = select(ChapterQueue).where(ChapterQueue.session_id == self.session_id)
         result = await self.db_session.execute(stmt)
         queue = result.scalar_one_or_none()
@@ -63,7 +68,7 @@ class SupervisorServerService:
             raise Exception("Cannot retrieve ChapterQueue")
 
         for doc_chunk in documents:
-            stmt_ch = select(Chapter).where(Chapter.chapter_tag == doc_chunk.id)
+            stmt_ch = select(Chapter).where(Chapter.chapter_tag == doc_chunk.metadata.get("chapter_tag"))
             ch_result = await self.db_session.execute(stmt_ch)
             retrieved_chapter = ch_result.scalar_one_or_none()
             if not retrieved_chapter:
@@ -87,9 +92,7 @@ class SupervisorServerService:
         return flashcard_ids
 
     async def notify_doc_chunk_queue(self, documents: list[Document]):
-        doc_chunks_ids = list(map(lambda x: str(x.id), documents))
-        print("Documents", documents)
-        print("doc_chunks_ids = list(map(lambda x: str(x.metadata.id), documents))", doc_chunks_ids)
+        doc_chunks_ids = [str(doc.metadata["chapter_id"]) for doc in documents]
 
         payload = {
             "session_id": str(self.session_id),

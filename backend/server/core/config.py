@@ -25,7 +25,10 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 30 * 24 * 60
 
-    google_api_key: Optional[str] = None
+    openrouter_api_key: Optional[str] = None
+    llm_model: str = "deepseek/deepseek-v4-pro"
+    llm_fast_model: str = "qwen/qwen3-30b-a3b-instruct-2507"
+    embedding_model: str = "qwen/qwen3-embedding-8b"
     langchain_api_key: Optional[str] = None
     langchain_project: Optional[str] = None
     langchain_endpoint: Optional[str] = None
@@ -62,8 +65,20 @@ ALLOWED_ORIGINS = [
     "https://api.mrag.krajnc.cc",
 ]
 
-# gemini-2.5-* are retired for keys created after mid-2026, and pro-class
-# models have free-tier quota 0 — flash-latest is the strongest model the
-# current key can serve. Restore a pro alias here once billing is enabled.
-LLM_MODEL = "gemini-flash-latest"
-LLM_FAST_MODEL = "gemini-flash-lite-latest"
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+# Chat: auto-routed, but only to providers honouring our params (structured
+# output) and not retaining prompts. StreamLake is the cheapest fp8 host.
+CHAT_PROVIDER_PREFS = {
+    "order": ["StreamLake"],
+    "require_parameters": True,
+    "data_collection": "deny",
+}
+# Embeddings: one pinned host, no fallback — mixed providers/quantizations
+# would mix vector spaces inside one index.
+EMBEDDING_PROVIDER_PREFS = {
+    "only": ["DeepInfra"],
+    "allow_fallbacks": False,
+    "data_collection": "deny",
+}
+LLM_MODEL = settings.llm_model
+LLM_FAST_MODEL = settings.llm_fast_model

@@ -1,8 +1,8 @@
 'use client'
 
 import { Message } from '@mytypes/types'
-import Markdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
+
+import MarkdownContent from './markdown-content'
 
 export default function MessageRow({ message }: { message: Message }) {
   if (message.content.length === 0) {
@@ -18,12 +18,9 @@ export default function MessageRow({ message }: { message: Message }) {
         {isUser ? (
           <div className="bubble-user">{message.content}</div>
         ) : (
-          <Markdown
-            rehypePlugins={[rehypeHighlight]}
-            className="prose chat-code"
-          >
+          <MarkdownContent className="prose chat-code">
             {message.content}
-          </Markdown>
+          </MarkdownContent>
         )}
       </div>
     </div>
