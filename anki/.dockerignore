@@ -1,5 +1,5 @@
 # Keep the build context minimal. Only the files explicitly COPY'd by
-# anki.Dockerfile need to be sent to the daemon:
+# Dockerfile need to be sent to the daemon:
 #   - supervisord.conf
 #   - seed-profile.py
 #   - entrypoint.sh

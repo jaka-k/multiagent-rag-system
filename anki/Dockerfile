@@ -98,8 +98,8 @@ ENV LC_ALL=C.UTF-8
 # --- Runtime apt packages --------------------------------------------
 # Why each one is here:
 #
-#   curl              — required by the docker-compose healthcheck,
-#                       which POSTs to AnkiConnect on :8765.
+#   curl              — used by health checks that POST to
+#                       AnkiConnect on :8765.
 #   ca-certificates   — TLS roots; needed by anything hitting HTTPS at
 #                       runtime (notably Anki's sync server check on
 #                       startup).
@@ -187,8 +187,8 @@ ENV VENV=/opt/anki-venv
 ENV PATH=${VENV}/bin:${PATH}
 
 # --- VNC password ----------------------------------------------------
-# Stored once at build time; x11vnc reads it via -rfbauth /etc/vncsecret.
-RUN x11vnc -storepasswd 1990 /etc/vncsecret
+# Not baked into the image: entrypoint.sh writes /etc/vncsecret from the
+# VNC_PASSWORD env var at container start (a Secret in Kubernetes).
 
 # --- Filesystem prep -------------------------------------------------
 # All directory creation + ownership in a single RUN so we don't

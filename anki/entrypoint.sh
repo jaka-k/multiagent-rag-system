@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
-# Per-container-start seeding of:
+# Per-container-start setup:
+#   0. VNC password file from $VNC_PASSWORD
+# and seeding of:
 #   1. AnkiConnect addon into the user's profile addons dir
 #   2. A registered "User 1" profile in prefs21.db so Anki -p loads it
 #      cleanly instead of blocking on the Profile Manager dialog
@@ -10,6 +12,14 @@
 # they're safe on existing volumes too.
 #
 set -euo pipefail
+
+# 0. VNC password — supplied at runtime, never baked into the image.
+if [ -z "${VNC_PASSWORD:-}" ]; then
+    echo "[entrypoint] VNC_PASSWORD is not set; refusing to start an unauthenticated VNC server." >&2
+    exit 1
+fi
+x11vnc -storepasswd "${VNC_PASSWORD}" /etc/vncsecret >/dev/null
+chmod 600 /etc/vncsecret
 
 ANKI_HOME="/home/ankiuser/.local/share/Anki2"
 ADDONS_DIR="${ANKI_HOME}/addons21"
