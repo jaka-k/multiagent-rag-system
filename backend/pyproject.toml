@@ -53,9 +53,9 @@ firebase-admin = "^6.6.0"
 [tool.poetry.group.statemachine.dependencies]
 langchain = "^1.2"
 langgraph = "^1.1"
-langchain-google-genai = "^4.2"
 langchain-community = "^0.4"
 orjson = "^3.10"
+langchain-openai = "^1"
 
 [tool.poetry.group.tools.dependencies]
 beautifulsoup4 = "^4.12.3"

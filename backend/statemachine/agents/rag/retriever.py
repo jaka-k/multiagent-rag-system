@@ -5,13 +5,13 @@ from typing import Sequence
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 from sqlmodel import select
 
-from server.core.config import LLM_FAST_MODEL, settings
+from server.core.config import LLM_FAST_MODEL
 from server.core.exceptions import RetrievalError
 from server.core.logger import app_logger
+from server.core.llm import build_chat_model
 from server.db.database import get_single_session
 from server.db.vectordb.vectordb import get_vector_store
 from server.models.document import Chapter
@@ -29,18 +29,14 @@ class RerankResponse(BaseModel):
 
 @lru_cache(maxsize=1)
 def _rerank_chain() -> Runnable:
-    llm = ChatGoogleGenerativeAI(
-        model=LLM_FAST_MODEL,
-        temperature=0,
-        google_api_key=settings.google_api_key,
-    ).with_structured_output(RerankResponse)
+    llm = build_chat_model(LLM_FAST_MODEL).with_structured_output(RerankResponse)
     return ChatPromptTemplate.from_messages([("system", RERANK_PROMPT)]) | llm
 
 
 async def _rerank_chunks(
     query: str, hits: Sequence[tuple[Document, float]]
 ) -> list[tuple[Document, float]]:
-    """Score each chunk 0-10 with Gemini Flash; fall back to vector score on rerank failure."""
+    """Score each chunk 0-10 with the fast LLM; fall back to vector score on rerank failure."""
     if not hits:
         return []
 

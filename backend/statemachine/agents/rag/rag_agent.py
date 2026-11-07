@@ -4,11 +4,11 @@ from typing import AsyncIterator, Literal
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
-from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
-from server.core.config import LLM_MODEL, LLM_FAST_MODEL, settings
+from server.core.config import LLM_MODEL, LLM_FAST_MODEL
 from server.core.exceptions import QueryRewriteError
+from server.core.llm import build_chat_model
 from statemachine.agents.rag.rag_agent_history import get_chat_history
 from statemachine.agents.rag.retriever import retrieve_chapters
 from statemachine.agents.rag.templates import (
@@ -37,16 +37,8 @@ class RagAgent:
     def __init__(self, chat_id: uuid.UUID, area: str):
         self.chat_id = chat_id
         self.area = area
-        self.llm = ChatGoogleGenerativeAI(
-            model=LLM_MODEL,
-            temperature=0,
-            google_api_key=settings.google_api_key,
-        )
-        self.llm_flash = ChatGoogleGenerativeAI(
-            model=LLM_FAST_MODEL,
-            temperature=0,
-            google_api_key=settings.google_api_key,
-        )
+        self.llm = build_chat_model(LLM_MODEL)
+        self.llm_flash = build_chat_model(LLM_FAST_MODEL)
         self.history_aware_prompt = ChatPromptTemplate.from_messages(
             [
                 MessagesPlaceholder("chat_history"),

@@ -1,2 +1,10 @@
 **/node_modules
 **/.next
+
+# Never bake local config or credentials into the image
+.env
+.env.*
+
+Dockerfile
+dev.Dockerfile
+.dockerignore

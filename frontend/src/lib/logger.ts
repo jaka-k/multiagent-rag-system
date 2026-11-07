@@ -4,7 +4,7 @@ import pino from 'pino'
 const logger = pino({
   name: 'mrag-client',
   base: {
-    service: 'mrag-client'
+    service: 'mrag.client'
   },
   level: process.env.LOG_LEVEL || 'info',
   timestamp: () => `,"ts":"${new Date().toISOString()}"`,
@@ -36,12 +36,17 @@ const logger = pino({
       return log
     }
   },
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true
+  // Pretty output for local development only. In production pino writes plain
+  // JSON lines to stdout, which is what log collectors expect (and pino-pretty
+  // is a dev dependency, so it isn't in the production image).
+  ...(process.env.NODE_ENV !== 'production' && {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true
+      }
     }
-  }
+  })
 })
 
 export { logger }

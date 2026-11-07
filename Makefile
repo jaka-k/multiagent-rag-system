@@ -1,5 +1,9 @@
 COMPOSE_DEV  = docker compose -f docker-compose.dev.yml
-COMPOSE_PROD = docker compose -f docker-compose.prod.yml
+
+# Firebase service-account key for local runs (Google's standard ADC variable).
+# Override with: make dev GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
+GOOGLE_APPLICATION_CREDENTIALS ?= $(CURDIR)/backend/firebaseServiceAccount.json
+export GOOGLE_APPLICATION_CREDENTIALS
 
 .PHONY: dev infra monitor stop install docker-dev help \
         migration migrate db-rollback db-history db-current db-shell

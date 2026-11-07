@@ -13,49 +13,35 @@ flagged.
 
 ## [Unreleased / in flight] — Redesign phase 2
 
-- **Auth screens + invite-gated beta registration** (doc 08 A): /login,
-  /register and /terms rebuilt in the design system (auth-card on the dark
-  desk); registration is locked behind an **8-digit invite PIN** validated
-  server-side (PinGate with paste/backspace/arrow UX and error shake). New
-  **InviteCode** table (max_uses/use_count, redeemed_by/at watermark) +
-  `POST /auth/invite/validate` + invite redemption inside /auth/register;
-  `poetry run create-invite` mints codes. Login now accepts **email or
-  username**; register/conflict paths converted to typed errors (new
-  40102 InviteCodeError, ConflictError instead of ad-hoc 409). Terms page
-  carries the designed five-section copy, with §5 softened to email-based
-  account deletion (no settings surface yet — designer ask stays open).
-- **New-area dialog** (doc 08 B): design-system modal (overlay/modal/m-*
-  CSS block ported) with name field, six-swatch **label color** picker and
-  live area-chip preview, opened from the rail's area menu ("New area"
-  foot entry). `Area.color` column added NOT NULL — the backend owns the
-  palette (`server/models/area.py`, mirrored in the dialog) and assigns a
-  deterministic md5-of-id pick when none is chosen; existing areas
-  backfilled with the same function, so every surface (rail dots, session
-  covers, launcher) renders one stable color per area and the frontend
-  id-hash is gone. Area `label` is now derived server-side from the
-  name (slug) — the ChromaDB-era naming-rules dialog is gone. Dead
-  pre-redesign components removed (top-menu, area-selector, dashboard,
-  sidebar, user-auth-form).
-- Migration `20260815_0001`: invitecode table + area.color.
-- **Designed UploadDialog + live shelf lifecycle** (doc 08 B follow-up):
-  the Radix upload dialog (Cards/Table UI) is replaced by the designer's
-  modal — dropzone (drag + browse, multi-EPUB queue), per-file rows
-  through the real lifecycle (uploading % from Firebase → parsing →
-  embedding → indexed/failed with retry), sequential client pipeline via
-  a new promise-based `extractEpubMetadata` (worker wrapper). Rail book
-  rows now show live indexing states (busy/failed dots, stage label,
-  failed → Retry re-fires `POST /api/embedding/{id}`), with store polling
-  while anything is in flight (SSE is session-scoped, not usable in the
-  rail). Old FileUpload/EpubElement deleted.
-- **Authz/error sweep on the upload endpoints** (missed in PR #27):
-  `/api/epub-upload` now verifies area ownership (a foreign area_id was
-  previously accepted!) and drops its ad-hoc 423/424 handlers;
-  `/api/embedding/{id}` and `/api/embedding-status/{id}` use
-  `require_owned_document` (typed 404 instead of ad-hoc 403); the status
-  endpoint no longer 500s on idle documents.
-- Still planned (docs/rework/08): citations, GenBot, agents wired into
-  generation, doc-05 leftover schema, reader (doc 07) — gated on a working
-  GOOGLE_API_KEY (last rotation rejected by Google).
+- **Gemini → OpenRouter** (chat + embeddings): one `build_chat_model`
+  factory (`server/core/llm.py`, `ChatOpenAI` on the OpenRouter base URL)
+  replaces five `ChatGoogleGenerativeAI` call sites. Models:
+  deepseek-v4-pro (answers/supervisor), qwen3-30b-a3b-instruct (rewrite,
+  rerank, flashcards), qwen3-embedding-8b @1536 with an instruction-prefixed
+  query side (asymmetric retrieval kept). Chat requests set
+  `require_parameters` + `data_collection: deny`; embeddings are pinned to
+  DeepInfra with no fallback. `GOOGLE_API_KEY` → `OPENROUTER_API_KEY`; ids
+  overridable via `LLM_MODEL`, `LLM_FAST_MODEL`, `EMBEDDING_MODEL`. New 50008
+  LlmConfigError; migration d0e1f2a3b4c5 truncates book_embeddings
+  (re-embed required).
+- **Flashcard agent trigger fix**: `handle_supervisor_flow` expected a
+  `{"context": …}` dict but the chat WS passes the document list, so it
+  raised before the supervisor ran. It now takes the documents directly (and
+  the question string, and chapter ids for the documents SSE event).
+  Regression tests: `backend/tests/test_supervisor_flow.py`. Supervisor-flow
+  failures are now logged (steps `supervisor.doc_queue` / `supervisor.flashcards`)
+  instead of killing the chat WebSocket.
+- **Code highlighting restored**: the light `nnfx-light` hljs theme sat on
+  the new near-black `pre` (unreadable); switched to `atom-one-dark`. The
+  side-panel chapter reader now highlights too, via a shared
+  `MarkdownContent` (chat + reader) that auto-detects untagged fences within
+  a fixed language subset — EPUB code fences carry no language.
+- **Embedding no-op fix**: `EmbeddingService.parse_chapters` read the
+  stale `Document.chapters` collection (chapters are inserted via Core in the
+  same session), found nothing, and the pipeline still ended `COMPLETED`.
+  Chapters are now queried by `document_id`, and a document with none raises
+  `EmbeddingParseError`. Regression tests: `backend/tests/` (need a scratch
+  DB via `TEST_DATABASE_URL`).
 
 ## Phase 7 — Redesign wave (merged 2026-08-14, PRs #21–#28)
 

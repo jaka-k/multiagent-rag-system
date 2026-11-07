@@ -1,6 +1,6 @@
 import { logger } from '@lib/logger'
 import { signInToFirebase } from '@lib/storage/auth'
-import { storage } from '@lib/storage/storage'
+import { firebaseStorage } from '@lib/storage/storage'
 import { getCoverMetadata } from '@lib/utils'
 import { CoverImage } from '@mytypes/epub-processor'
 import {
@@ -30,7 +30,7 @@ export function useFirebaseUpload(): UseFirebaseUploadReturn {
 
     try {
       await signInToFirebase()
-      const storageRef = ref(storage, path)
+      const storageRef = ref(firebaseStorage(), path)
       const uploadTask = uploadBytesResumable(storageRef, file)
 
       uploadTask.on(
@@ -65,7 +65,7 @@ export function useFirebaseUpload(): UseFirebaseUploadReturn {
 
     try {
       await signInToFirebase()
-      const coverRef = ref(storage, coverPath)
+      const coverRef = ref(firebaseStorage(), coverPath)
       const uploadTask = uploadBytesResumable(coverRef, coverFile)
 
       uploadTask.on(

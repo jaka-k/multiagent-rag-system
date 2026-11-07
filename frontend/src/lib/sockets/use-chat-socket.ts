@@ -1,6 +1,7 @@
 'use client'
 
 import { logger } from '@lib/logger.ts'
+import { publicEnv } from '@lib/runtime-config/public-env'
 import {
   parseWsFrame,
   WsContextChapter,
@@ -10,12 +11,6 @@ import {
 } from '@lib/sockets/ws-protocol.ts'
 import { useCallback } from 'react'
 import useWebSocket from 'react-use-websocket'
-
-export const BACKEND_DOMAIN =
-  process.env.NEXT_PUBLIC_BACKEND_DOMAIN || 'localhost:8080'
-
-const isProd = process.env.NODE_ENV === 'production'
-const wsProtocol = isProd ? 'wss' : 'ws'
 
 export interface ChatSocketHandlers {
   onContent?: (chunk: string) => void
@@ -27,7 +22,8 @@ export interface ChatSocketHandlers {
 /** Typed chat socket: connects to the session stream (all clients on the
  * same chat receive every frame) and dispatches frames per WsEvent. */
 export function useChatSocket(chatId: string, handlers: ChatSocketHandlers) {
-  const socketUrl = `${wsProtocol}://${BACKEND_DOMAIN}/api/ws/${chatId}`
+  // http → ws, https → wss: the socket follows the backend URL's scheme.
+  const socketUrl = `${publicEnv().backendUrl.replace(/^http/, 'ws')}/api/ws/${chatId}`
 
   const onMessage = useCallback(
     (event: MessageEvent) => {

@@ -164,7 +164,9 @@ async def websocket_endpoint(
             await chat_controller.save_retrievals(agent_message.id, context)
             if metadata_collector is not None:
                 await chat_controller.update_session_metadata(metadata_collector)
-            await supervisor_service.handle_supervisor_flow(chat_input, response_content_collector, context)
+            await supervisor_service.handle_supervisor_flow(
+                chat_input.user_input, response_content_collector, context
+            )
 
     except WebSocketDisconnect:
         app_logger.info(

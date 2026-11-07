@@ -1,12 +1,11 @@
 from langchain_core.documents import Document as PGVectorDocument
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from server.core.exceptions import EmbeddingModelError, EmbeddingStoreError
+from server.core.exceptions import EmbeddingModelError, EmbeddingParseError, EmbeddingStoreError
 from server.core.logger import app_logger
 from server.db.vectordb.vectordb import get_vector_store
-from server.models.document import Document
+from server.models.document import Chapter, Document
 
 CHUNK_SIZE_TOKENS = 1000
 CHUNK_OVERLAP_TOKENS = 150
@@ -34,25 +33,27 @@ class EmbeddingService:
         self.db_session = db_session
 
     async def parse_chapters(self):
-        stmt = (
-            select(Document)
-            .options(selectinload(Document.chapters),
-                     selectinload(Document.area))
-            .where(Document.id == self.doc_id)
-        )
-        result = await self.db_session.execute(stmt)
+        result = await self.db_session.execute(select(Document).where(Document.id == self.doc_id))
         document = result.scalar_one_or_none()
 
         if not document:
             app_logger.error(f"Document {self.doc_id} not found in background task.")
             return
 
+        # Query chapters directly: they were inserted via Core, so a Document
+        # loaded earlier in this session still holds a stale empty `.chapters`.
+        chapters = (await self.db_session.execute(
+            select(Chapter).where(Chapter.document_id == document.id).order_by(Chapter.order)
+        )).scalars().all()
+        if not chapters:
+            raise EmbeddingParseError(f"Document {self.doc_id} has no chapters to embed")
+
         vector_store = await get_vector_store()
         area_label = document.area.label
 
         pending_chunks: list[PGVectorDocument] = []
         chapters_to_mark = []
-        for chapter in document.chapters:
+        for chapter in chapters:
             if chapter.is_embedded:
                 app_logger.info(f"Skipping {chapter.label} (already embedded)")
                 continue
@@ -118,15 +119,15 @@ class EmbeddingService:
 
 
 def _classify_vector_store_error(exc: Exception, doc_id, chunks: int):
-    """Best-effort split between Gemini-side and pgvector-side failures.
+    """Best-effort split between embedding-API and pgvector-side failures.
 
-    google.api_core.exceptions.* indicate the embedding API rejected the call
-    (404 for retired models, 429 rate limit, 401 auth, etc); everything else
-    is treated as a pgvector write failure. The original exception chains via
+    openai.* exceptions indicate the embedding API rejected the call (404 for
+    unknown models, 429 rate limit, 401 auth, etc); everything else is treated
+    as a pgvector write failure. The original exception chains via
     `from exc` either way, so the original type lands in the error log.
     """
     module = type(exc).__module__ or ""
-    if module.startswith("google.api_core") or module.startswith("google.auth"):
+    if module.startswith("openai"):
         return EmbeddingModelError(
             f"Embedding model call failed for doc {doc_id} ({chunks} chunks): {exc}"
         )

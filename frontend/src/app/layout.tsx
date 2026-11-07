@@ -2,9 +2,10 @@ import './globals.css'
 import './mrag.css'
 // TODO: handle locally
 // eslint-disable-next-line import/no-unresolved
-import 'highlight.js/styles/nnfx-light.css'
+import 'highlight.js/styles/atom-one-dark.css'
 
 import { Toaster } from '@components/ui/toaster'
+import { PublicEnvScript } from '@lib/runtime-config/public-env-script'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
@@ -24,6 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <PublicEnvScript />
+      </head>
       <body className={inter.className}>
         {children}
         <Toaster />

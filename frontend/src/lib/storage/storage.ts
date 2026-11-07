@@ -1,12 +1,12 @@
-import { initializeApp } from 'firebase/app'
-import { getStorage } from 'firebase/storage'
+import { publicEnv } from '@lib/runtime-config/public-env'
+import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app'
+import { FirebaseStorage, getStorage } from 'firebase/storage'
 
-import { firebaseConfig } from './config'
+/** Firebase app, initialised on first use from the runtime public config. */
+export function firebaseApp(): FirebaseApp {
+  return getApps().length ? getApp() : initializeApp(publicEnv().firebase)
+}
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig)
-
-// Initialize Cloud Storage and get a reference to the service
-const storage = getStorage(app)
-
-export { app, storage }
+export function firebaseStorage(): FirebaseStorage {
+  return getStorage(firebaseApp())
+}

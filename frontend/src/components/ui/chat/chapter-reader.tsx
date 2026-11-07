@@ -3,7 +3,8 @@
 import { getSingleChapter } from '@lib/fetchers/fetch-chapters.ts'
 import { X } from 'lucide-react'
 import React from 'react'
-import Markdown from 'react-markdown'
+
+import MarkdownContent from './markdown-content'
 
 export default function ChapterReader({
   chapterTag,
@@ -38,7 +39,7 @@ export default function ChapterReader({
       </div>
       <div className="reader scroll">
         {content ? (
-          <Markdown>{content}</Markdown>
+          <MarkdownContent>{content}</MarkdownContent>
         ) : (
           <div className="empty-hint">Loading chapter…</div>
         )}

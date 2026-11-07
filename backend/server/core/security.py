@@ -71,7 +71,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=30))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, settings.hashing_secret_key, algorithm=settings.hashing_algorithm
+        to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
     )
     return encoded_jwt
 
@@ -92,7 +92,7 @@ async def create_refresh_token(session: AsyncSession, user: User) -> Token:
 def _decode_claims(token: str) -> dict:
     """The single decode path for our JWTs — every consumer goes through here."""
     return jwt.decode(
-        token, settings.hashing_secret_key, algorithms=[settings.hashing_algorithm],
+        token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm],
         options={"require": ["exp", "sub"]}
     )
 

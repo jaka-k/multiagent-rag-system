@@ -20,8 +20,6 @@ def _http() -> httpx.AsyncClient:
 class AnkiConnectClient:
     def __init__(self, url: Optional[str] = None):
         self.url = url or settings.anki_url
-        if not self.url:
-            raise RuntimeError("ANKI_URL is not configured. Set it in your .env file.")
 
     async def invoke(self, action: str, **params) -> Any:
         payload: Dict[str, Any] = {"action": action, "params": params, "version": 6}

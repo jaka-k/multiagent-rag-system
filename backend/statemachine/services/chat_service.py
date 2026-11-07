@@ -20,7 +20,7 @@ class ChatService:
             chat_input.user_input, chat_input.thread_id
         )
 
-        # Token tracking is not available via a direct Gemini callback equivalent;
+        # Token tracking is not available via a direct provider callback equivalent;
         # yield zeroed metadata so the downstream pipeline stays intact.
         empty_metadata = MetaDataDTO(
             total_tokens=0,
