@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ backend, frontend ]
+        service: [ backend, frontend, anki ]
     steps:
       - uses: actions/delete-package-versions@v5
         with:

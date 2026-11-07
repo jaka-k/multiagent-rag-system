@@ -24,6 +24,8 @@ jobs:
             frontend:
               - 'frontend/**'
               - 'shared/**'
+            anki:
+              - 'anki/**'
 
   deploy:
     needs: changes
@@ -71,6 +73,8 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.service }}
+          # The ekko clusters are amd64. Config is read at runtime, so no build args.
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.docker-image }}
           cache-from: type=gha,scope=${{ matrix.service }}
