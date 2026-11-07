@@ -1,4 +1,19 @@
+# Local environments and caches
 .venv
 __pycache__
 *.pyc
 *.pyo
+.pytest_cache
+
+# Never bake credentials into an image
+.env
+.env.*
+firebaseServiceAccount*.json
+*.pem
+*.key
+
+# Not needed at runtime
+tests
+Dockerfile
+dev.Dockerfile
+.dockerignore
